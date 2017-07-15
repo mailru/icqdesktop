@@ -1,16 +1,12 @@
-Ui--HistoryControl
-{
-	background-color: transparent;
-}
-
 QWidget#topWidget
 {
-	background: rgba(255, 255, 255, 95%);
-	min-height: 63dip;
-	max-height: 63dip;
-	border-bottom-style: solid;
-	border-bottom-width: 1dip;
-	border-bottom-color: #dadada;
+    background: #ffffff;
+    border-style: solid;
+	border-width: 1dip;
+	border-color: #d7d7d7;
+	border-left: none;
+	border-right: none;
+    border-top: none;
 }
 
 QPushButton#callButton
@@ -27,23 +23,6 @@ QPushButton#callButton:hover
 	border-image: url(:/resources/contr_call_100_hover.png);
 }
 
-QPushButton#callButton:hover:pressed
-{
-	border-image: url(:/resources/contr_call_100_active.png);
-}
-
-QPushButton#favoriteStar
-{
-	margin-top: 10dip;
-	min-width: 12dip;
-	max-width: 12dip;
-	min-height: 12dip;
-	max-height: 12dip;
-	margin-left: 8dip;
-	margin-right: 8dip;
-	border-image: url(:/resources/cl_favorites_100.png);
-}
-
 QPushButton#officialMark
 {
 	margin-left: -2dip;
@@ -51,7 +30,7 @@ QPushButton#officialMark
 	max-width: 20dip;
 	min-height: 20dip;
 	max-height: 20dip;
-	border-image: url(:/resources/cl_badges_official_100.png);
+	border-image: url(:/resources/official_badge_blue_100.png);
 }
 
 QPushButton#videoCallButton
@@ -66,10 +45,6 @@ QPushButton#videoCallButton:hover
 {
 	border-image: url(:/resources/contr_videocall_100_hover.png);
 }
-QPushButton#videoCallButton:hover:pressed
-{
-	border-image: url(:/resources/contr_videocall_100_active.png);
-}
 
 QPushButton#addMemberButton
 {
@@ -77,15 +52,11 @@ QPushButton#addMemberButton
 	max-width: 40dip;
 	min-height: 40dip;
 	max-height: 40dip;
-	border-image: url(:/resources/contr_addpeople_round_100.png);
+	border-image: url(:/resources/add_members_100.png);
 }
 QPushButton#addMemberButton:hover
 {
-	border-image: url(:/resources/contr_addpeople_round_100_hover.png);
-}
-QPushButton#addMemberButton:hover:pressed
-{
-	border-image: url(:/resources/contr_addpeople_round_100_active.png);
+	border-image: url(:/resources/add_members_100_hover.png);
 }
 
 QPushButton#optionButton
@@ -94,73 +65,20 @@ QPushButton#optionButton
 	max-width: 40dip;
 	min-height: 40dip;
 	max-height: 40dip;
-	border-image: url(:/resources/contr_options_round_100.png);
+	border-image: url(:/resources/options_round_100.png);
 }
 QPushButton#optionButton:hover
 {
-	border-image: url(:/resources/contr_options_round_100_hover.png);
+	border-image: url(:/resources/options_round_100_hover.png);
 }
 QPushButton#optionButton:checked
 {
-	border-image: url(:/resources/contr_options_round_100_active.png);
+	border-image: url(:/resources/options_round_100_active.png);
 }
 
 QWidget[MessagesWidget=true]
 {
 	background: transparent;
-}
-
-QWidget[NewMessages="true"]
-{
-	background: transparent;
-	min-height: 42dip;
-	max-height: 42dip;
-}
-
-QWidget[NewMessagesWidget="true"]
-{
-	min-height: 20dip;
-	max-height: 20dip;
-	margin-top: 12dip;
-	margin-bottom: 12dip;
-	border-radius: 10dip;
-}
-
-QWidget[NewMessagesWidgetHover="true"]
-{
-	min-height: 20dip;
-	max-height: 20dip;
-	margin-top: 12dip;
-	margin-bottom: 12dip;
-	border-radius: 10dip;
-}
-
-QWidget[NewMessagesWidgetPressed="true"]
-{
-	min-height: 20dip;
-	max-height: 20dip;
-	margin-top: 12dip;
-	margin-bottom: 12dip;
-	border-radius: 10dip;
-	background: #498812;
-}
-
-QLabel[NewMessagesLabel="true"]
-{
-	font-size: 12dip;
-	font-family: "%FONT_FAMILY_SEMIBOLD%";
-	font-weight: %FONT_WEIGHT_SEMIBOLD%;
-	margin-left: 24dip;
-	margin-right: 24dip;
-}
-
-QLabel[NewMessagesLabelHover="true"]
-{
-	font-size: 12dip;
-	font-family: "%FONT_FAMILY_SEMIBOLD%";
-	font-weight: %FONT_WEIGHT_SEMIBOLD%;
-	margin-left: 24dip;
-	margin-right: 24dip;
 }
 
 QWidget[ServiceMessage="true"]
@@ -185,8 +103,8 @@ QWidget[DateWidget="true"]
 QLabel[DateWidgetLabel="true"]
 {
 	font-size: 12dip;
-	font-family: "%FONT_FAMILY_SEMIBOLD%";
-	font-weight: %FONT_WEIGHT_SEMIBOLD%;
+	font-family: "%FONT_FAMILY_MEDIUM%";
+	font-weight: %FONT_WEIGHT_MEDIUM%;
 	margin-left: 12dip;
 	margin-right: 12dip;
 	margin-top: 10dip;
@@ -213,8 +131,8 @@ QWidget[ServiceMessageWidgetOverlay="true"]
 QLabel[ServiceMessageLabelOverlay="true"]
 {
 	font-size: 12dip;
-	font-family: "%FONT_FAMILY_SEMIBOLD%";
-	font-weight: %FONT_WEIGHT_SEMIBOLD%;
+	font-family: "%FONT_FAMILY_MEDIUM%";
+	font-weight: %FONT_WEIGHT_MEDIUM%;
 	margin-left: 12dip;
 	margin-right: 12dip;
 	margin-top: 10dip;

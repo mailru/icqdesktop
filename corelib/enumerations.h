@@ -280,6 +280,7 @@ namespace core
         min = 1,
         network_error = 2,
         not_in_chat = 3,
+        blocked = 4,
         max,
     };
 
@@ -307,6 +308,7 @@ namespace core
             absolete_reg_edit_phone = 12,
             absolete_reg_error_uin = 13,
             absolete_reg_error_other = 14,
+            absolete_login_forgot_password = 224,
 
             absolete_main_window_fullscreen = 15,
             absolete_main_window_resize = 16,
@@ -314,17 +316,13 @@ namespace core
             absolete_groupchat_from_create_button = 17,
             absolete_groupchat_from_sidebar = 18,
             absolete_groupchat_created = 19,
-            absolete_groupchat_create_rename = 20,
             absolete_groupchat_create_members_count = 21,
             absolete_groupchat_members_count = 22,
             absolete_groupchat_leave = 23,
-            absolete_livechat_leave = 24,
             absolete_groupchat_rename = 25,
             absolete_groupchat_avatar_changed = 182,
             absolete_groupchat_add_member_sidebar = 183,
             absolete_groupchat_add_member_dialog = 184,
-            absolete_groupchat_viewall = 185,
-
 
             absolete_filesharing_sent_count = 26,
             absolete_filesharing_sent = 27,
@@ -353,8 +351,7 @@ namespace core
             absolete_spam_cl_menu = 51,
             absolete_spam_auth_widget = 52,
             absolete_spam_sidebar = 53,
-            absolete_spam_profile_page = 54,
-
+            
             absolete_recents_close = 55,
             absolete_recents_read = 56,
             absolete_recents_readall = 57,
@@ -366,7 +363,6 @@ namespace core
             absolete_ignore_cl_menu = 62,
             absolete_ignore_auth_widget = 63,
             absolete_ignore_sidebar = 64,
-            absolete_ignore_profile_page = 65,
             absolete_ignorelist_open = 66,
             absolete_ignorelist_remove = 67,
 
@@ -376,9 +372,9 @@ namespace core
             absolete_cl_empty_find_friends = 71,
             absolete_cl_search = 72,
             absolete_cl_load = 73,
-            absolete_cl_search_openchatmessage = 208,
+            absolete_cl_search_openmessage = 208,
             absolete_cl_search_dialog = 209,
-            absolete_cl_search_dialog_open = 210,
+            absolete_cl_search_dialog_openmessage = 210,
             absolete_cl_search_nohistory = 211,
 
             absolete_myprofile_edit = 74,
@@ -399,7 +395,6 @@ namespace core
 
             absolete_add_user_profile_page = 87,
             absolete_add_user_auth_widget = 89,
-            absolete_add_user_dialog = 90,
             absolete_add_user_sidebar = 164,
             absolete_delete_auth_widget = 91,
             absolete_delete_sidebar = 92,
@@ -418,13 +413,11 @@ namespace core
             absolete_open_chat_recents = 104,
             absolete_open_chat_search_recents = 105,
             absolete_open_chat_cl = 106,
-            absolete_open_chat_search_cl = 107,
 
             absolete_message_pending = 113,
             absolete_message_delete_my = 155,
             absolete_message_delete_all = 156,
 
-            absolete_history_new_messages_botton = 117,
             absolete_history_preload = 118,
             absolete_history_delete = 157,
 
@@ -436,14 +429,11 @@ namespace core
             absolete_feedback_sent = 121,
             absolete_feedback_error = 122,
 
-            absolete_voip_call = 123,
-            absolete_voip_videocall = 124,
-            absolete_voip_call_from_dialog = 125,
-            absolete_voip_videocall_from_dialog = 126,
-            absolete_voip_call_from_cl = 127,
-            absolete_voip_call_from_profile = 128,
-            absolete_voip_videocall_from_profile = 129,
-            absolete_voip_call_from_search = 130,
+            absolete_call_from_chat = 123,
+            absolete_videocall_from_chat = 124,
+            absolete_call_from_cl_menu = 127,
+            absolete_call_from_search_results = 130,
+
             absolete_voip_callback = 131,
             absolete_voip_incoming_call = 132,
             absolete_voip_accept = 133,
@@ -494,7 +484,6 @@ namespace core
             absolete_introduce_name_set = 187,
             absolete_introduce_avatar_changed = 188,
             absolete_introduce_avatar_fail = 189,
-            absolete_introduce_skip = 190,
 
             absolete_masks_open = 192,
             absolete_masks_select = 193,
@@ -534,6 +523,7 @@ namespace core
             reg_edit_phone = 2010,
             reg_error_uin = 2011,
             reg_error_other = 2012,
+            login_forgot_password = 2013,
 
             main_window_fullscreen = 3001,
             main_window_resize = 3002,
@@ -541,17 +531,13 @@ namespace core
             groupchat_from_create_button = 4001,
             groupchat_from_sidebar = 4002,
             groupchat_created = 4003,
-            groupchat_create_rename = 4004,
             groupchat_create_members_count = 4005,
             groupchat_members_count = 4006,
             groupchat_leave = 4007,
-            livechat_leave = 4008,
             groupchat_rename = 4009,
             groupchat_avatar_changed = 4010,
             groupchat_add_member_sidebar = 4011,
             groupchat_add_member_dialog = 4012,
-            groupchat_viewall = 4013,
-
 
             filesharing_sent_count = 5001,
             filesharing_sent = 5002,
@@ -576,11 +562,15 @@ namespace core
             alert_click = 7001,
             alert_viewall = 7002,
             alert_close = 7003,
+            alert_mail_common = 7004,
+            alert_mail_letter = 7005,
+            tray_mail = 7006,
 
             spam_cl_menu = 8001,
             spam_auth_widget = 8002,
             spam_sidebar = 8003,
-            spam_profile_page = 8004,
+            spam_members_list = 8004,
+            spam_chat_avatar = 8005,
 
             recents_close = 9001,
             recents_read = 9002,
@@ -593,7 +583,6 @@ namespace core
             ignore_cl_menu = 10002,
             ignore_auth_widget = 10003,
             ignore_sidebar = 10004,
-            ignore_profile_page = 10005,
             ignorelist_open = 10006,
             ignorelist_remove = 10007,
 
@@ -603,9 +592,9 @@ namespace core
             cl_empty_find_friends = 11004,
             cl_search = 11005,
             cl_load = 11006,
-            cl_search_openchatmessage = 11007,
+            cl_search_openmessage = 11007,
             cl_search_dialog = 11008,
-            cl_search_dialog_open = 11009,
+            cl_search_dialog_openmessage = 11009,
             cl_search_nohistory = 11010,
 
             myprofile_edit = 12001,
@@ -623,10 +612,10 @@ namespace core
             profile_call = 13006,
             profile_video_call = 13007,
             profile_sidebar = 13008,
+            profile_write_message = 13009,
 
             add_user_profile_page = 14001,
             add_user_auth_widget = 14002,
-            add_user_dialog = 14003,
             add_user_sidebar = 14004,
             delete_auth_widget = 14005,
             delete_sidebar = 14006,
@@ -645,13 +634,11 @@ namespace core
             open_chat_recents = 17001,
             open_chat_search_recents = 17002,
             open_chat_cl = 17003,
-            open_chat_search_cl = 17004,
 
             message_pending = 18001,
             message_delete_my = 18002,
             message_delete_all = 18003,
 
-            history_new_messages_botton = 19001,
             history_preload = 19002,
             history_delete = 19003,
 
@@ -663,14 +650,10 @@ namespace core
             feedback_sent = 22002,
             feedback_error = 22003,
 
-            voip_call = 23001,
-            voip_videocall = 23002,
-            voip_call_from_dialog = 23003,
-            voip_videocall_from_dialog = 23004,
-            voip_call_from_cl = 23005,
-            voip_call_from_profile = 23006,
-            voip_videocall_from_profile = 23007,
-            voip_call_from_search = 23008,
+            call_from_chat = 23001,
+            videocall_from_chat = 23002,
+            call_from_cl_menu = 23005,
+            call_from_search_results = 23008,
             voip_callback = 23009,
             voip_incoming_call = 23010,
             voip_accept = 23011,
@@ -721,7 +704,6 @@ namespace core
             introduce_name_set = 31002,
             introduce_avatar_changed = 31003,
             introduce_avatar_fail = 31004,
-            introduce_skip = 31005,
 
             masks_open = 32001,
             masks_select = 32002,
@@ -743,7 +725,15 @@ namespace core
             forward_send_preview = 35003,
             forward_messagescount = 35004,
 
-            max = 36000,
+            merge_accounts = 35100,
+
+            unknowns_add_user = 36000,
+            unknowns_close = 36001,
+            unknowns_closeall = 36002,
+
+			chat_down_button = 36003,
+
+            max = 36004,
         };
 
         inline std::ostream& operator<<(std::ostream &oss, const stats_event_names arg)
@@ -786,6 +776,8 @@ namespace core
             case stats_event_names::absolete_reg_error_uin : oss << "Reg_Error_UIN"; break;
             case stats_event_names::reg_error_other :
             case stats_event_names::absolete_reg_error_other : oss << "Reg_Error_Other"; break;
+            case stats_event_names::login_forgot_password:
+            case stats_event_names::absolete_login_forgot_password: oss << "Login_Forgot_Password"; break;
 
             // main window
             case stats_event_names::main_window_fullscreen :
@@ -800,14 +792,10 @@ namespace core
             case stats_event_names::absolete_groupchat_from_sidebar : oss << "Groupchat_FromSidebar"; break;
             case stats_event_names::groupchat_created :
             case stats_event_names::absolete_groupchat_created : oss << "Groupchat_Created"; break;
-            case stats_event_names::groupchat_create_rename :
-            case stats_event_names::absolete_groupchat_create_rename : oss << "Groupchat_Create_Rename"; break;
             case stats_event_names::groupchat_members_count :
             case stats_event_names::absolete_groupchat_members_count : oss << "Groupchat_MembersCount"; break;
             case stats_event_names::groupchat_leave :
             case stats_event_names::absolete_groupchat_leave : oss << "Groupchat_Leave"; break;
-            case stats_event_names::livechat_leave :
-            case stats_event_names::absolete_livechat_leave : oss << "Livechat_Leave"; break;
             case stats_event_names::groupchat_rename :
             case stats_event_names::absolete_groupchat_rename : oss << "Groupchat_Rename"; break;
             case stats_event_names::groupchat_avatar_changed :
@@ -816,8 +804,6 @@ namespace core
             case stats_event_names::absolete_groupchat_add_member_sidebar : oss << "Groupchat_Add_member_Sidebar"; break;
             case stats_event_names::groupchat_add_member_dialog :
             case stats_event_names::absolete_groupchat_add_member_dialog : oss << "Groupchat_Add_member_Dialog"; break;
-            case stats_event_names::groupchat_viewall :
-            case stats_event_names::absolete_groupchat_viewall : oss << "Groupchat_Viewall"; break;
 
             // filesharing
             case stats_event_names::filesharing_sent :
@@ -866,7 +852,9 @@ namespace core
             case stats_event_names::absolete_alert_viewall : oss << "Alert_ViewAll"; break;
             case stats_event_names::alert_close :
             case stats_event_names::absolete_alert_close : oss << "Alert_Close"; break;
-
+            case stats_event_names::alert_mail_common:  oss << "Alert_Mail_Common"; break;
+            case stats_event_names::alert_mail_letter: oss << "Alert_Mail_Letter"; break;
+            case stats_event_names::tray_mail: oss << "Tray_Mail"; break;
             // spam
             case stats_event_names::spam_cl_menu :
             case stats_event_names::absolete_spam_cl_menu : oss << "Spam_CL_Menu"; break;
@@ -874,8 +862,8 @@ namespace core
             case stats_event_names::absolete_spam_auth_widget : oss << "Spam_Auth_Widget"; break;
             case stats_event_names::spam_sidebar :
             case stats_event_names::absolete_spam_sidebar : oss << "Spam_Sidebar"; break;
-            case stats_event_names::spam_profile_page :
-            case stats_event_names::absolete_spam_profile_page : oss << "Spam_Profile_Page"; break;
+            case stats_event_names::spam_members_list: oss << "Spam_Members_List"; break;
+            case stats_event_names::spam_chat_avatar: oss << "Spam_Chat_Avatar"; break;
 
             // cl
             case stats_event_names::recents_close :
@@ -900,8 +888,6 @@ namespace core
             case stats_event_names::absolete_ignore_auth_widget : oss << "Ignore_Auth_Widget"; break;
             case stats_event_names::ignore_sidebar :
             case stats_event_names::absolete_ignore_sidebar: oss << "Ignore_Sidebar"; break;
-            case stats_event_names::ignore_profile_page :
-            case stats_event_names::absolete_ignore_profile_page : oss << "Ignore_Profile_Page"; break;
             case stats_event_names::ignorelist_open :
             case stats_event_names::absolete_ignorelist_open : oss << "Ignorelist_Open"; break;
             case stats_event_names::ignorelist_remove :
@@ -924,12 +910,12 @@ namespace core
             case stats_event_names::absolete_cl_search : oss << "CL_Search"; break;
             case stats_event_names::cl_load :
             case stats_event_names::absolete_cl_load : oss << "CL_Load"; break;
-            case stats_event_names::cl_search_openchatmessage :
-            case stats_event_names::absolete_cl_search_openchatmessage: oss << "CL_Search_OpenChatMessage"; break;
+            case stats_event_names::cl_search_openmessage :
+            case stats_event_names::absolete_cl_search_openmessage: oss << "CL_Search_OpenMessage"; break;
             case stats_event_names::cl_search_dialog :
             case stats_event_names::absolete_cl_search_dialog: oss << "CL_Search_Dialog"; break;
-            case stats_event_names::cl_search_dialog_open :
-            case stats_event_names::absolete_cl_search_dialog_open: oss << "CL_Search_Dialog_Open"; break;
+            case stats_event_names::cl_search_dialog_openmessage:
+            case stats_event_names::absolete_cl_search_dialog_openmessage: oss << "CL_Search_Dialog_OpenMessage"; break;
             case stats_event_names::cl_search_nohistory :
             case stats_event_names::absolete_cl_search_nohistory: oss << "CL_Search_NoHistory"; break;
 
@@ -960,7 +946,8 @@ namespace core
             case stats_event_names::profile_video_call :
             case stats_event_names::absolete_profile_video_call : oss << "Profile_Video_Call"; break;
             case stats_event_names::profile_sidebar :
-            case stats_event_names::absolete_profile_sidebar : oss << "profile_sidebar"; break;
+            case stats_event_names::absolete_profile_sidebar : oss << "Profile_Sidebar"; break;
+            case stats_event_names::profile_write_message: oss << "Profile_Write_Message"; break;
 
             case stats_event_names::add_user_profile_page :
             case stats_event_names::absolete_add_user_profile_page : oss << "Add_User_Profile_Page"; break;
@@ -971,10 +958,11 @@ namespace core
             // search, adding and auth
             case stats_event_names::add_user_auth_widget :
             case stats_event_names::absolete_add_user_auth_widget : oss << "Add_User_Auth_Widget"; break;
-            case stats_event_names::add_user_dialog :
-            case stats_event_names::absolete_add_user_dialog : oss << "Add_User_Dialog"; break;
             case stats_event_names::add_user_sidebar :
             case stats_event_names::absolete_add_user_sidebar: oss << "Add_User_Sidebar"; break;
+            case stats_event_names::unknowns_add_user: oss << "Unknowns_Add_User"; break;
+
+
             case stats_event_names::delete_auth_widget :
             case stats_event_names::absolete_delete_auth_widget : oss << "Delete_Auth_Widget"; break;
             case stats_event_names::delete_sidebar :
@@ -983,6 +971,8 @@ namespace core
             case stats_event_names::absolete_delete_cl_menu : oss << "Delete_CL_Menu"; break;
             case stats_event_names::delete_profile_page :
             case stats_event_names::absolete_delete_profile_page: oss << "Delete_Profile_Page"; break;
+            case stats_event_names::unknowns_close: oss << "Unknowns_Close"; break;
+            case stats_event_names::unknowns_closeall: oss << "Unknowns_CloseAll"; break;
 
             case stats_event_names::search_open_page :
             case stats_event_names::absolete_search_open_page : oss << "Search_Open_Page"; break;
@@ -1005,8 +995,6 @@ namespace core
             case stats_event_names::absolete_open_chat_search_recents : oss << "Open_Chat_Search_Recents"; break;
             case stats_event_names::open_chat_cl :
             case stats_event_names::absolete_open_chat_cl : oss << "Open_Chat_CL"; break;
-            case stats_event_names::open_chat_search_cl :
-            case stats_event_names::absolete_open_chat_search_cl : oss << "Open_Chat_Search_CL"; break;
 
             case stats_event_names::message_pending :
             case stats_event_names::absolete_message_pending : oss << "Message_Pending"; break;
@@ -1017,9 +1005,6 @@ namespace core
             case stats_event_names::open_popup_livechat :
             case stats_event_names::absolete_open_popup_livechat : oss << "open_popup_livechat"; break;
 
-
-            case stats_event_names::history_new_messages_botton :
-            case stats_event_names::absolete_history_new_messages_botton : oss << "History_New_Messages_Botton"; break;
             case stats_event_names::history_preload :
             case stats_event_names::absolete_history_preload : oss << "History_Preload"; break;
             case stats_event_names::history_delete :
@@ -1032,22 +1017,14 @@ namespace core
             case stats_event_names::feedback_error :
             case stats_event_names::absolete_feedback_error : oss << "Feedback_Error"; break;
 
-            case stats_event_names::voip_call :
-            case stats_event_names::absolete_voip_call : oss << "Voip_Call"; break;
-            case stats_event_names::voip_videocall :
-            case stats_event_names::absolete_voip_videocall : oss << "Voip_Videocall"; break;
-            case stats_event_names::voip_call_from_dialog :
-            case stats_event_names::absolete_voip_call_from_dialog : oss << "Voip_Call_From_Dialog"; break;
-            case stats_event_names::voip_videocall_from_dialog :
-            case stats_event_names::absolete_voip_videocall_from_dialog : oss << "Voip_Videocall_From_Dialog"; break;
-            case stats_event_names::voip_call_from_cl :
-            case stats_event_names::absolete_voip_call_from_cl : oss << "Voip_Call_From_CL"; break;
-            case stats_event_names::voip_call_from_profile :
-            case stats_event_names::absolete_voip_call_from_profile : oss << "Voip_Call_From_Profile"; break;
-            case stats_event_names::voip_videocall_from_profile :
-            case stats_event_names::absolete_voip_videocall_from_profile : oss << "Voip_Videocall_From_Profile"; break;
-            case stats_event_names::voip_call_from_search :
-            case stats_event_names::absolete_voip_call_from_search : oss << "Voip_Call_From_Search"; break;
+            case stats_event_names::call_from_chat :
+            case stats_event_names::absolete_call_from_chat: oss << "Call_From_Chat"; break;
+            case stats_event_names::videocall_from_chat:
+            case stats_event_names::absolete_videocall_from_chat: oss << "Videocall_From_Chat"; break;
+            case stats_event_names::call_from_cl_menu :
+            case stats_event_names::absolete_call_from_cl_menu : oss << "Call_From_CL_Meu"; break;
+            case stats_event_names::call_from_search_results :
+            case stats_event_names::absolete_call_from_search_results : oss << "Call_From_Search_Results"; break;
             case stats_event_names::voip_callback :
             case stats_event_names::absolete_voip_callback : oss << "Voip_Callback"; break;
             case stats_event_names::voip_incoming_call :
@@ -1141,8 +1118,6 @@ namespace core
             case stats_event_names::absolete_introduce_avatar_changed : oss << "Introduce_Avatar_Changed"; break;
             case stats_event_names::introduce_avatar_fail :
             case stats_event_names::absolete_introduce_avatar_fail : oss << "Introduce_Avatar_Fail"; break;
-            case stats_event_names::introduce_skip :
-            case stats_event_names::absolete_introduce_skip : oss << "Introduce_Skip"; break;
 
             // Masks 
             case stats_event_names::masks_open :
@@ -1181,7 +1156,11 @@ namespace core
             case stats_event_names::absolete_forward_send_preview : oss << "Forward_Send_Preview"; break;
             case stats_event_names::forward_messagescount :
             case stats_event_names::absolete_forward_messagescount : oss << "Forward_MessagesCount"; break;
-                    
+
+            case stats_event_names::merge_accounts: oss << "Merge_Accounts"; break;
+
+			case stats_event_names::chat_down_button: oss << "Chat_DownButton"; break;
+
             default:
                 assert(!"unknown core::stats_event_names ");
                 oss << "Unknown event " << (int)arg; break;

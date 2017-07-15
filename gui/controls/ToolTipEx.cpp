@@ -9,7 +9,7 @@
 #define TOOLTIP_ARROW_LEFT_OFFSET   Utils::scale_value(24)
 
 const QString TOOLTIP_STYLE =
-    "QLabel { color: #282828; font-size: 14dip; background-color: #FFFFFF;"
+    "QLabel { font-size: 14dip; background-color: #ffffff;"
     "padding-left: 14dip; padding-bottom: 14dip; } ";
 
 class ToolTipLabel : public QLabel
@@ -141,7 +141,6 @@ void ToolTipLabel::paintEvent(QPaintEvent* _e)
 		path.addPolygon(polygon);
 
 		QPainter painter(this);
-
-		painter.strokePath(path, QPen(QColor(0x28, 0x28, 0x28, (int32_t)(0.5 * 255)), Utils::scale_value(2)));
+        painter.strokePath(path, QPen(QColor("#d7d7d7"), Utils::scale_value(2)));
 	}
 }

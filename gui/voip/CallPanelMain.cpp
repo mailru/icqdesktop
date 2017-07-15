@@ -8,66 +8,73 @@
 #include "../controls/CommonStyle.h"
 #include "../main_window/contact_list/ContactListModel.h"
 #include "../utils/utils.h"
+#include "../main_window/contact_list/SelectionContactsForGroupChat.h"
+#include "../main_window/contact_list/ContactList.h"
+#include "../main_window/contact_list/ChatMembersModel.h"
+#include "../main_window/MainPage.h"
+#include "../utils/InterConnector.h"
 
 extern const QString vertSoundBg;
 extern const QString horSoundBg;
 
-const QString minButtonStyle      = "QPushButton { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_minimize_100.png); background-color: transparent; background-repeat: no-repeat; background-position: center; padding-top: 2dip; padding-bottom: 2dip; padding-left: 11dip; padding-right: 11dip; border: none; }"
-                                    "QPushButton:hover { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_minimize_100_hover.png); background-color: #d3d3d3; }"
-                                    "QPushButton:hover:pressed { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_minimize_100_active.png); background-color: #c8c8c8; }";
+const QString buttonGoChat =
+"QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip;"
+"border-image: url(:/resources/video_panel/videoctrl_chat_mini_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_chat_mini_100_hover.png); }";
 
-const QString maxButtonStyle      = "QPushButton { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_bigwindow_100.png); background-color: transparent; background-repeat: no-repeat; background-position: center; padding-top: 2dip; padding-bottom: 2dip; padding-left: 11dip; padding-right: 11dip; border: none; }"
-                                    "QPushButton:hover { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_bigwindow_100_hover.png); background-color: #d3d3d3; }"
-                                    "QPushButton:hover:pressed { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_bigwindow_100_active.png); background-color: #c8c8c8; }";
+const QString buttonCameraEnable =
+"QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip;"
+"border-image: url(:/resources/video_panel/videoctrl_camera_mini_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_camera_mini_100_hover.png); }";
 
-const QString maxButtonStyle2     = "QPushButton { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_smallwindow_100.png); background-color: transparent; background-repeat: no-repeat; background-position: center; padding-top: 2dip; padding-bottom: 2dip; padding-left: 11dip; padding-right: 11dip; border: none; }"
-                                    "QPushButton:hover { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_smallwindow_100.png); background-color: #d3d3d3; }"
-                                    "QPushButton:hover:pressed { width: 24dip; height: 24dip; background-image: url(:/resources/main_window/contr_smallwindow_100_active.png); background-color: #c8c8c8; }";
+const QString buttonCameraDisable =
+"QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip;"
+"border-image: url(:/resources/video_panel/videoctrl_camera_off_mini_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_camera_off_mini_100_hover.png); }";
 
-const QString buttonStyleEnabled  = "QPushButton { background-color: transparent; background-repeat: no-repeat; background-position: center; }"; 
+const QString buttonStopCall =
+"QPushButton { min-height: 40dip; max-height: 40dip; min-width: 40dip; max-width: 40dip;"
+"border-image: url(:/resources/contr_endcall_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/contr_endcall_100_hover.png); }";
 
-const QString buttonStyleDisabled = "QPushButton { background-color: transparent; background-repeat: no-repeat; background-position: center; }";
+const QString buttonMicEnable =
+"QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip;"
+"border-image: url(:/resources/video_panel/videoctrl_micro_mini_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_micro_mini_100_hover.png); }";
 
-const QString buttonGoChat        = "QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip; border-image: url(:/resources/video_panel/videoctrl_chat_mini_100.png); }"
-                                    "QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_chat_mini_100_hover.png); }"
-                                    "QPushButton:hover:pressed { border-image: url(:/resources/video_panel/videoctrl_chat_mini_100_active.png); }";
+const QString buttonMicDisable =
+"QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip;"
+"border-image: url(:/resources/video_panel/videoctrl_micro_off_mini_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_micro_off_mini_100_hover.png); }";
 
-const QString buttonCameraEnable  = "QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip; border-image: url(:/resources/video_panel/videoctrl_camera_mini_100.png); }"
-                                    "QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_camera_mini_100_hover.png); }"
-                                    "QPushButton:hover:pressed { border-image: url(:/resources/video_panel/videoctrl_camera_mini_100_active.png); }";
+const QString buttonSoundEnable =
+"QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip;"
+"border-image: url(:/resources/video_panel/videoctrl_volume_mini_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_volume_mini_100_hover.png); }";
 
-const QString buttonCameraDisable = "QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip; border-image: url(:/resources/video_panel/videoctrl_camera_off_mini_100.png); }"
-                                    "QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_camera_off_mini_100_hover.png); }"
-                                    "QPushButton:hover:pressed { border-image: url(:/resources/video_panel/videoctrl_camera_off_mini_100_active.png); }";
+const QString buttonSoundDisable =
+"QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip;"
+"border-image: url(:/resources/video_panel/videoctrl_volume_off_mini_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_volume_off_mini_100_hover.png); }";
 
-const QString buttonStopCall      = "QPushButton { min-height: 40dip; max-height: 40dip; min-width: 40dip; max-width: 40dip; border-image: url(:/resources/contr_endcall_100.png); }"
-                                    "QPushButton:hover { border-image: url(:/resources/contr_endcall_100_hover.png); }"
-                                    "QPushButton:hover:pressed { border-image: url(:/resources/contr_endcall_100_active.png); }";
+const QString loginNameLable =
+"QPushButton:!enabled { color: #000000; }";
 
-const QString buttonMicEnable     = "QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip; border-image: url(:/resources/video_panel/videoctrl_micro_mini_100.png); }"
-                                    "QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_micro_mini_100_hover.png); }"
-                                    "QPushButton:hover:pressed { border-image: url(:/resources/video_panel/videoctrl_micro_mini_100_active.png); }";
+const QString backToVideoStyleIcon =
+"QLabel {image: url(:/resources/video_panel/content_arrow_right_100.png); background-color: transparent;}";
 
-const QString buttonMicDisable    = "QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip; border-image: url(:/resources/video_panel/videoctrl_micro_off_mini_100.png); }"
-                                    "QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_micro_off_mini_100_hover.png); }"
-                                    "QPushButton:hover:pressed { border-image: url(:/resources/video_panel/videoctrl_micro_off_mini_100_active.png); }";
+const QString backToVideoStyle =
+"QPushButton { width: auto; height: 24dip;"
+"background-color: transparent; padding-left: 24dip; padding-right: 14dip;"
+"border: none; font-size: 14dip; color: #866f3c; margin-bottom: 5dip; margin-top: 5dip; text-align: left;}"
+"QPushButton:hover { width: auto; height: 24dip; background-color: rgba(242, 196, 46, 90%); }"
+"QPushButton:hover:pressed { width: auto; height: 24dip; background-color: rgba(242, 196, 46, 90%); }";
 
-const QString buttonSoundEnable   = "QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip; border-image: url(:/resources/video_panel/videoctrl_volume_mini_100.png); }"
-                                    "QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_volume_mini_100_hover.png); }"
-                                    "QPushButton:hover:pressed { border-image: url(:/resources/video_panel/videoctrl_volume_mini_100_active.png); }";
+const QString buttonAddChat =
+"QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip;"
+"border-image: url(:/resources/video_panel/videoctrl_add_mini_100.png); }"
+"QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_add_mini_100_hover.png); }";
 
-const QString buttonSoundDisable  = "QPushButton { min-width: 40dip; max-width: 40dip; min-height: 40dip; max-height: 40dip; border-image: url(:/resources/video_panel/videoctrl_volume_off_mini_100.png); }"
-                                    "QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_volume_off_mini_100_hover.png); }"
-                                    "QPushButton:hover:pressed { border-image: url(:/resources/video_panel/videoctrl_volume_off_mini_100_active.png); }";
-
-const QString loginNameLable      = "QPushButton:!enabled { color: rgb(0,0,0);}";
-
-const QString backToVideoStyleIcon = "QLabel {image: url(:/resources/video_panel/content_arrow_right_100.png); background-color: transparent;}";
-
-
-const QString backToVideoStyle = "QPushButton { width: auto; height: 24dip; background-color: transparent; padding-left: 24dip; padding-right: 14dip; border: none; font-size: 14dip; color: #866f3c; margin-bottom: 5dip; margin-top: 5dip; text-align: left;}"
-								 "QPushButton:hover  { width: auto; height: 24dip; background-color: rgba(242, 196, 46, 90%); }"
-								 "QPushButton:hover:pressed { width: auto; height: 24dip; background-color: rgba(242, 196, 46, 90%); }";
 
 namespace
 {
@@ -77,27 +84,10 @@ namespace
         kmenu_item_mic = 1,
         kmenu_item_cam = 2
     };
-
-    QString getTitleStyle()
-    {
-        return QString(" background: transparent; color: %1; font-size: 15dip; margin-left: 8dip; ")
-            .arg(Utils::rgbaStringFromColor(Ui::CommonStyle::getTextCommonColor()));
-    };
 }
-#define ICON_SIZE Utils::scale_value(20)
 
-#define PANEL_DEF_COLOR_R 127
-#define PANEL_DEF_COLOR_G 127
-#define PANEL_DEF_COLOR_B 127
-#define PANEL_DEF_COLOR_A 255
-
-#define COLOR_R_VAL(x) (((x) & 0xff000000) >> 24)
-#define COLOR_G_VAL(x) (((x) & 0x00ff0000) >> 16)
-#define COLOR_B_VAL(x) (((x) & 0x0000ff00) >>  8)
-#define COLOR_A_VAL(x) (((x) & 0x000000ff)      )
-
-#define TOP_PANEL_BUTTONS_W              Utils::scale_value(46)
-#define TOP_PANEL_TITLE_W                Utils::scale_value(80)
+#define TOP_PANEL_COLOR                  QColor("#fddc6f")
+#define TOP_PANEL_NAME_COLOR             QColor("#866f3c")
 #define BOTTOM_PANEL_BETWEEN_BUTTONS_GAP Utils::scale_value(32)
 #define TOP_PANEL_SECURE_CALL_OFFSET     Utils::scale_value(8)
 
@@ -107,8 +97,8 @@ namespace
 #define SECURE_BTN_TEXT_W      Utils::scale_value(50)
 #define SECURE_BTN_ICON2TEXT_W TOP_PANEL_SECURE_CALL_OFFSET
 
-#define COLOR_SECURE_BTN_ACTIVE   QColor(0xf5, 0xc8, 0x36, 0xff)
-#define COLOR_SECURE_BTN_INACTIVE QColor(0, 0, 0, 0)
+#define COLOR_SECURE_BTN_ACTIVE   QColor("#f5c836")
+#define COLOR_SECURE_BTN_INACTIVE Qt::transparent
 
 #define BACK_TO_VIDEO_RIGHT_PADDING   18
 #define BACK_TO_VIDEO_ICON_TEXT_SPACE 6
@@ -123,22 +113,15 @@ extern std::string getFotmatedTime(unsigned ts);
 Ui::SliderEx::SliderEx(QWidget* _parent)
     : QWidget(_parent)
 {
-    if (this->objectName().isEmpty())
-        this->setObjectName(QStringLiteral("sliderEx"));
-    this->resize(252, 45);
-    horizontalLayout_ = new QHBoxLayout(this);
-    horizontalLayout_->setSpacing(0);
-    horizontalLayout_->setContentsMargins(0, 0, 0, 0);
+    horizontalLayout_ = Utils::emptyHLayout(this);
 
     sliderIcon_ = new voipTools::BoundBox<PushButton_t>(this);
-    QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    sliderIcon_->setSizePolicy(sizePolicy);
+    sliderIcon_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     
     horizontalLayout_->addWidget(sliderIcon_);
     
     slider_ = new voipTools::BoundBox<QSlider>(this);
-    QSizePolicy sizePolicy1(QSizePolicy::Preferred, QSizePolicy::Expanding);
-    slider_->setSizePolicy(sizePolicy1);
+    slider_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     slider_->setOrientation(Qt::Horizontal);
     
     horizontalLayout_->addWidget(slider_);
@@ -253,12 +236,10 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
 {
     if (_muted)
     {
-        Utils::ApplyStyle(&_btn, buttonStyleEnabled);
         Utils::ApplyStyle(&_btn, buttonSoundDisable);
     }
     else
     {
-        Utils::ApplyStyle(&_btn, buttonStyleDisabled);
         Utils::ApplyStyle(&_btn, buttonSoundEnable);
     }
 })
@@ -266,12 +247,10 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
 {
     if (_muted)
     {
-        Utils::ApplyStyle(&_btn, buttonStyleEnabled);
         Utils::ApplyStyle(&_btn, buttonSoundDisable);
     }
     else
     {
-        Utils::ApplyStyle(&_btn, buttonStyleDisabled);
         Utils::ApplyStyle(&_btn, buttonSoundEnable);
     }
 })
@@ -280,9 +259,7 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
 {
     setFixedHeight(format_.topPartHeight + format_.bottomPartHeight);
     {
-        QVBoxLayout* l = new QVBoxLayout();
-        l->setSpacing(0);
-        l->setContentsMargins(0, 0, 0, 0);
+        QVBoxLayout* l = Utils::emptyVLayout();
         setLayout(l);
     }
 
@@ -291,93 +268,66 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
     }
 
     {
-        QVBoxLayout* l = new QVBoxLayout();
-        l->setSpacing(0);
-        l->setContentsMargins(0, 0, 0, 0);
+        QVBoxLayout* l = Utils::emptyVLayout();
         rootWidget_->setLayout(l);
     }
-
-    {
-        std::stringstream rootWidgetStyle;
-        rootWidgetStyle << 
-            "QWidget { background: rgba(" << COLOR_R_VAL(format_.rgba) <<
-            "," << COLOR_G_VAL(format_.rgba) <<
-            "," << COLOR_B_VAL(format_.rgba) <<
-            "," << COLOR_A_VAL(format_.rgba) <<
-            "); }";
-
-        Utils::ApplyStyle(rootWidget_, rootWidgetStyle.str().c_str());
-    }
+    
+    QString style = QString("QWidget { background: %1; }").arg(Utils::rgbaStringFromColor(TOP_PANEL_COLOR));
+    Utils::ApplyStyle(rootWidget_, style);
 
     if (!platform::is_apple()) 
     { // top part
         QWidget* topPartWidget = new QWidget(rootWidget_);
         topPartWidget->setFixedHeight(format_.topPartHeight);
         {
-            QHBoxLayout* l = new QHBoxLayout();
-            l->setSpacing(0);
-            l->setContentsMargins(0, 0, 0, 0);
+            QHBoxLayout* l = Utils::emptyHLayout();
             topPartWidget->setLayout(l);
         }
 
         if (format_.topPartFormat & kVPH_ShowLogo)
         {
             QWidget* logoWidg = new QWidget(topPartWidget);
-            logoWidg->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+            logoWidg->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             {
-                QHBoxLayout* l = new QHBoxLayout();
-                l->setSpacing(0);
-                l->setContentsMargins(0, 0, 0, 0);
+                QHBoxLayout* l = Utils::emptyHLayout();
                 l->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
                 logoWidg->setLayout(l);
             }
             topPartWidget->layout()->addWidget(logoWidg);
 
-            QSizePolicy sizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-            sizePolicy.setHorizontalStretch(0);
-            sizePolicy.setVerticalStretch(0);
-
             QPushButton* logoBtn = new voipTools::BoundBox<QPushButton>(logoWidg);
             logoBtn->setObjectName("windowIcon");
+            logoBtn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             logoBtn->setAttribute(Qt::WA_TransparentForMouseEvents);
             logoWidg->layout()->addWidget(logoBtn);
 
-            sizePolicy.setHeightForWidth(logoBtn->sizePolicy().hasHeightForWidth());
-            logoBtn->setSizePolicy(sizePolicy);
-
             QLabel* title = new voipTools::BoundBox<QLabel>(logoWidg);
-            Utils::ApplyStyle(title, getTitleStyle());
-            title->setText("ICQ");
+            title->setFont(Fonts::appFontScaled(14, Fonts::FontWeight::Medium));
+            title->setContentsMargins(Utils::scale_value(8), 0, 0, 0);
+            title->setText(build::is_icq() ? QT_TRANSLATE_NOOP("title", "ICQ") : QT_TRANSLATE_NOOP("title", "Mail.Ru Agent"));
             title->setAttribute(Qt::WA_TransparentForMouseEvents);
             title->setMouseTracking(true);
-            title->setFixedWidth(TOP_PANEL_TITLE_W);
             logoWidg->layout()->addWidget(title);
         }
 
         if (format_.topPartFormat & kVPH_ShowName)
         {
             QWidget* buttonWidg = new QWidget(topPartWidget);
-            buttonWidg->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+            buttonWidg->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             {
-                QHBoxLayout* l = new QHBoxLayout();
-                l->setSpacing(0);
-                l->setContentsMargins(0, 0, 0, 0);
+                QHBoxLayout* l = Utils::emptyHLayout();
                 l->setAlignment(Qt::AlignCenter);
                 buttonWidg->setLayout(l);
             }
             topPartWidget->layout()->addWidget(buttonWidg);
 
-            QFont f = QApplication::font();
-            f.setPixelSize(format_.topPartFontSize);
-            f.setStyleStrategy(QFont::PreferAntialias);
-
             nameLabel_ = new voipTools::BoundBox<PushButton_t>(buttonWidg);
-            nameLabel_->setFont(f);
+            nameLabel_->setFont(Fonts::appFontScaled(14));
             nameLabel_->setAlignment(Qt::AlignCenter);
             nameLabel_->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding));
             nameLabel_->setPostfix(std::string(" " + getFotmatedTime(0)).c_str());
-            nameLabel_->setFixedWidth(nameLabel_->precalculateWidth() + 2*SECURE_BTN_BORDER_W);
-            nameLabel_->setPostfixColor(QColor(0x86, 0x6f, 0x3c, 0xff));
+            nameLabel_->setFixedWidth(nameLabel_->precalculateWidth() + 2 * SECURE_BTN_BORDER_W);
+            nameLabel_->setPostfixColor(TOP_PANEL_NAME_COLOR);
             
             // Make disable text color also black.
             Utils::ApplyStyle(nameLabel_, loginNameLable);
@@ -388,11 +338,9 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
 
         {
             QWidget* sysWidg = new QWidget(topPartWidget);
-            sysWidg->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+            sysWidg->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             {
-                QHBoxLayout* l = new QHBoxLayout();
-                l->setSpacing(0);
-                l->setContentsMargins(0, 0, 0, 0);
+                QHBoxLayout* l = Utils::emptyHLayout();
                 l->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
                 sysWidg->setLayout(l);
             }
@@ -400,12 +348,12 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
 
             if (format_.topPartFormat & kVPH_ShowMin)
             {
-                addButton<QPushButton>(*sysWidg, minButtonStyle, SLOT(_onMinimize()));
+                addButton<QPushButton>(*sysWidg, Ui::CommonStyle::getMinimizeButtonStyle(), SLOT(_onMinimize()));
             }
 
             if (format_.topPartFormat & kVPH_ShowMax)
             {
-                buttonMaximize_ = addButton<QPushButton>(*sysWidg, maxButtonStyle, SLOT(_onMaximize()));
+                buttonMaximize_ = addButton<QPushButton>(*sysWidg, Ui::CommonStyle::getMaximizeButtonStyle(), SLOT(_onMaximize()));
             }
 
             if (format_.topPartFormat & kVPH_ShowClose)
@@ -421,13 +369,13 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
         QWidget* bottomPartWidget = new voipTools::BoundBox<QWidget>(rootWidget_);
         bottomPartWidget->setFixedHeight(format_.bottomPartHeight);
         {
-            QHBoxLayout* l = new QHBoxLayout();
-            l->setSpacing(0);
-            l->setContentsMargins(0, 0, 0, 0);
+            QHBoxLayout* l = Utils::emptyHLayout();
             bottomPartWidget->setLayout(l);
         }
         bottomPartWidget->layout()->setAlignment(Qt::AlignCenter);
 
+        addButton<QPushButton>(*bottomPartWidget, buttonAddChat, SLOT(addUserToVideoCall()));
+        bottomPartWidget->layout()->setSpacing(BOTTOM_PANEL_BETWEEN_BUTTONS_GAP);
         addButton<QPushButton>(*bottomPartWidget, buttonGoChat,        SLOT(onClickGoChat()));
         bottomPartWidget->layout()->setSpacing(BOTTOM_PANEL_BETWEEN_BUTTONS_GAP);
         buttonLocalCamera_ = addButton<QPushButton>(*bottomPartWidget, buttonCameraDisable, SLOT(onCameraTurn()));
@@ -436,6 +384,7 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
         bottomPartWidget->layout()->setSpacing(BOTTOM_PANEL_BETWEEN_BUTTONS_GAP);
         buttonLocalMic_ = addButton<QPushButton>(*bottomPartWidget, buttonMicDisable,    SLOT(onMicTurn()));
         bottomPartWidget->layout()->setSpacing(BOTTOM_PANEL_BETWEEN_BUTTONS_GAP);
+
         
         // Volume controls group.
         volumeGroup = addVolumeGroup(*bottomPartWidget, false, Utils::scale_value(660));
@@ -452,7 +401,7 @@ Ui::CallPanelMainEx::CallPanelMainEx(QWidget* _parent, const CallPanelMainFormat
         rootWidget_->layout()->addWidget(bottomPartWidget);
     }
 
-    QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallNameChanged(const std::vector<voip_manager::Contact>&)), this, SLOT(onVoipCallNameChanged(const std::vector<voip_manager::Contact>&)), Qt::DirectConnection);
+    QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallNameChanged(const voip_manager::ContactsList&)), this, SLOT(onVoipCallNameChanged(const voip_manager::ContactsList&)), Qt::DirectConnection);
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipMediaLocalVideo(bool)), this, SLOT(onVoipMediaLocalVideo(bool)), Qt::DirectConnection);
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipMediaLocalAudio(bool)), this, SLOT(onVoipMediaLocalAudio(bool)), Qt::DirectConnection);
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipUpdateCipherState(const voip_manager::CipherState&)), this, SLOT(onVoipUpdateCipherState(const voip_manager::CipherState&)), Qt::DirectConnection);
@@ -474,7 +423,7 @@ void Ui::CallPanelMainEx::processOnWindowMaximized()
 {
     if (buttonMaximize_)
     {
-        Utils::ApplyStyle(buttonMaximize_, maxButtonStyle2);
+        Utils::ApplyStyle(buttonMaximize_, Ui::CommonStyle::getRestoreButtonStyle());
     }
 }
 
@@ -482,7 +431,7 @@ void Ui::CallPanelMainEx::processOnWindowNormalled()
 {
     if (buttonMaximize_)
     {
-        Utils::ApplyStyle(buttonMaximize_, maxButtonStyle);
+        Utils::ApplyStyle(buttonMaximize_, Ui::CommonStyle::getMaximizeButtonStyle());
     }
 }
 
@@ -516,14 +465,14 @@ void Ui::CallPanelMainEx::_onClose()
     emit onClose();
 }
 
-void Ui::CallPanelMainEx::onVoipCallNameChanged(const std::vector<voip_manager::Contact>& _contacts)
+void Ui::CallPanelMainEx::onVoipCallNameChanged(const voip_manager::ContactsList& _contacts)
 {
-    if(_contacts.empty())
+    if(_contacts.contacts.empty())
     {
         return;
     }
 
-    activeContact_ = _contacts[0].contact;
+    activeContact_ = _contacts.contacts[0].contact;
     QString friendlyName = Logic::getContactListModel()->getDisplayName(activeContact_.c_str());
     friendlyName += " -";
 
@@ -545,12 +494,10 @@ void Ui::CallPanelMainEx::onVoipMediaLocalVideo(bool _enabled)
     {
         if (_enabled)
         {
-            Utils::ApplyStyle(buttonLocalCamera_, buttonStyleEnabled);
             Utils::ApplyStyle(buttonLocalCamera_, buttonCameraEnable);
         }
         else
         {
-            Utils::ApplyStyle(buttonLocalCamera_, buttonStyleDisabled);
             Utils::ApplyStyle(buttonLocalCamera_, buttonCameraDisable);
         }
     }
@@ -562,12 +509,10 @@ void Ui::CallPanelMainEx::onVoipMediaLocalAudio(bool _enabled)
     {
         if (_enabled)
         {
-            Utils::ApplyStyle(buttonLocalMic_, buttonStyleEnabled);
             Utils::ApplyStyle(buttonLocalMic_, buttonMicEnable);
         }
         else
         {
-            Utils::ApplyStyle(buttonLocalMic_, buttonStyleDisabled);
             Utils::ApplyStyle(buttonLocalMic_, buttonMicDisable);
         }
     }
@@ -588,7 +533,7 @@ ButtonType* Ui::CallPanelMainEx::addButton(
 {
     ButtonType* btn = new voipTools::BoundBox<ButtonType>(&_parentWidget);
     Utils::ApplyStyle(btn, _propertyName);
-    btn->setSizePolicy(QSizePolicy(rightAlignment ? QSizePolicy::Expanding : QSizePolicy::Preferred, QSizePolicy::Expanding));
+    btn->setSizePolicy(rightAlignment ? QSizePolicy::Expanding : QSizePolicy::Preferred, QSizePolicy::Expanding);
 
     // For volume control we have blinking with cursor under mac.
     // We will use dfault cursor to fix it.
@@ -600,7 +545,6 @@ ButtonType* Ui::CallPanelMainEx::addButton(
 
     if (!rightAlignment)
     {
-        btn->setFixedWidth(TOP_PANEL_BUTTONS_W);
         _parentWidget.layout()->addWidget(btn);
     }
     else
@@ -613,6 +557,9 @@ ButtonType* Ui::CallPanelMainEx::addButton(
     }
     connect(btn, SIGNAL(clicked()), this, _slot, Qt::QueuedConnection);
 
+    // Disable dragging using using buttons.
+    btn->setAttribute(Qt::WA_NoMousePropagation);
+
     return btn;
 }
 
@@ -622,17 +569,15 @@ Ui::VolumeGroup* Ui::CallPanelMainEx::addVolumeGroup(QWidget& _parentWidget,  bo
     {
         if (_muted)
         {
-            Utils::ApplyStyle(&_btn, buttonStyleEnabled);
             Utils::ApplyStyle(&_btn, buttonSoundDisable);
         }
         else
         {
-            Utils::ApplyStyle(&_btn, buttonStyleDisabled);
             Utils::ApplyStyle(&_btn, buttonSoundEnable);
         }
     }, verticalSize);
     
-    volumeGroup->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding));
+    volumeGroup->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     
     if (!rightAlignment)
     {
@@ -650,7 +595,10 @@ Ui::VolumeGroup* Ui::CallPanelMainEx::addVolumeGroup(QWidget& _parentWidget,  bo
             qobject_cast<QBoxLayout*>(_parentWidget.layout())->addWidget(volumeGroup, 1, Qt::AlignRight);
         }
     }
-    
+
+    // Disable dragging using using buttons.
+    volumeGroup->setAttribute(Qt::WA_NoMousePropagation);
+
     return volumeGroup;
 }
 
@@ -797,4 +745,9 @@ void Ui::CallPanelMainEx::onSecureCallClicked()
         secureCallWnd_->raise();
         secureCallWnd_->setFocus(Qt::NoFocusReason);
     }
+}
+
+void Ui::CallPanelMainEx::addUserToVideoCall()
+{
+    showAddUserToVideoConverenceDialogMainWindow(this, parentWidget());
 }

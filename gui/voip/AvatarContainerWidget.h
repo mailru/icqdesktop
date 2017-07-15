@@ -12,7 +12,7 @@ namespace Ui {
     Q_SIGNALS:
 
     public:
-        AvatarContainerWidget(QWidget* _parent, int avatarSize, int _xOffset = 0, int _yOffset = 0, int _borderW = 0);
+        AvatarContainerWidget(QWidget* _parent, int avatarSize, int _xOffset = 0, int _yOffset = 0);
         virtual ~AvatarContainerWidget();
 
         void setOverlap(float _per01);
@@ -35,8 +35,6 @@ namespace Ui {
         int avatarSize_;
         int xOffset_; 
         int yOffset_;
-        //int borderW_;
-        QPixmap* border_;
 
         void addAvatarTo(const std::string& _userId, std::map<std::string, Logic::QPixmapSCptr>& _avatars);
         std::vector<QRect> calculateAvatarPositions(const QRect& _rcParent, QSize& _avatarsSize);

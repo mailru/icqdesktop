@@ -27,11 +27,11 @@ namespace Ui
 		void push_back(std::shared_ptr<TewLex> _lex);
 		int draw(QPainter& _painter, int _x, int _y, int _w);
         int draw(QPainter& _painter, int _x, int _y, int _w, int _h);
-		int width(QPainter& _painter);
-        int height(QPainter& _painter);
+		int width(const QFontMetrics& _painter);
+        int height(const QFontMetrics& _painter);
         void setKerning(int _kerning) { kerning_ = _kerning; }
 
-        static bool compileText(const QString& _text, CompiledText& _result, bool _multiline);
+        static bool compileText(const QString& _text, CompiledText& _result, bool _multiline, bool _ellipsis);
 	};
 
 	enum TextEmojiAlign
@@ -55,6 +55,7 @@ namespace Ui
         QString                         sourceText_;
 		int								sizeToBaseline_;
 		int								descent_;
+        bool                            fading_;
         bool                            ellipsis_;
         bool                            multiline_;
         bool                            selectable_;
@@ -75,7 +76,7 @@ namespace Ui
         void setSize(int, int);
 
     public:
-        TextEmojiWidget(QWidget* _parent, Fonts::FontFamily _fontFamily, Fonts::FontWeight _fontWeight, int _fontSize, const QColor& _color, int _sizeToBaseline = -1);
+        TextEmojiWidget(QWidget* _parent, const QFont& _font, const QColor& _color, int _sizeToBaseline = -1);
 		virtual ~TextEmojiWidget();
 
 		int ascent();
@@ -87,6 +88,7 @@ namespace Ui
 
         void setColor(const QColor& _color);
 
+        void setFading(bool _v);
         void setEllipsis(bool _v);
         void setMultiline(bool _v);
         void setSelectable(bool _v);
@@ -96,6 +98,8 @@ namespace Ui
         void setSizePolicy(QSizePolicy::Policy _hor, QSizePolicy::Policy _ver);
 
         void setSourceText(const QString& source);
+
+        int getCompiledWidth() const;
 
     private:
         static TextEmojiWidgetEvents& events();

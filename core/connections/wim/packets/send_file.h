@@ -46,8 +46,6 @@ namespace core
 
         public:
 
-            virtual int32_t execute() override;
-
             send_file(
                 const wim_packet_params& _params, 
                 const send_file_params& _chunk, 

@@ -29,57 +29,26 @@
 
 namespace
 {
-    const int top_margin = 16;
     const int avatar_size = 180;
-    const int left_margin = 24;
+    const int HOR_PADDING = 16;
+    const int LEFT_MARGIN = 52;
     const int button_size = 40;
     const int big_button_size = 48;
-    const int back_button_spacing = 10;
-    const int text_top_margin = 21;
-    const int more_left_margin = 4;
-    const int right_margin = 48;
-    const int more_right_margin = 24;
-    const int desc_length = 100;
+    const int back_button_spacing = 8;
     const int members_count = 5;
     const int ignore_margins = 16;
     const int ignore_spacing = 7;
     const int buttons_spacing = 16;
     const int buttons_top_margin = 24;
     const int buttons_margin = 16;
-    const int button_bottom_space = 16;
     const int button_height = 44;
     const int button_offset = 28;
-    const int reverse_margin = -20;
-    const int line_vertical_margin = 6;
+    const int line_vertical_margin = 4;
     const int avatar_botton_spacing = 10;
-    const int members_space = 10;
     const int name_margin = 18;
     const int edit_top_margin = 14;
-    const int checkbox_width = 44;
-    const int checkbox_height = 24;
-    const int edit_right_margin = 12;
-    const int save_button_offset = 32;
+    const int save_button_offset = 16;
     const int name_desc_space = 40;
-
-    const static QString transparent_background = "background: transparent;";
-
-    QString saveButtonStyle()
-    {
-        return QString(
-            "QPushButton {"
-            "color: #ffffff;"
-            "font-size: 16dip;"
-            "background-color: #579e1c;"
-            "border-style: none;"
-            "margin: 0;"
-            "padding-left: 20dip; padding-right: 20dip;"
-            "min-width: 100dip;"
-            "max-height: 40dip; min-height: 40dip;"
-            "text-align: center; }"
-            "QPushButton:hover { background-color: #57a813; }"
-            "QPushButton:pressed { background-color: #50901b; } "
-            );
-    }
 }
 
 namespace Ui
@@ -88,17 +57,18 @@ namespace Ui
         : QWidget(parent)
         , attachPhone_(false)
     {
-        auto rootLayout = emptyHLayout(this);
-        rootLayout->addSpacerItem(new QSpacerItem(leftMargin, 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+        auto rootLayout = Utils::emptyHLayout(this);
+        rootLayout->setContentsMargins(leftMargin, 0, 0, 0);
         {
-            auto vLayout = emptyVLayout();
+            auto vLayout = Utils::emptyVLayout();
+            vLayout->setContentsMargins(0, 0, 0, Utils::scale_value(HOR_PADDING));
             header_ = new QLabel(this);
             QPalette p;
-            p.setColor(QPalette::Foreground, QColor("#696969"));
+            p.setColor(QPalette::Foreground, QColor("#767676"));
             header_->setFont(Fonts::appFontScaled(14));
             header_->setPalette(p);
             vLayout->addWidget(header_);
-            info_ = new TextEmojiWidget(this, Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), Utils::scale_value(18), QColor("#000000"));
+            info_ = new TextEmojiWidget(this, Fonts::appFontScaled(18), CommonStyle::getTextCommonColor());
             connect(info_, SIGNAL(rightClicked()), this, SLOT(menuRequested()), Qt::QueuedConnection);
             info_->setSelectable(true);
             vLayout->addWidget(info_);
@@ -108,7 +78,6 @@ namespace Ui
             phoneInfo_->setPalette(p);
             vLayout->addWidget(phoneInfo_);
             phoneInfo_->hide();
-            vLayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(button_bottom_space), QSizePolicy::Preferred, QSizePolicy::Fixed));
             rootLayout->addLayout(vLayout);
             Utils::grabTouchWidget(header_);
             Utils::grabTouchWidget(info_);
@@ -120,7 +89,7 @@ namespace Ui
     void InfoPlate::menuRequested()
     {
         ContextMenu* menu = new ContextMenu(this);
-        menu->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_copy_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy"), QVariant());
+        menu->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/copy_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy"), QVariant());
         connect(menu, &ContextMenu::triggered, this, &InfoPlate::menu, Qt::QueuedConnection);
         menu->popup(QCursor::pos());
     }
@@ -167,7 +136,7 @@ namespace Ui
         if (!infoStr_.startsWith(prefix))
             infoStr_ = prefix + infoStr_;
 
-        info_->setText(infoStr_, QColor("#000000"));
+        info_->setText(infoStr_, CommonStyle::getTextCommonColor());
         info_->adjustSize();
         phoneInfo_->hide();
     }
@@ -183,6 +152,11 @@ namespace Ui
         info_->setSourceText(infoStr_);
     }
 
+    QString InfoPlate::getInfoText()
+    {
+        return (info_ ? info_->text() : "");
+    }
+    
     ProfilePage::ProfilePage(QWidget* parent)
         : SidebarPage(parent)
         , info_(std::make_shared<Data::ChatInfo>())
@@ -199,49 +173,45 @@ namespace Ui
         QPainter p(this);
         style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
         QWidget::paintEvent(_e);
-        if (myInfo_)
-            p.fillRect(rect(), Qt::white);
-        else
-            p.fillRect(rect(), CommonStyle::getFrameTransparency());
-        p.setPen(QPen(QColor("#dadada"), Utils::scale_value(1)));
+        p.fillRect(rect(), CommonStyle::getFrameColor());
+        p.setPen(QPen(QColor("#d7d7d7"), Utils::scale_value(1)));
         p.drawLine(contentsRect().topLeft(), contentsRect().bottomLeft());
     }
 
     void ProfilePage::updateWidth()
     {
-        Line_->setLineWidth(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin) - rightWidget_->width());
+        Line_->setLineWidth(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
         if (myInfo_ && width() >= Utils::scale_value(596))
         {
-            name_->adjustHeight(width_ - Utils::scale_value(button_size + back_button_spacing + right_margin + left_margin) - rightWidget_->width() - editLabel_->width());
+            name_->adjustHeight(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING) - editLabel_->width());
         }
         else if (width() >= Utils::scale_value(596))
         {
-            nameEdit_->adjustHeight(width_ - Utils::scale_value(button_size + back_button_spacing + right_margin + left_margin) - rightWidget_->width());
-            descriptionEdit_->adjustHeight(width_ - Utils::scale_value(button_size + back_button_spacing + right_margin + left_margin) - rightWidget_->width());
-            saveButtonSpace_->setFixedWidth(width_ - Utils::scale_value(button_size + back_button_spacing + left_margin + Utils::scale_value(8)) - rightWidget_->width() - saveButton_->width());
+            nameEdit_->adjustHeight(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+            descriptionEdit_->adjustHeight(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+            saveButtonSpace_->setFixedWidth(width_ - Utils::scale_value(LEFT_MARGIN + HOR_PADDING + Utils::scale_value(8)) - saveButton_->width());
         }
         else
         {
-            name_->adjustHeight(width_ - Utils::scale_value(button_size + back_button_spacing + right_margin) - rightWidget_->width());
-            nameEdit_->adjustHeight(width_ - Utils::scale_value(button_size + back_button_spacing + right_margin) - rightWidget_->width());
-            descriptionEdit_->adjustHeight(width_ - Utils::scale_value(button_size + back_button_spacing + right_margin) - rightWidget_->width());
-            saveButtonSpace_->setFixedWidth(width_ - Utils::scale_value(button_size + back_button_spacing + right_margin) - rightWidget_->width() - saveButton_->width());
+            name_->adjustHeight(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+            nameEdit_->adjustHeight(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+            descriptionEdit_->adjustHeight(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+            saveButtonSpace_->setFixedWidth(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING) - saveButton_->width());
         }
 
-        ignoreWidget_->setFixedWidth(width_ - Utils::scale_value(left_margin + right_margin + back_button_spacing) - rightWidget_->width());
-        uin_->elideText(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin + left_margin + button_offset));
-        phone_->elideText(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin + left_margin + button_offset));
-        firstName_->elideText(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin + left_margin + button_offset));
-        lastName_->elideText(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin + left_margin + button_offset));
-        nickName_->elideText(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin + left_margin + button_offset));
-        birthday_->elideText(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin + left_margin + button_offset));
-        city_->elideText(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin + left_margin + button_offset));
-        country_->elideText(width_ - Utils::scale_value(back_button_spacing + button_size + right_margin + left_margin + button_offset));
+        ignoreWidget_->setFixedWidth(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+        uin_->elideText(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+        phone_->elideText(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+        firstName_->elideText(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+        lastName_->elideText(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+        nickName_->elideText(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+        birthday_->elideText(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+        city_->elideText(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
+        country_->elideText(width_ - Utils::scale_value(LEFT_MARGIN + 2 * HOR_PADDING));
 
-        int diff = rightWidget_->width() == 0? Utils::scale_value(left_margin) : 0;
-        renameContact_->setFixedWidth(width_ - Utils::scale_value(right_margin + left_margin) + diff);
-        ignoreListButton->setFixedWidth(width_ - Utils::scale_value(right_margin + left_margin) + diff);
-        attachOldAcc->setFixedWidth(width_ - Utils::scale_value(right_margin + left_margin) + diff);
+        renameContact_->setFixedWidth(width_ - Utils::scale_value(2 * HOR_PADDING));
+        ignoreListButton->setFixedWidth(width_ - Utils::scale_value(2 * HOR_PADDING));
+        attachOldAcc->setFixedWidth(width_ - Utils::scale_value(2 * HOR_PADDING));
         avatar_->update();
     }
 
@@ -271,7 +241,15 @@ namespace Ui
         currentAimId_ = fixedAimId;
         myInfo_ = (MyInfo()->aimId() == currentAimId_ && aimId.isEmpty());
         
-        backButton_->setVisible(!myInfo_);
+        QString oldName = Logic::getContactListModel()->getDisplayName(fixedAimId);
+        if (!newContact && myInfo_)
+        {
+            oldName = nickName_->getInfoText();
+            if (!nickName_->getInfoText().isEmpty())
+            {
+                oldName = nickName_->getInfoText();
+            }
+        }
         
         Logic::GetAvatarStorage()->ForceRequest(currentAimId_, Utils::scale_value(avatar_size));
 
@@ -287,6 +265,7 @@ namespace Ui
         GetDispatcher()->post_message_to_core("load_flags", helper.get());
 
         attachOldAcc->setVisible(myInfo_ && connectOldVisible_);
+        backButton_->setVisible(!myInfo_);
 
         if (newContact)
         {
@@ -303,7 +282,7 @@ namespace Ui
 
         name_->setPlainText(QString());
         QTextCursor cursorName = name_->textCursor();
-        Logic::Text2Doc(Logic::getContactListModel()->getDisplayName(currentAimId_), cursorName, Logic::Text2DocHtmlMode::Pass, false);
+        Logic::Text2Doc(oldName/*Logic::getContactListModel()->getDisplayName(currentAimId_)*/, cursorName, Logic::Text2DocHtmlMode::Pass, false);
 
         editLabel_->setVisible(myInfo_);
 
@@ -316,7 +295,7 @@ namespace Ui
         {
             Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
             collection.set_value_as_qstring("aimid", currentAimId_);
-            collection.set_value_as_int("limit", members_count);
+            collection.set_value_as_int("limit", Logic::ChatMembersModel::get_limit(members_count));
             Ui::GetDispatcher()->post_message_to_core("chats/info/get", collection.get());
         }
 
@@ -371,6 +350,7 @@ namespace Ui
                     phone_->setInfo(list.front().get_phone(), "+");
                     phone_->show();
                     renameContact_->hide();
+                    Line_->hide();
                 }
             }
 
@@ -468,47 +448,48 @@ namespace Ui
         connect(Ui::GetDispatcher(), SIGNAL(chatInfo(qint64, std::shared_ptr<Data::ChatInfo>)), this, SLOT(chatInfo(qint64, std::shared_ptr<Data::ChatInfo>)), Qt::QueuedConnection);
         connect(GetDispatcher(), SIGNAL(recvFlags(int)), this, SLOT(recvFlags(int)));
 
-        auto layout = emptyVLayout(this);
+        auto layout = Utils::emptyVLayout(this);
         auto area = CreateScrollAreaAndSetTrScrollBar(this);
         area->horizontalScrollBar()->setDisabled(true);
         layout->addWidget(area);
 
         area->setContentsMargins(0, 0, 0, 0);
         mainWidget_ = new QWidget(area);
+        mainWidget_->setStyleSheet("background: transparent;");
         area->setWidget(mainWidget_);
         area->setWidgetResizable(true);
         area->setFrameStyle(QFrame::NoFrame);
-        area->setStyleSheet(transparent_background);
+        area->setStyleSheet("background: transparent;");
 
         Utils::grabTouchWidget(area->viewport(), true);
         Utils::grabTouchWidget(mainWidget_);
 
         connect(QScroller::scroller(area->viewport()), SIGNAL(stateChanged(QScroller::State)), this, SLOT(touchScrollStateChanged(QScroller::State)), Qt::QueuedConnection);
 
-        auto vLayoutMain = emptyVLayout(mainWidget_);
-        vLayoutMain->addSpacerItem(new QSpacerItem(0, Utils::scale_value(top_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
+        auto vLayoutMain = Utils::emptyVLayout(mainWidget_);
+        vLayoutMain->setContentsMargins(0, Utils::scale_value(HOR_PADDING), 0, 0);
 
-        auto hLayoutMain = emptyHLayout();
-        hLayoutMain->addSpacerItem(new QSpacerItem(Utils::scale_value(left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+        auto hLayoutMain = Utils::emptyHLayout();
+        hLayoutMain->setContentsMargins(Utils::scale_value(HOR_PADDING), 0, 0, 0);
 
-        subBackButtonLayout_ = emptyVLayout();
+        subBackButtonLayout_ = Utils::emptyVLayout();
         subBackButtonLayout_->setAlignment(Qt::AlignTop);
         hLayoutMain->addLayout(subBackButtonLayout_);
 
-        subAvatarLayout_ = emptyVLayout();
+        subAvatarLayout_ = Utils::emptyVLayout();
         subAvatarLayout_->setAlignment(Qt::AlignTop);
         hLayoutMain->addLayout(subAvatarLayout_);
 
-        auto rootLayout = emptyVLayout();
+        auto rootLayout = Utils::emptyVLayout();
+        rootLayout->setContentsMargins(0, 0, 0, Utils::scale_value(HOR_PADDING));
         rootLayout->setAlignment(Qt::AlignTop);
         {
-            auto avatarLayout = emptyHLayout();
+            auto avatarLayout = Utils::emptyHLayout();
             {
-                mainBackButtonLayout_ = emptyVLayout();
+                mainBackButtonLayout_ = Utils::emptyVLayout();
                 mainBackButtonLayout_->setAlignment(Qt::AlignTop);
-                backButton_ = new CustomButton(mainWidget_, ":/resources/contr_back_100.png");
-                backButton_->setHoverImage(":/resources/contr_back_100_hover.png");
-                backButton_->setActiveImage(":/resources/contr_back_100_active.png");
+                backButton_ = new CustomButton(mainWidget_, ":/resources/basic_elements/contr_back_100.png");
+                backButton_->setHoverImage(":/resources/basic_elements/contr_back_100_hover.png");
                 backButton_->setFixedSize(Utils::scale_value(button_size), Utils::scale_value(button_size));
                 backButton_->setCursor(QCursor(Qt::PointingHandCursor));
                 Utils::grabTouchWidget(backButton_);
@@ -517,17 +498,17 @@ namespace Ui
             }
             avatarLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(back_button_spacing), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
             {
-                mainAvatarLayout_ = emptyVLayout();
+                mainAvatarLayout_ = Utils::emptyVLayout();
                 mainAvatarLayout_->setAlignment(Qt::AlignTop);
                 avatar_ = new ContactAvatarWidget(mainWidget_, QString(), QString(), Utils::scale_value(avatar_size), true);
-                auto mainSaveButtonLayout_ = emptyHLayout();
+                auto mainSaveButtonLayout_ = Utils::emptyHLayout();
                 mainSaveButtonLayout_->setAlignment(Qt::AlignRight);
                 saveButtonSpace_ = new QWidget(mainWidget_);
                 Utils::grabTouchWidget(saveButtonSpace_);
                 mainSaveButtonLayout_->addWidget(saveButtonSpace_);
-                auto subSaveButtonLayout = emptyVLayout();
+                auto subSaveButtonLayout = Utils::emptyVLayout();
                 saveButton_ = new QPushButton(mainWidget_);
-                Utils::ApplyStyle(saveButton_, saveButtonStyle());
+                Utils::ApplyStyle(saveButton_, Ui::CommonStyle::getGreenButtonStyle());
                 saveButton_->setText(QT_TRANSLATE_NOOP("sidebar", "Save"));
                 saveButton_->setCursor(Qt::PointingHandCursor);
                 saveButton_->adjustSize();
@@ -548,18 +529,17 @@ namespace Ui
                 avatarLayout->addLayout(mainAvatarLayout_);
             }
             avatarLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
-            editLayout_ = emptyVLayout();
+            editLayout_ = Utils::emptyVLayout();
             editLayout_->setAlignment(Qt::AlignTop);
             editLayout_->addSpacerItem(new QSpacerItem(0, Utils::scale_value(edit_top_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
             avatarLayout->addLayout(editLayout_);
-            avatarLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+            avatarLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(HOR_PADDING), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
             rootLayout->addLayout(avatarLayout);
 
             {
-                nameLayout_ = emptyHLayout();
-                nameLayout_->addSpacerItem(new QSpacerItem(Utils::scale_value(back_button_spacing + button_size - more_left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                name_ = new TextEditEx(mainWidget_, Fonts::defaultAppFontFamily(), Utils::scale_value(24), CommonStyle::getTextCommonColor(), false, false);
-                name_->setStyleSheet(transparent_background);
+                nameLayout_ = Utils::emptyHLayout();
+                nameLayout_->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, Utils::scale_value(HOR_PADDING), 0);
+                name_ = new TextEditEx(mainWidget_, Fonts::appFontScaled(24), CommonStyle::getTextCommonColor(), false, false);
                 name_->setFrameStyle(QFrame::NoFrame);
                 name_->setContentsMargins(0, 0, 0, 0);
                 name_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -567,9 +547,9 @@ namespace Ui
                 name_->setContextMenuPolicy(Qt::NoContextMenu);
                 Utils::grabTouchWidget(name_);
                 nameLayout_->addWidget(name_);
-                subEditLayout_ = emptyVLayout();
+                subEditLayout_ = Utils::emptyVLayout();
+                subEditLayout_->setContentsMargins(0, Utils::scale_value(edit_top_margin), 0, 0);
                 subEditLayout_->setAlignment(Qt::AlignTop);
-                subEditLayout_->addSpacerItem(new QSpacerItem(0, Utils::scale_value(edit_top_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
                 editLabel_ = new LabelEx(mainWidget_);
                 editLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Edit"));
                 editLabel_->setProperty("edit", true);
@@ -581,9 +561,8 @@ namespace Ui
                 editLabel_->adjustSize();
                 subEditLayout_->addWidget(editLabel_);
                 Utils::grabTouchWidget(editLabel_);
-                nameLayout_->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin / 2), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+                nameLayout_->addSpacerItem(new QSpacerItem(Utils::scale_value(HOR_PADDING), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
                 nameLayout_->addLayout(subEditLayout_);
-                nameLayout_->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin / 2), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
                 nameLayout_->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                 rootLayout->addLayout(nameLayout_);
             }
@@ -594,18 +573,12 @@ namespace Ui
             rootLayout->addWidget(nameMargin_);
 
             {
-                auto horLayoutIn = emptyHLayout();
-                horLayoutIn->addSpacerItem(new QSpacerItem(Utils::scale_value(back_button_spacing + button_size - more_left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+                auto horLayoutIn = Utils::emptyHLayout();
+                horLayoutIn->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 statusWidget_ = new QWidget(mainWidget_);
                 Utils::grabTouchWidget(statusWidget_);
-                statusWidget_->setObjectName(QStringLiteral("statusWidget_"));
                 statusWidget_->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed));
-                statusWidget_->setMinimumSize(QSize(0, Utils::scale_value(45)));
-                statusWidget_->setMaximumSize(QSize(16777215, Utils::scale_value(45)));
-                auto statusLayout_ = new QHBoxLayout(statusWidget_);
-                statusLayout_->setSpacing(0);
-                statusLayout_->setObjectName(QStringLiteral("info_state_area_ayout"));
-                statusLayout_->setContentsMargins(0, 0, 0, 0);
+                auto statusLayout_ = Utils::emptyHLayout(statusWidget_);
 
                 statusButton_ = new QPushButton(statusWidget_);
                 statusButton_->setObjectName("statusButton");
@@ -616,20 +589,31 @@ namespace Ui
                 statusButton_->setIconSize(QSize(Utils::scale_value(24), Utils::scale_value(24)));
                 statusButton_->setFocusPolicy(Qt::NoFocus);
                 statusButton_->setCursor(Qt::CursorShape::PointingHandCursor);
+
                 statusMenu_ = new FlatMenu(statusButton_);
                 statusMenu_->setObjectName("statusMenu");
-                statusMenu_->addAction(QIcon(":/resources/content_status_online_200.png"), QT_TRANSLATE_NOOP("sidebar", "Online"), this, SLOT(menuStateOnline()));
-                statusMenu_->addAction(QIcon(":/resources/content_status_dnd_200.png"), QT_TRANSLATE_NOOP("sidebar", "Do not disturb"), this, SLOT(menuStateDoNotDisturb()));
-                statusMenu_->addAction(QIcon(":/resources/content_status_invisible_200.png"), QT_TRANSLATE_NOOP("sidebar", "Invisible"), this, SLOT(menuStateInvisible()));
+                statusMenu_->addAction(
+                    QIcon(Utils::parse_image_name(build::is_icq()
+                        ? ":/resources/statuses/status_online_100.png"
+                        : ":/resources/statuses/status_online_agent_100.png")),
+                    QT_TRANSLATE_NOOP("sidebar", "Online"), this, SLOT(menuStateOnline()));
+                statusMenu_->addAction(
+                    QIcon(Utils::parse_image_name(build::is_icq()
+                        ? ":/resources/statuses/status_dnd_100.png"
+                        : ":/resources/statuses/status_dnd_agent_100.png")),
+                    QT_TRANSLATE_NOOP("sidebar", "Do not disturb"), this, SLOT(menuStateDoNotDisturb()));
+                statusMenu_->addAction(
+                    QIcon(Utils::parse_image_name(build::is_icq()
+                        ? ":/resources/statuses/status_invisible_100.png"
+                        : ":/resources/statuses/status_invisible_agent_100.png")),
+                    QT_TRANSLATE_NOOP("sidebar", "Invisible"), this, SLOT(menuStateInvisible()));
 
                 statusLabel_ = new LabelEx(statusWidget_);
                 statusLabel_->setObjectName("statusLabel");
                 statusLayout_->addWidget(statusLabel_);
+
                 statusLayout_->addWidget(statusButton_);
                 statusButton_->setMenu(statusMenu_);
-
-                auto horizontalSpacer = new QSpacerItem(Utils::scale_value(40), Utils::scale_value(20), QSizePolicy::Expanding, QSizePolicy::Minimum);
-                statusLayout_->addItem(horizontalSpacer);
 
                 Utils::grabTouchWidget(statusLabel_);
                 Utils::grabTouchWidget(statusMenu_);
@@ -646,27 +630,27 @@ namespace Ui
 
 
             {
-                auto horLayoutIn = emptyHLayout();
-                horLayoutIn->addSpacerItem(new QSpacerItem(Utils::scale_value(button_size - more_left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+                auto horLayoutIn = Utils::emptyHLayout();
+                horLayoutIn->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, Utils::scale_value(HOR_PADDING), 0);
                 ignoreWidget_ = new QWidget(mainWidget_);
                 ignoreWidget_->setStyleSheet("background: #fbdbd9;");
                 {
-                    auto ignoreLayout = emptyVLayout(ignoreWidget_);
+                    auto ignoreLayout = Utils::emptyVLayout(ignoreWidget_);
                     {
                         auto vLayout = new QVBoxLayout();
                         vLayout->setSpacing(Utils::scale_value(ignore_spacing));
-                        vLayout->setContentsMargins(Utils::scale_value(more_left_margin + back_button_spacing), Utils::scale_value(ignore_margins), Utils::scale_value(back_button_spacing), Utils::scale_value(ignore_margins));
+                        vLayout->setContentsMargins(Utils::scale_value(back_button_spacing), Utils::scale_value(ignore_margins), Utils::scale_value(back_button_spacing), Utils::scale_value(ignore_margins));
                         auto label = new QLabel(ignoreWidget_);
                         label->setWordWrap(true);
                         label->setFont(Fonts::appFontScaled(16));
                         QPalette p;
-                        p.setColor(QPalette::Foreground, QColor("#000000"));
+                        p.setColor(QPalette::Foreground, CommonStyle::getTextCommonColor());
                         label->setPalette(p);
                         label->setText(QT_TRANSLATE_NOOP("sidebar", "This contact is in the ignore list"));
                         vLayout->addWidget(label);
                         ignoreLabel_ = new LabelEx(ignoreWidget_);
                         ignoreLabel_->setFont(Fonts::appFontScaled(16));
-                        p.setColor(QPalette::Foreground, QColor("#e30f04"));
+                        p.setColor(QPalette::Foreground, Ui::CommonStyle::getRedLinkColor());
                         ignoreLabel_->setPalette(p);
                         ignoreLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Delete"));
                         ignoreLabel_->setCursor(QCursor(Qt::PointingHandCursor));
@@ -677,7 +661,6 @@ namespace Ui
                 Utils::grabTouchWidget(ignoreLabel_);
                 Utils::grabTouchWidget(ignoreWidget_);
                 horLayoutIn->addWidget(ignoreWidget_);
-                horLayoutIn->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed));
                 horLayoutIn->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding));
                 rootLayout->addLayout(horLayoutIn);
             }
@@ -685,26 +668,22 @@ namespace Ui
             {
                 buttonWidget_ = new QWidget(mainWidget_);
                 auto hLayout = new QHBoxLayout(buttonWidget_);
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, Utils::scale_value(buttons_margin));
                 hLayout->setSpacing(Utils::scale_value(buttons_spacing));
-                hLayout->setContentsMargins(0, 0, 0, Utils::scale_value(buttons_margin));
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(back_button_spacing + button_size), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
                 addButton_ = new CustomButton(mainWidget_, ":/resources/contr_addpeople_big_100.png");
                 addButton_->setHoverImage(":/resources/contr_addpeople_big_100_hover.png");
-                addButton_->setActiveImage(":/resources/contr_addpeople_big_100_active.png");
                 addButton_->setFixedSize(Utils::scale_value(big_button_size), Utils::scale_value(big_button_size));
                 addButton_->setCursor(QCursor(Qt::PointingHandCursor));
                 hLayout->addWidget(addButton_);
 
                 chatButton_ = new CustomButton(mainWidget_, ":/resources/contr_writemsg_big_100.png");
                 chatButton_->setHoverImage(":/resources/contr_writemsg_big_100_hover.png");
-                chatButton_->setActiveImage(":/resources/contr_writemsg_big_100_active.png");
                 chatButton_->setFixedSize(Utils::scale_value(big_button_size), Utils::scale_value(big_button_size));
                 chatButton_->setCursor(QCursor(Qt::PointingHandCursor));
                 hLayout->addWidget(chatButton_);
 
                 callButton_ = new CustomButton(mainWidget_, ":/resources/contr_call_big_100.png");
                 callButton_->setHoverImage(":/resources/contr_call_big_100_hover.png");
-                callButton_->setActiveImage(":/resources/contr_call_big_100_active.png");
                 callButton_->setFixedSize(Utils::scale_value(big_button_size), Utils::scale_value(big_button_size));
                 callButton_->setDisabledImage(":/resources/contr_call_bigdisable_100.png");
                 callButton_->setCursor(QCursor(Qt::PointingHandCursor));
@@ -712,7 +691,6 @@ namespace Ui
 
                 videoCall_button_ = new CustomButton(mainWidget_, ":/resources/contr_videocall_big_100.png");
                 videoCall_button_->setHoverImage(":/resources/contr_videocall_big_100_hover.png");
-                videoCall_button_->setActiveImage(":/resources/contr_videocall_big_100_active.png");
                 videoCall_button_->setFixedSize(Utils::scale_value(big_button_size), Utils::scale_value(big_button_size));
                 videoCall_button_->setDisabledImage(":/resources/contr_videocall_bigdisable_100.png");
                 videoCall_button_->setCursor(QCursor(Qt::PointingHandCursor));
@@ -727,44 +705,47 @@ namespace Ui
             Utils::grabTouchWidget(buttonWidget_);
             rootLayout->addWidget(buttonWidget_);
 
-            uin_ = new InfoPlate(mainWidget_, Utils::scale_value(back_button_spacing + button_size));
-            uin_->setHeader(QT_TRANSLATE_NOOP("sidebar", "UIN"));
+            uin_ = new InfoPlate(mainWidget_, Utils::scale_value(LEFT_MARGIN));
+            uin_->setHeader(build::is_icq() ?
+                QT_TRANSLATE_NOOP("sidebar", "UIN")
+                : QT_TRANSLATE_NOOP("sidebar", "Email/UIN")
+            );
             rootLayout->addWidget(uin_);
 
-            phone_ = new InfoPlate(mainWidget_, Utils::scale_value(back_button_spacing + button_size));
+            phone_ = new InfoPlate(mainWidget_, Utils::scale_value(LEFT_MARGIN));
             phone_->setHeader(QT_TRANSLATE_NOOP("sidebar", "Phone number"));
             rootLayout->addWidget(phone_);
 
-            firstName_ = new InfoPlate(mainWidget_, Utils::scale_value(back_button_spacing + button_size));
+            firstName_ = new InfoPlate(mainWidget_, Utils::scale_value(LEFT_MARGIN));
             firstName_->setHeader(QT_TRANSLATE_NOOP("sidebar", "First name"));
             rootLayout->addWidget(firstName_);
 
-            lastName_ = new InfoPlate(mainWidget_, Utils::scale_value(back_button_spacing + button_size));
+            lastName_ = new InfoPlate(mainWidget_, Utils::scale_value(LEFT_MARGIN));
             lastName_->setHeader(QT_TRANSLATE_NOOP("sidebar", "Last name"));
             rootLayout->addWidget(lastName_);
 
-            nickName_ = new InfoPlate(mainWidget_, Utils::scale_value(back_button_spacing + button_size));
+            nickName_ = new InfoPlate(mainWidget_, Utils::scale_value(LEFT_MARGIN));
             nickName_->setHeader(QT_TRANSLATE_NOOP("sidebar", "Nickname"));
             rootLayout->addWidget(nickName_);
 
-            birthday_ = new InfoPlate(mainWidget_, Utils::scale_value(back_button_spacing + button_size));
+            birthday_ = new InfoPlate(mainWidget_, Utils::scale_value(LEFT_MARGIN));
             birthday_->setHeader(QT_TRANSLATE_NOOP("sidebar", "Birthday"));
             rootLayout->addWidget(birthday_);
 
-            city_ = new InfoPlate(mainWidget_, Utils::scale_value(back_button_spacing + button_size));
+            city_ = new InfoPlate(mainWidget_, Utils::scale_value(LEFT_MARGIN));
             city_->setHeader(QT_TRANSLATE_NOOP("sidebar", "City"));
             rootLayout->addWidget(city_);
 
-            country_ = new InfoPlate(mainWidget_, Utils::scale_value(back_button_spacing + button_size));
+            country_ = new InfoPlate(mainWidget_, Utils::scale_value(LEFT_MARGIN));
             country_->setHeader(QT_TRANSLATE_NOOP("sidebar", "Country"));
             rootLayout->addWidget(country_);
 
             chatEditWidget_ = new QWidget(mainWidget_);
-            auto vLayout = emptyVLayout(chatEditWidget_);
+            auto vLayout = Utils::emptyVLayout(chatEditWidget_);
             {
-                auto hLayout = emptyHLayout();
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 hLayout->setAlignment(Qt::AlignLeft);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(button_size + back_button_spacing), 0, QSizePolicy::Fixed));
                 auto label = new LabelEx(chatEditWidget_);
                 label->setObjectName("editor");
                 label->setText(QT_TRANSLATE_NOOP("sidebar", "NAME"));
@@ -773,13 +754,12 @@ namespace Ui
             }
 
             {
-                auto hLayout = emptyHLayout();
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 hLayout->setAlignment(Qt::AlignLeft);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(back_button_spacing + button_size), 0, QSizePolicy::Fixed));
-                nameEdit_ = new Ui::TextEditEx(chatEditWidget_, Fonts::defaultAppFontFamily(), Utils::scale_value(18), Ui::CommonStyle::getTextCommonColor(), true, true);
+                nameEdit_ = new Ui::TextEditEx(chatEditWidget_, Fonts::appFontScaled(18), Ui::CommonStyle::getTextCommonColor(), true, true);
                 Utils::ApplyStyle(nameEdit_, Ui::CommonStyle::getTextEditStyle());
                 nameEdit_->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-                nameEdit_->setAutoFillBackground(false);
                 nameEdit_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
                 nameEdit_->setTextInteractionFlags(Qt::TextEditable | Qt::TextEditorInteraction);
                 nameEdit_->setCatchEnter(false);
@@ -793,9 +773,9 @@ namespace Ui
             vLayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(name_desc_space), QSizePolicy::Preferred, QSizePolicy::Fixed));
 
             {
-                auto hLayout = emptyHLayout();
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 hLayout->setAlignment(Qt::AlignLeft);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(button_size + back_button_spacing), 0, QSizePolicy::Fixed));
                 auto label = new LabelEx(chatEditWidget_);
                 label->setObjectName("editor");
                 label->setText(QT_TRANSLATE_NOOP("sidebar", "DESCRIPTION"));
@@ -804,13 +784,12 @@ namespace Ui
             }
 
             {
-                auto hLayout = emptyHLayout();
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 hLayout->setAlignment(Qt::AlignLeft);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(back_button_spacing + button_size), 0, QSizePolicy::Fixed));
-                descriptionEdit_ = new Ui::TextEditEx(chatEditWidget_, Fonts::defaultAppFontFamily(), Utils::scale_value(18), Ui::CommonStyle::getTextCommonColor(), true, true);
+                descriptionEdit_ = new Ui::TextEditEx(chatEditWidget_, Fonts::appFontScaled(18), Ui::CommonStyle::getTextCommonColor(), true, true);
                 Utils::ApplyStyle(descriptionEdit_, Ui::CommonStyle::getTextEditStyle());
                 descriptionEdit_->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-                descriptionEdit_->setAutoFillBackground(false);
                 descriptionEdit_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
                 descriptionEdit_->setTextInteractionFlags(Qt::TextEditable | Qt::TextEditorInteraction);
                 descriptionEdit_->setCatchEnter(false);
@@ -826,22 +805,22 @@ namespace Ui
             Utils::grabTouchWidget(chatEditWidget_);
             rootLayout->addWidget(chatEditWidget_);
 
-            Line_ = new LineWidget(mainWidget_, Utils::scale_value(back_button_spacing + button_size), Utils::scale_value(line_vertical_margin), Utils::scale_value(right_margin), Utils::scale_value(line_vertical_margin));
+            Line_ = new LineWidget(mainWidget_, Utils::scale_value(LEFT_MARGIN), Utils::scale_value(line_vertical_margin), Utils::scale_value(HOR_PADDING), Utils::scale_value(line_vertical_margin));
             Utils::grabTouchWidget(Line_);
             rootLayout->addWidget(Line_);
 
-            renameContact_ = new ActionButton(mainWidget_, ":/resources/sidebar_rename_100.png", QT_TRANSLATE_NOOP("sidebar", "Rename"), Utils::scale_value(button_height), Utils::scale_value(reverse_margin), Utils::scale_value(button_offset));
+            renameContact_ = new ActionButton(mainWidget_, ":/resources/profile_rename_100.png", QT_TRANSLATE_NOOP("sidebar", "Rename"), Utils::scale_value(button_height), 0, Utils::scale_value(HOR_PADDING));
             renameContact_->setCursor(QCursor(Qt::PointingHandCursor));
             Utils::grabTouchWidget(renameContact_);
             rootLayout->addWidget(renameContact_);
 
-            ignoreListButton = new ActionButton(mainWidget_, ":/resources/content_ignorelist_100.png", QT_TRANSLATE_NOOP("sidebar", "Ignored contacts"), Utils::scale_value(button_height), Utils::scale_value(reverse_margin), Utils::scale_value(button_offset));
-            ignoreListButton->setStyleSheet("color: #e30f04;");
+            ignoreListButton = new ActionButton(mainWidget_, ":/resources/i_ignore_100.png", QT_TRANSLATE_NOOP("sidebar", "Ignored contacts"), Utils::scale_value(button_height), 0, Utils::scale_value(HOR_PADDING));
+            ignoreListButton->setColor("#d0021b;");
             ignoreListButton->setCursor(QCursor(Qt::PointingHandCursor));
             Utils::grabTouchWidget(ignoreListButton);
             rootLayout->addWidget(ignoreListButton);
 
-            attachOldAcc = new ActionButton(mainWidget_, ":/resources/content_oldaccount_100.png", QT_TRANSLATE_NOOP("sidebar", "Connect to ICQ account"), Utils::scale_value(button_height), Utils::scale_value(reverse_margin), Utils::scale_value(button_offset));
+            attachOldAcc = new ActionButton(mainWidget_, ":/resources/profile_oldaccount_100.png", QT_TRANSLATE_NOOP("sidebar", "Connect to ICQ account"), Utils::scale_value(button_height), 0, Utils::scale_value(HOR_PADDING));
             attachOldAcc->setStyleSheet("color: #579e1c;");
             attachOldAcc->setCursor(QCursor(Qt::PointingHandCursor));
             Utils::grabTouchWidget(attachOldAcc);
@@ -849,13 +828,7 @@ namespace Ui
 
             rootLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding));
             hLayoutMain->addLayout(rootLayout);
-            rightWidget_ = new QWidget(mainWidget_);
-            rightWidget_->setFixedWidth(0);
-            Utils::grabTouchWidget(rightWidget_);
-            hLayoutMain->addWidget(rightWidget_);
             vLayoutMain->addLayout(hLayoutMain);
-
-            rootLayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(top_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
 
         }
 
@@ -911,7 +884,7 @@ namespace Ui
     void ProfilePage::contactChanged(QString aimId)
     {
         if (aimId == currentAimId_)
-            initFor(aimId);
+            initFor(MyInfo()->aimId() == aimId ? "" : aimId);
     }
 
     void ProfilePage::contactRemoved(QString aimId)
@@ -932,47 +905,17 @@ namespace Ui
             return;
 
         QString state;
-        QDateTime lastSeen;
-        Logic::ContactItem* cont = Logic::getContactListModel()->getContactItem(currentAimId_);
-        if (!cont)
+        if (myInfo_)
         {
-            if (myInfo_)
-            {
-                state = MyInfo()->state();
-            }
+            state = MyInfo()->state();
         }
         else
         {
-            state = cont->Get()->State_;
-            lastSeen = cont->Get()->GetLastSeen();
-            if (lastSeen.isValid())
-            {
-                state = QT_TRANSLATE_NOOP("sidebar", "Seen ");
-                if (lastSeen.isValid())
-                {
-                    const auto current = QDateTime::currentDateTime();
-                    const auto days = lastSeen.daysTo(current);
-                    if (days == 0)
-                        state += QT_TRANSLATE_NOOP("sidebar", "today");
-                    else if (days == 1)
-                        state += QT_TRANSLATE_NOOP("sidebar", "yesterday");
-                    else
-                        state += Utils::GetTranslator()->formatDate(lastSeen.date(), lastSeen.date().year() == current.date().year());
-                    if (lastSeen.date().year() == current.date().year())
-                    {
-                        state += QT_TRANSLATE_NOOP("sidebar", " at ");
-                        state += lastSeen.time().toString(Qt::SystemLocaleShortDate);
-                    }
-                }
-            }
-            else if (state.isEmpty())
-            {
-                state = QT_TRANSLATE_NOOP("sidebar", "Online");
-            }
+            state = Logic::getContactListModel()->getStatusString(currentAimId_);
         }
 
         QPalette p;
-        p.setColor(QPalette::Foreground, QColor(lastSeen.isValid() ? CommonStyle::getTextCommonColor() : "#579e1c"));
+        p.setColor(QPalette::Foreground, QColor("#579e1c"));
         statusLabel_->setPalette(p);
         statusLabel_->setText(state);
         statusLabel_->adjustSize();
@@ -992,6 +935,7 @@ namespace Ui
     void ProfilePage::chatClicked()
     {
         Logic::getContactListModel()->setCurrent(currentAimId_, -1, true, true);
+        GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::profile_write_message);
     }
 
     void ProfilePage::callClicked()
@@ -1014,6 +958,12 @@ namespace Ui
 
     void ProfilePage::back()
     {
+        if (myInfo_)
+        {
+            emit Utils::InterConnector::instance().myProfileBack();
+            return;
+        }
+
         if (prevAimId_.isEmpty())
             Utils::InterConnector::instance().setSidebarVisible(false);
         else
@@ -1039,7 +989,7 @@ namespace Ui
 
     void ProfilePage::resizeEvent(QResizeEvent* e)
     {
-        mainWidget_->setFixedWidth(e->size().width() - Utils::scale_value(8));
+        mainWidget_->setFixedWidth(e->size().width());
         if (e->size().width() >= Utils::scale_value(596))
         {
             mainBackButtonLayout_->takeAt(0);
@@ -1048,7 +998,6 @@ namespace Ui
             avatarBottomSpace_->setVisible(false);
             subBackButtonLayout_->insertWidget(0, backButton_);
             subAvatarLayout_->insertWidget(0, avatar_);
-            rightWidget_->setFixedWidth(Utils::scale_value(more_right_margin));
             if (editLayout_->itemAt(1) && editLayout_->itemAt(1)->widget() && editLayout_->itemAt(1)->widget()->property("edit").toBool())
                 editLayout_->takeAt(1);
             subEditLayout_->insertWidget(1, editLabel_);
@@ -1061,7 +1010,6 @@ namespace Ui
             avatarBottomSpace_->setVisible(true);
             mainBackButtonLayout_->insertWidget(0, backButton_);
             mainAvatarLayout_->insertWidget(1, avatar_);
-            rightWidget_->setFixedWidth(Utils::scale_value(0));
             if (subEditLayout_->itemAt(1) && subEditLayout_->itemAt(1)->widget() && subEditLayout_->itemAt(1)->widget()->property("edit").toBool())
                 subEditLayout_->takeAt(1);
             editLayout_->insertWidget(1, editLabel_);
@@ -1107,19 +1055,35 @@ namespace Ui
 
     void ProfilePage::editClicked()
     {
-        auto url = QString("https://icq.com/people/%1/edit").arg(currentAimId_);
-        core::coll_helper helper(GetDispatcher()->create_collection(), true);
-        helper.set_value_as_string("url", url.toStdString());
-        GetDispatcher()->post_message_to_core("sign_url", helper.get());
-        GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::myprofile_edit);
-
-        GetDispatcher()->disconnect(SIGNAL(signedUrl(QString)));
-        connect(GetDispatcher(), &core_dispatcher::signedUrl, [](QString url)
+        if (build::is_icq())
         {
-            Utils::InterConnector::instance().unsetUrlHandler();
-            QDesktopServices::openUrl(url);
-            Utils::InterConnector::instance().setUrlHandler();
-        });
+            auto url = QString("https://icq.com/people/%1/edit").arg(currentAimId_);
+            core::coll_helper helper(GetDispatcher()->create_collection(), true);
+            helper.set_value_as_string("url", url.toStdString());
+            GetDispatcher()->post_message_to_core("sign_url", helper.get());
+            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::myprofile_edit);
+
+            GetDispatcher()->disconnect(SIGNAL(signedUrl(QString)));
+            connect(GetDispatcher(), &core_dispatcher::signedUrl, [](QString url)
+            {
+                Utils::InterConnector::instance().unsetUrlHandler();
+                QDesktopServices::openUrl(url);
+                Utils::InterConnector::instance().setUrlHandler();
+            });
+        }
+        else
+        {
+            Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
+
+            collection.set_value_as_qstring("email", currentAimId_);
+
+            Ui::GetDispatcher()->post_message_to_core("mrim/get_key", collection.get(), this, [this](core::icollection* _collection)
+            {
+                const QString profileUrl = "https://e.mail.ru/settings/userinfo";
+
+                Utils::openAgentUrl(profileUrl, profileUrl, currentAimId_, Ui::gui_coll_helper(_collection, false).get_value_as_string("key"));
+            });
+        }
     }
 
     void ProfilePage::statusClicked()

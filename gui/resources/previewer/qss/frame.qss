@@ -1,6 +1,6 @@
 QFrame[GalleryFrame="true"]
 {
-    background-color: rgba(0, 0, 0, 179);
+    background-color: rgba(0, 0, 0, 70%);
     border-radius: 8dip;
     padding: 8dip;
 }

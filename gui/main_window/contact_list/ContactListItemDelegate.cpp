@@ -15,10 +15,11 @@
 
 namespace Logic
 {
-    ContactListItemDelegate::ContactListItemDelegate(QObject* parent, int _regim)
+    ContactListItemDelegate::ContactListItemDelegate(QObject* parent, int _regim, ChatMembersModel* chatMembersModel)
         : AbstractItemDelegateWithRegim(parent)
         , StateBlocked_(false)
         , renderRole_(false)
+        , chatMembersModel_(chatMembersModel)
     {
         viewParams_.regim_ = _regim;
     }
@@ -36,7 +37,7 @@ namespace Logic
         bool isGroup = false;
         QString displayName, status, state;
         QString aimId;
-        bool haveLastSeen = false, isChecked = false, isChatMember = false, isOfficial = false;
+        bool hasLastSeen = false, isChecked = false, isChatMember = false, isOfficial = false;
         QDateTime lastSeen;
 
         bool hasMouseOver = true;
@@ -52,6 +53,11 @@ namespace Logic
         if (membersModel || searchMemberModel)
         {
             auto cont = index.data(Qt::DisplayRole).value<Data::ChatMemberInfo*>();
+			if (!cont)
+			{
+				// If we use custom widget.
+				return;
+			}
             displayName = cont->getFriendly();
             if (renderRole_)
                 role = cont->Role_;
@@ -84,14 +90,20 @@ namespace Logic
             aimId = contact_in_cl->AimId_;
             status = contact_in_cl->StatusMsg_;
             state = contact_in_cl->State_;
-            haveLastSeen = contact_in_cl->HaveLastSeen_;
+            hasLastSeen = contact_in_cl->HasLastSeen_;
             lastSeen = contact_in_cl->LastSeen_;
             isChecked = contact_in_cl->IsChecked_;
             isOfficial = contact_in_cl->IsOfficial_;
 
         }
 
-        auto chatMembersModel = Logic::getChatMembersModel();
+        if ((state == "online" || state == "mobile") && (option.state & QStyle::State_Selected))
+            state += "_active";
+
+        // For video conference we use own chatModel.
+        auto chatMembersModel = Logic::is_video_conference_regim(viewParams_.regim_) ?
+            chatMembersModel_ : Logic::getChatMembersModel();
+
         if (!!chatMembersModel)
         {
             isChatMember = chatMembersModel->isContactInChat(aimId);
@@ -114,12 +126,12 @@ namespace Logic
             const auto isFilled = !isMultichat;
             auto isDefault = false;
 
-            const auto &avatar = Logic::GetAvatarStorage()->GetRounded(aimId, displayName, Utils::scale_bitmap(ContactList::GetContactListParams().avatarH().px())
+            const auto &avatar = Logic::GetAvatarStorage()->GetRounded(aimId, displayName, Utils::scale_bitmap(ContactList::GetContactListParams().avatarSize())
                 , isMultichat ? QString() : state, isFilled, isDefault, false /* _regenerate */ , ContactList::GetContactListParams().isCL());
-            const ContactList::VisualDataBase visData(aimId, *avatar, state, status, isHovered, isSelected, displayName, haveLastSeen, lastSeen
+            const ContactList::VisualDataBase visData(aimId, *avatar, state, status, isHovered, isSelected, displayName, hasLastSeen, lastSeen
                 , isChecked, isChatMember, isOfficial, false /* draw last read */, QPixmap() /* last seen avatar*/, role, 0 /* unread count */, "" /* search_term */);
 
-            ContactList::ViewParams viewParams(viewParams_.regim_, membersModel && membersModel->isShortView_, viewParams_.fixedWidth_, viewParams_.leftMargin_, viewParams_.rightMargin_);
+            ContactList::ViewParams viewParams(viewParams_.regim_, viewParams_.fixedWidth_, viewParams_.leftMargin_, viewParams_.rightMargin_);
             ContactList::RenderContactItem(*painter, visData, viewParams);
         }
 
@@ -133,23 +145,31 @@ namespace Logic
 
     QSize ContactListItemDelegate::sizeHint(const QStyleOptionViewItem&, const QModelIndex &index) const
     {
+    	// For custom widget 
+		auto customWidget = index.data().value<QWidget*>();
+		if (customWidget)
+		{
+			return customWidget->isVisible() ? customWidget->sizeHint() : QSize(0, 0);
+		}
+
         const auto membersModel = qobject_cast<const Logic::ChatMembersModel*>(index.model());
-        const auto width = viewParams_.fixedWidth_ == -1 ? ContactList::GetContactListParams().itemWidth().px() : viewParams_.fixedWidth_;
+        const auto width = viewParams_.fixedWidth_ == -1 ? ContactList::GetContactListParams().itemWidth() : viewParams_.fixedWidth_;
         if (!membersModel)
         {
             const auto cont = index.data(Qt::DisplayRole).value<Data::Contact*>();
             if (!cont)
             {
-                return QSize(width, ContactList::ContactItemHeight());
+                return QSize(width, ContactList::GetContactListParams().itemHeight());
             }
 
             const auto isGroup = (cont->GetType() == Data::GROUP);
             if (isGroup)
             {
-                return QSize(width, ContactList::GroupItemHeight());
+                return QSize(width, ContactList::GetContactListParams().serviceItemHeight());
             }
         }
-        return QSize(width, ContactList::ContactItemHeight());
+
+        return QSize(width, ContactList::GetContactListParams().itemHeight());
     }
 
     void ContactListItemDelegate::blockState(bool value)

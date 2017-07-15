@@ -4,6 +4,8 @@
 
 #include "FileSharingUtils.h"
 
+#include "../../../utils/utils.h"
+
 UI_COMPLEX_MESSAGE_NS_BEGIN
 
 namespace
@@ -80,7 +82,7 @@ int32_t extractDurationFromFileSharingId(const QString &id)
         return -1;
     }
 
-    const auto isPtt = ((id[0] == 'I') || (id[0] == 'J'));
+    const auto isPtt = extractContentTypeFromFileSharingId(id) == core::file_sharing_content_type::ptt;
     if (!isPtt)
     {
         return -1;
@@ -115,9 +117,7 @@ QString extractIdFromFileSharingUri(const QString &uri)
         return QString();
     }
 
-    QString normalizedUri = uri;
-    if (normalizedUri.endsWith(QChar::Space) || normalizedUri.endsWith(QChar::LineFeed))
-        normalizedUri.truncate(normalizedUri.length() - 1);
+    QString normalizedUri = Utils::normalizeLink(uri);
 
     static const QRegularExpression re(
         "^"

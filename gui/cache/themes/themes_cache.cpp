@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "themes.h"
 #include "../../theme_settings.h"
+#include "../../main_window/history_control/MessageStyle.h"
 #include "../../utils/gui_coll_helper.h"
 #include "../../utils/utils.h"
 #include "../../utils/log/log.h"
@@ -63,53 +64,33 @@ theme theme::getDefaultTheme()
     if (!isDefaultThemeConstructed)
     {
         defaultTheme.tile_ = true;
-        defaultTheme.tint_color_ = QColor(0xff, 0xff, 0xff, 0x00);
-    
-        defaultTheme.contact_list_item_.bg_color_ = QColor(0xff, 0xff, 0xff, 0xff);
-        defaultTheme.contact_list_item_.name_color_ = QColor(0x28, 0x28, 0x28, 0xff);
-        defaultTheme.contact_list_item_.message_color_ = QColor(0x69, 0x69, 0x69, 0xff);
-        defaultTheme.contact_list_item_.sender_color_ = QColor(0x69, 0x69, 0x69, 0xff);
-        defaultTheme.contact_list_item_.time_color_ = QColor(0x69, 0x69, 0x69, 0xff);
+        defaultTheme.tint_color_ = Qt::transparent;
 
-        defaultTheme.incoming_bubble_.bg1_color_ = QColor(0xff, 0xff, 0xff, 0xff);
-        defaultTheme.incoming_bubble_.bg2_color_ = QColor(0xff, 0xff, 0xff, 0xb8);
-        defaultTheme.incoming_bubble_.text_color_ = QColor(0x28, 0x28, 0x28, 0xff);
-        defaultTheme.incoming_bubble_.time_color_ = QColor(0x97, 0x97, 0x97, 0xff);
-        defaultTheme.incoming_bubble_.link_color_ = QColor(0x57, 0x9e, 0x1c, 0xff);
-        defaultTheme.incoming_bubble_.info_color_ = QColor(0x28, 0x28, 0x28, 0xff);
-        defaultTheme.incoming_bubble_.info_link_color_ = QColor(0x57, 0x9e, 0x1c, 0xff);
+        defaultTheme.incoming_bubble_.bg1_color_ = MessageStyle::getIncomingBodyColorA();
+        defaultTheme.incoming_bubble_.bg2_color_ = MessageStyle::getIncomingBodyColorB();
+        defaultTheme.incoming_bubble_.time_color_ = MessageStyle::getTimeColor();
     
-        defaultTheme.outgoing_bubble_.bg1_color_ = QColor(0xd8, 0xd4, 0xce, 0xe5);
-        defaultTheme.outgoing_bubble_.bg2_color_ = QColor(0xd5, 0xd2, 0xce, 0xb8);
-        defaultTheme.outgoing_bubble_.text_color_ = QColor(0x28, 0x28, 0x28, 0xff);
-        defaultTheme.outgoing_bubble_.time_color_ = QColor(0x97, 0x97, 0x97, 0xff);
-        defaultTheme.outgoing_bubble_.link_color_ = QColor(0x57, 0x9e, 0x1c, 0xff);
-        defaultTheme.outgoing_bubble_.info_color_ = QColor(0x28, 0x28, 0x28, 0xff);
-        defaultTheme.outgoing_bubble_.info_link_color_ = QColor(0x57, 0x9e, 0x1c, 0xff);
+        defaultTheme.outgoing_bubble_.bg1_color_ = MessageStyle::getOutgoingBodyColorA();
+        defaultTheme.outgoing_bubble_.bg2_color_ = MessageStyle::getOutgoingBodyColorB();
+        defaultTheme.outgoing_bubble_.time_color_ = MessageStyle::getTimeColor();
     
-        defaultTheme.preview_stickers_.time_color_ = QColor(0x97, 0x97, 0x97, 0xff);
+        defaultTheme.preview_stickers_.time_color_ = MessageStyle::getTimeColor();
     
-        defaultTheme.date_.bg_color_ = QColor(0x83, 0x83, 0x83, 0xff);
-        defaultTheme.date_.text_color_ = QColor(0xff, 0xff, 0xff, 0xff);
+        defaultTheme.date_.bg_color_ = QColor("#767676");
+        defaultTheme.date_.text_color_ = QColor("#ffffff");
     
-        defaultTheme.chat_event_.bg_color_ = QColor(0xff, 0xff, 0xff, 0x00);
-        defaultTheme.chat_event_.text_color_ = QColor(0x97, 0x97, 0x97, 0xff);
+        defaultTheme.chat_event_.bg_color_ = Qt::transparent;
+        defaultTheme.chat_event_.text_color_ = QColor("#767676");
     
-        defaultTheme.contact_name_.text_color_ = QColor(0x28, 0x28, 0x28, 0xff);
+        defaultTheme.contact_name_.text_color_ = MessageStyle::getSenderColor();
+
+        QColor newMessagesColor("#579e1c");
+        newMessagesColor.setAlphaF(0.5);
+        defaultTheme.new_messages_plate_.bg_color_ = newMessagesColor;
+        defaultTheme.new_messages_plate_.text_color_ = QColor("#ffffff");
     
-        defaultTheme.new_messages_bubble_.bg_color_ = QColor(0x57, 0x9e, 0x1c, 0xff);
-        defaultTheme.new_messages_bubble_.bg_hover_color_ = QColor(0x60, 0xaa, 0x23, 0xff);
-        defaultTheme.new_messages_bubble_.bg_pressed_color_ = QColor(0x49, 0x88, 0x12, 0xff);
-        defaultTheme.new_messages_bubble_.text_color_ = QColor(0xff, 0xff, 0xff, 0xff);
-    
-        defaultTheme.new_messages_plate_.bg_color_ = QColor(0x57, 0x9e, 0x1c, 0x7f);
-        defaultTheme.new_messages_plate_.text_color_ = QColor(0xff, 0xff, 0xff, 0xff);
-    
-        defaultTheme.typing_.text_color_ = QColor(0x57, 0x54, 0x4c, 0xff);
+        defaultTheme.typing_.text_color_ = MessageStyle::getTypingColor();
         defaultTheme.typing_.light_gif_ = 0;
-    
-        defaultTheme.spinner_color_ = QColor(0x83, 0x86, 0x93, 0xff);
-        defaultTheme.edges_color_ = QColor(0xc7, 0xc7, 0xc7, 0xff);
     
         defaultTheme.image_ = QPixmap(Utils::parse_image_name(":/resources/main_window/pat_100.png"));
         defaultTheme.thumb_ = QPixmap(Utils::parse_image_name(":/resources/main_window/pat_thumb_100.png"));
@@ -127,15 +108,6 @@ QColor theme::get_tint_color()
     return tint_color_;
 }
 
-void theme::contact_list_item::unserialize(Ui::gui_coll_helper& _coll)
-{
-    bg_color_ = colorFromString(_coll.get_value_as_string("bg_color"));
-    name_color_ = colorFromString(_coll.get_value_as_string("name_color"));
-    message_color_ = colorFromString(_coll.get_value_as_string("message_color"));
-    sender_color_ = colorFromString(_coll.get_value_as_string("sender_color"));
-    time_color_ = colorFromString(_coll.get_value_as_string("time_color"));
-}
-
 void theme::date::unserialize(Ui::gui_coll_helper& _coll)
 {
     text_color_ = colorFromString(_coll.get_value_as_string("text_color"));
@@ -144,13 +116,9 @@ void theme::date::unserialize(Ui::gui_coll_helper& _coll)
 
 void theme::bubble::unserialize(Ui::gui_coll_helper& _coll)
 {
-    text_color_ = colorFromString(_coll.get_value_as_string("text_color"));
     bg1_color_ = colorFromString(_coll.get_value_as_string("bg1_color"));
     bg2_color_ = colorFromString(_coll.get_value_as_string("bg2_color"));
     time_color_ = colorFromString(_coll.get_value_as_string("time_color"));
-    link_color_ = colorFromString(_coll.get_value_as_string("link_color"));
-    info_color_ = colorFromString(_coll.get_value_as_string("info_color"));
-    info_link_color_  = colorFromString(_coll.get_value_as_string("info_link_color"));
 }
 
 void theme::preview_stickers::unserialize(Ui::gui_coll_helper& _coll)
@@ -168,24 +136,10 @@ void theme::contact_name::unserialize(Ui::gui_coll_helper& _coll)
     text_color_ = colorFromString(_coll.get_value_as_string("text_color"));
 }
 
-void theme::new_messages::unserialize(Ui::gui_coll_helper& _coll)
-{
-    text_color_ = colorFromString(_coll.get_value_as_string("text_color"));
-    bg_color_ = colorFromString(_coll.get_value_as_string("bg_color"));
-}
-
 void theme::new_messages_plate::unserialize(Ui::gui_coll_helper& _coll)
 {
     text_color_ = colorFromString(_coll.get_value_as_string("text_color"));
     bg_color_ = colorFromString(_coll.get_value_as_string("bg_color"));
-}
-
-void theme::new_messages_bubble::unserialize(Ui::gui_coll_helper& _coll)
-{
-    text_color_ = colorFromString(_coll.get_value_as_string("text_color"));
-    bg_color_ = colorFromString(_coll.get_value_as_string("bg_color"));
-    bg_hover_color_ = colorFromString(_coll.get_value_as_string("bg_hover_color"));
-    bg_pressed_color_ = colorFromString(_coll.get_value_as_string("bg_pressed_color"));
 }
 
 void theme::typing::unserialize(Ui::gui_coll_helper& _coll)
@@ -212,9 +166,6 @@ void theme::unserialize(core::coll_helper _coll)
         }
     }
 
-    Ui::gui_coll_helper coll_contact_list_item(_coll.get_value_as_collection("contact_list_item"), false);
-    contact_list_item_.unserialize(coll_contact_list_item);
-
     Ui::gui_coll_helper coll_incoming_bubble(_coll.get_value_as_collection("incoming_bubble"), false);
     incoming_bubble_.unserialize(coll_incoming_bubble);
     
@@ -233,14 +184,8 @@ void theme::unserialize(core::coll_helper _coll)
     Ui::gui_coll_helper coll_contact_name(_coll.get_value_as_collection("contact_name"), false);
     contact_name_.unserialize(coll_contact_name);
     
-    Ui::gui_coll_helper coll_new_messages(_coll.get_value_as_collection("new_messages"), false);
-    new_messages_.unserialize(coll_new_messages);
-    
     Ui::gui_coll_helper coll_new_messages_plate(_coll.get_value_as_collection("new_messages_plate"), false);
     new_messages_plate_.unserialize(coll_new_messages_plate);
-    
-    Ui::gui_coll_helper coll_new_messages_bubble(_coll.get_value_as_collection("new_messages_bubble"), false);
-    new_messages_bubble_.unserialize(coll_new_messages_bubble);
     
     Ui::gui_coll_helper coll_typing(_coll.get_value_as_collection("typing"), false);
     typing_.unserialize(coll_typing);

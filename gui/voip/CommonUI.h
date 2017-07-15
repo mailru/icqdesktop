@@ -29,6 +29,9 @@ namespace Ui
 	public:
 		ResizeEventFilter(std::vector<BaseVideoPanel*>& panels, ShadowWindow* shadow, QObject* _parent);
 
+		void addPanel(BaseVideoPanel* _panel);
+		void removePanel(BaseVideoPanel* _panel);
+
 	protected:
 		bool eventFilter(QObject* _obj, QEvent* _event);
 
@@ -41,6 +44,7 @@ namespace Ui
 	{
 	public:
 		ShadowWindowParent(QWidget* parent);
+        ~ShadowWindowParent();
 
 		void showShadow();
 		void hideShadow();
@@ -61,6 +65,7 @@ namespace Ui
 		void fadeIn(unsigned _interval);
 
 		void geometryTo(const QRect& _rc, unsigned _interval);
+        bool isFadedIn();
 
 	private:
 		bool fadedIn_;
@@ -84,6 +89,7 @@ namespace Ui
 
 		void useAspect();
 		void unuseAspect();
+        void saveMinSize(const QSize& size);
 
 	protected:
 		bool nativeEvent(const QByteArray& _eventType, void* _message, long* _result) override;
@@ -92,20 +98,23 @@ namespace Ui
 
 		private Q_SLOTS:
 		void onVoipFrameSizeChanged(const voip_manager::FrameSize& _fs);
-		void onVoipCallCreated(const voip_manager::ContactEx& _contactEx);
+		//void onVoipCallCreated(const voip_manager::ContactEx& _contactEx);
 
 	private:
 		float aspectRatio_;
 		bool useAspect_;
+        QSize originMinSize_;
 
 		UIEffects* selfResizeEffect_;
-		bool firstTimeUseAspectRatio_;
+		// Commented because we always constrain size of video window.
+		//bool firstTimeUseAspectRatio_;
 
 		void applyFrameAspectRatio(float _wasAr);
 		void keyReleaseEvent(QKeyEvent*) override;
 #ifdef _WIN32
 		bool onWMSizing(RECT& _rc, unsigned _wParam);
 #endif
+        void fitMinimalSizeToAspect();
 	};
 
     // Inherit from this class to create panel in voip window.
@@ -120,6 +129,7 @@ namespace Ui
 		virtual void fadeOut(unsigned int duration);
         
         bool isGrabMouse();
+        virtual bool isFadedIn();
 
     protected:
         
@@ -136,7 +146,7 @@ namespace Ui
 	public:
 		BaseTopVideoPanel(QWidget* parent, Qt::WindowFlags f = Qt::Window | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
 
-		void updatePosition(const QWidget& parent);
+		void updatePosition(const QWidget& parent) override;
 	};
 
     // Inherit from this class to create panel on bottom in voip window.
@@ -145,8 +155,31 @@ namespace Ui
 	public:
 		BaseBottomVideoPanel(QWidget* parent, Qt::WindowFlags f = Qt::Window | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
 
-		void updatePosition(const QWidget& parent);
+		void updatePosition(const QWidget& parent) override;
 	};
+
+    // This panel fill all parent window
+    class FullVideoWindowPanel : public Ui::BaseVideoPanel
+    {
+        Q_OBJECT
+
+    public:        
+
+        FullVideoWindowPanel(QWidget* parent);
+
+        virtual void updatePosition(const QWidget& parent) override;
+
+        virtual void fadeIn(unsigned int duration)  override {}
+        virtual void fadeOut(unsigned int duration) override {}
+
+    signals:
+
+        void onResize();
+
+    protected:
+
+        virtual void	resizeEvent(QResizeEvent *event);
+    };
 
     // Use this class if you want to process
     // mouse event on transparent panels.
@@ -299,4 +332,63 @@ namespace Ui
         int verticalSize;
     };
 
+
+    /**
+     * This widget is used to process mouse event for another panel if it has transparent pixels.
+     * Under Windows it is imposible to get mouse event for tranparent part of widgets.
+     * We have outgoing panel which implements drag & drop, but it has trasporent parts.
+     */
+    class TransparentPanel : public BaseVideoPanel
+    {
+        Q_OBJECT
+
+    public:
+        TransparentPanel(QWidget* _parent, BaseVideoPanel* _eventWidget);
+        ~TransparentPanel();
+
+        void updatePosition(const QWidget& parent) override;
+
+        virtual void fadeIn(unsigned int duration) override {}
+        virtual void fadeOut(unsigned int duration) override {}
+
+    protected:
+
+        void resizeEvent(QResizeEvent * event) override;
+        void mouseMoveEvent(QMouseEvent* _e) override;
+        void mouseReleaseEvent(QMouseEvent * event) override;
+        void mousePressEvent(QMouseEvent * event) override;
+
+        template <typename E> void resendMouseEventToPanel(E* event_);
+
+    protected:
+
+        // We will resend events to this widget.
+        BaseVideoPanel* eventWidget_;
+
+        // Background widget to able process mouse events on transparent parts of panel.
+        PanelBackground* backgroundWidget_;
+    };
+
+	// QWidget which has clicked signal.
+	class PureClickedWidget : public QWidget
+	{
+		Q_OBJECT
+
+	Q_SIGNALS :
+		void clicked();
+
+	public:
+		PureClickedWidget(QWidget* parent);
+		void setEnabled(bool value);
+
+	protected:
+		virtual void mouseReleaseEvent(QMouseEvent *) override;
+
+	private:
+		bool Enabled_;
+	};
+
+    // Show dialog to add new users to video call.
+    void showAddUserToVideoConverenceDialogVideoWindow(QObject* parent, FullVideoWindowPanel* parentWindow);
+    void showAddUserToVideoConverenceDialogMainWindow(QObject* parent, QWidget* parentWindow);
 }

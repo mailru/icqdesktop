@@ -33,6 +33,8 @@ namespace core
 #define WIM_CAP_FILETRANSFER "094613434c7f11d18222444553540000"
 #define WIM_CAP_UNIQ_REQ_ID  "094613534c7f11d18222444553540000"
 #define WIM_CAP_EMOJI        "094613544c7f11d18222444553540000"
+#define WIM_CAP_MAIL_NOTIFICATIONS "094613594c7f11d18222444553540000"
+#define WIM_CAP_SNAPS "094613584C7F11D18222444553540000"
 
 #define SAAB_SESSION_OLDER_THAN_AUTH_UPDATE          1010
 
@@ -92,13 +94,19 @@ namespace core
 
             wpie_error_request_canceled_wait_timeout = 36,
 
+            wpie_error_robusto_you_are_blocked = 37,
+
+            wpie_wrong_login_2x_factor = 38,
+
             wpie_client_http_error = 400,
 
             wpie_error_need_relogin= 1000,
 
             wpie_error_task_canceled = 2000,
 
-            wpie_error_empty_avatar_data = 4000
+            wpie_error_empty_avatar_data = 4000,
+
+            wpie_error_metainfo_not_found = 8000,
         };
 
         enum wim_protocol_error
@@ -159,6 +167,7 @@ namespace core
             proxy_settings proxy_;
             bool full_log_;
             hosts_map hosts_;
+            int64_t nonce_;
 
             wim_packet_params(
                 std::function<bool()> _stop_handler,
@@ -174,7 +183,7 @@ namespace core
                 const core::hosts_map& _hosts
                 )
                 :
-            stop_handler_(_stop_handler),
+                stop_handler_(_stop_handler),
                 a_token_(_a_token),
                 session_key_(_session_key),
                 dev_id_(_dev_id),
@@ -186,6 +195,8 @@ namespace core
                 full_log_(_full_log),
                 hosts_(_hosts)
             {
+                static int64_t nonce_counter = 0;
+                nonce_ = ++nonce_counter;
             }
 
             bool is_auth_valid() const
@@ -195,12 +206,17 @@ namespace core
 
         };
 
-        class wim_packet : public async_task
+        class wim_packet
+            : public async_task
+            , public std::enable_shared_from_this<wim_packet>
         {
             std::string response_str_;
             std::string header_str_;
 
             bool hosts_scheme_changed_;
+
+        public:
+            typedef std::function<void (int32_t _result)> handler_t;
 
         protected:
 
@@ -219,6 +235,7 @@ namespace core
 
             virtual int32_t init_request(std::shared_ptr<core::http_request_simple> request);
             virtual int32_t execute_request(std::shared_ptr<core::http_request_simple> request);
+            virtual void execute_request_async(std::shared_ptr<core::http_request_simple> request, handler_t _handler);
             virtual int32_t parse_response(std::shared_ptr<core::tools::binary_stream> response);
             virtual int32_t parse_response_data(const rapidjson::Value& _data);
             virtual void parse_response_data_on_error(const rapidjson::Value& _data);
@@ -233,13 +250,17 @@ namespace core
 
         public:
 
-            virtual int32_t execute() override;
+            virtual bool support_async_execution() const;
+
+            int32_t execute() override final;
+            void execute_async(handler_t _handler);
+
             static std::string escape_symbols(const std::string& data);
             static std::string escape_symbols_data(const char* _data, uint32_t _len);
-            static std::string get_url_sign(const std::string& host, const Str2StrMap& params, const wim_packet_params& _wim_params, bool post_method, bool make_escape_symbols = true);
-            static std::string format_get_params(const Str2StrMap& _params);
+            static std::string get_url_sign(const std::string& host, const str_2_str_map& params, const wim_packet_params& _wim_params, bool post_method, bool make_escape_symbols = true);
+            static std::string format_get_params(const str_2_str_map& _params);
             static std::string detect_digest(const std::string& hashed_data, const std::string& session_key);
-            static std::string create_query_from_map(const Str2StrMap& params);
+            static std::string create_query_from_map(const str_2_str_map& params);
             static void replace_log_messages(tools::binary_stream& _bs);
 
             virtual std::shared_ptr<core::tools::binary_stream> getRawData() { return NULL; }
@@ -250,7 +271,7 @@ namespace core
             uint32_t get_repeat_count() const;
             void set_repeat_count(const uint32_t _count);
             bool is_stopped() const;
-            
+
             bool can_change_hosts_scheme() const;
             void set_can_change_hosts_scheme(const bool _can);
             void change_hosts_scheme();

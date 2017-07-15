@@ -71,9 +71,9 @@ int32_t get_chat_info::parse_results(const rapidjson::Value& _node_results)
 int32_t get_chat_info::on_response_error_code()
 {
     if (status_code_ == 40001)
-    {
         return wpie_error_robusto_you_are_not_chat_member;
-    }
+    else if (status_code_ == 40002)
+        return wpie_error_robusto_you_are_blocked;
 
     return robusto_packet::on_response_error_code();
 }

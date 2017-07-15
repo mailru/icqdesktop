@@ -5,6 +5,7 @@
 #include "../contact_list/Common.h"
 #include "../../controls/CommonStyle.h"
 #include "../../controls/ContactAvatarWidget.h"
+#include "../../controls/TextEditEx.h"
 #include "../../types/chat.h"
 #include "../../utils/utils.h"
 #include "../../utils/Text2DocConverter.h"
@@ -57,7 +58,7 @@ namespace
     QString getFriendsStylesheet(const QString& _color)
     {
         return QString("font: %1 %2px \"%3\"; color: %4; background-color: transparent")
-            .arg(Fonts::appFontWeightQss(Fonts::FontWeight::Semibold))
+            .arg(Fonts::appFontWeightQss(Fonts::FontWeight::Medium))
             .arg(Utils::scale_value(12))
             .arg(Fonts::defaultAppFontQssName())
             .arg(_color);
@@ -122,22 +123,41 @@ namespace Logic
             avatar.UpdateParams(info.AimId_, info.Name_);
             avatar.render(_painter, QPoint(Utils::scale_value(avatar_left_margin), Utils::scale_value(top_margin)), QRegion(), QWidget::DrawChildren);
 
+            bool isSelected = (_option.state & QStyle::State_Selected);
+
             static auto name = ContactList::CreateTextBrowser(
                 "chat_name",
                 getChatNameStylesheet(Utils::rgbaStringFromColor(Ui::CommonStyle::getTextCommonColor())),
                 0
             );
+
+            static auto name_active = ContactList::CreateTextBrowser(
+                "chat_name",
+                getChatNameStylesheet("#ffffff"),
+                0
+                );
+
+            auto name_control = isSelected ? name_active.get() : name.get();
+
+            name_active->clear();
             name->clear();
-            QTextCursor cursorName = name->textCursor();
+
+            QTextCursor cursorName = name_control->textCursor();
             Logic::Text2Doc(info.Name_, cursorName, Logic::Text2DocHtmlMode::Pass, false);
             int margin = Utils::scale_value(avatar_size) + Utils::scale_value(avatar_left_margin) + Utils::scale_value(avatar_right_margin);
-            int maxWidth = ContactList::ItemWidth(false, false, false).px() - margin - Utils::scale_value(right_margin);
-            name->setFixedWidth(maxWidth);
-            name->render(_painter, QPoint(margin, Utils::scale_value(top_margin - spacing)));
+            int maxWidth = ContactList::ItemWidth(false, false, false) - margin - Utils::scale_value(right_margin);
+            name_control->setFixedWidth(maxWidth);
+            name_control->render(_painter, QPoint(margin, Utils::scale_value(top_margin - spacing)));
 
-            static auto description = ContactList::CreateTextBrowser("chat_info", getChatDescriptionStylesheet("#696969"), 0);
+            static auto description = ContactList::CreateTextBrowser("chat_info", getChatDescriptionStylesheet("#767676"), 0);
+            static auto description_active = ContactList::CreateTextBrowser("chat_info", getChatDescriptionStylesheet("#ffffff"), 0);
+
+            auto desc_control = isSelected ? description_active.get() : description.get();
+
+            description_active->clear();
             description->clear();
-            QTextCursor cursorDescription = description->textCursor();
+
+            QTextCursor cursorDescription = desc_control->textCursor();
             QString about = info.About_;
             if (about.length() > max_desc_chars)
                 about = about.left(max_desc_chars) + "...";
@@ -154,8 +174,8 @@ namespace Logic
             }
 
             Logic::Text2Doc(about, cursorDescription, Logic::Text2DocHtmlMode::Pass, false);
-            description->setFixedWidth(maxWidth);
-            description->render(_painter, QPoint(margin, Utils::scale_value(top_margin) + name->document()->size().height() - Utils::scale_value(desc_spacing)));
+            desc_control->setFixedWidth(maxWidth);
+            desc_control->render(_painter, QPoint(margin, Utils::scale_value(top_margin) + name_control->document()->size().height() - Utils::scale_value(desc_spacing)));
 
             QString friendsInfoStr;
             if (!info.Location_.isEmpty())
@@ -176,22 +196,28 @@ namespace Logic
                     QT_TRANSLATE_NOOP3("livechats", "friends", "21")));
             }
 
-            static auto friends = ContactList::CreateTextBrowser("friends", getFriendsStylesheet("#696969"), 0);
+            static auto friends = ContactList::CreateTextBrowser("friends", getFriendsStylesheet("#767676"), 0);
+            static auto friends_active = ContactList::CreateTextBrowser("friends", getFriendsStylesheet("#ffffff"), 0);
+
+            auto friends_control = isSelected ? friends_active.get() : friends.get();
+
             friends->clear();
+            friends_active->clear();
+
             if (!friendsInfoStr.isEmpty())
             {
-                QTextCursor cursorFriend = friends->textCursor();
+                QTextCursor cursorFriend = friends_control->textCursor();
                 Logic::Text2Doc(friendsInfoStr, cursorFriend, Logic::Text2DocHtmlMode::Pass, false);
                 int margin = Utils::scale_value(avatar_size) + Utils::scale_value(avatar_left_margin) + Utils::scale_value(avatar_right_margin);
-                int maxWidth = ContactList::ItemWidth(false, false, false).px() - margin - Utils::scale_value(right_margin);
-                friends->setFixedWidth(maxWidth);
-                friends->render(_painter, QPoint(margin, Utils::scale_value(top_margin) + name->document()->size().height() + description->document()->size().height() - Utils::scale_value(friends_spacing)));
+                int maxWidth = ContactList::ItemWidth(false, false, false) - margin - Utils::scale_value(right_margin);
+                friends_control->setFixedWidth(maxWidth);
+                friends_control->render(_painter, QPoint(margin, Utils::scale_value(top_margin) + name_control->document()->size().height() + desc_control->document()->size().height() - Utils::scale_value(friends_spacing)));
             }
 
             Ui::LiveChatMembersControl avatarsCollection_(parent_, std::make_shared<Data::ChatInfo>(info), 4);
-            int y = Utils::scale_value(top_margin) + name->document()->size().height() + description->document()->size().height();
+            int y = Utils::scale_value(top_margin) + name_control->document()->size().height() + desc_control->document()->size().height();
             if (!friendsInfoStr.isEmpty())
-                y += friends->document()->size().height();
+                y += friends_control->document()->size().height();
 
             y -= Utils::scale_value(avatars_spacing);
 
@@ -202,7 +228,7 @@ namespace Logic
             else if (_option.state & QStyle::State_MouseOver)
                 avatarsCollection_.setColor(Ui::CommonStyle::getContactListHoveredColor());
             else
-                avatarsCollection_.setColor(Ui::CommonStyle::getFrameTransparency());
+                avatarsCollection_.setColor(Ui::CommonStyle::getFrameColor());
 
             avatarsCollection_.render(_painter, QPoint(margin, y), QRegion(), QWidget::DrawChildren);
 
@@ -219,7 +245,7 @@ namespace Logic
             kCount_.setText(formatMembersCount(info.MembersCount_, avatarsCollection_.getRealCount()));
             kCount_.setFont(Fonts::appFontScaled(12));
             QPalette p;
-            p.setColor(QPalette::Foreground, QColor(0x69, 0x69, 0x69));
+            p.setColor(QPalette::Foreground, isSelected ? QColor("#ffffff") : QColor("#767676"));
             kCount_.setPalette(p);
             kCount_.adjustSize();
             kCount_.render(_painter, QPoint(margin + avatarsCollection_.width(), y), QRegion(), QWidget::DrawChildren);
@@ -233,7 +259,7 @@ namespace Logic
         if (!height_.contains(_index.row()))
             height_[_index.row()] = 200;
 
-        return QSize(ContactList::ItemWidth(false, false, false).px(), height_[_index.row()]);
+        return QSize(ContactList::ItemWidth(false, false, false), height_[_index.row()]);
     }
 
     void LiveChatItemDelegate::blockState(bool _value)

@@ -35,7 +35,6 @@ namespace Utils
         PlaceholdersType_HideFindFriend,
 
         PlaceholdersType_IntroduceYourself,
-        // PlaceholdersType_HideIntroduceYourself,
         PlaceholdersType_SetExistanseOnIntroduceYourself,
         PlaceholdersType_SetExistanseOffIntroduceYourself,
 
@@ -52,15 +51,12 @@ Q_SIGNALS:
         void profileSettingsShow(QString uin);
         void profileSettingsBack();
 
+        void themesSettingsOpen();
+
         void generalSettingsShow(int type);
         void generalSettingsBack();
         void themesSettingsShow(bool, QString);
         void themesSettingsBack();
-        void profileSettingsDoMessage(QString uin);
-        void profileSettingsUnknownAdd(QString uin);
-        void profileSettingsUnknownRemove(QString uin);
-        void profileSettingsUnknownIgnore(QString uin);
-        void profileSettingsUnknownSpam(QString uin);
         void profileSettingsUpdateInterface();
         
         void generalSettingsContactUsShown();
@@ -119,7 +115,7 @@ Q_SIGNALS:
 
         void activateNextUnread();
 
-        void historyControlReady(QString, qint64 _message_id);
+        void historyControlReady(QString, qint64 _message_id, qint64 _last_read_msg);
 
         void imageCropDialogIsShown(QWidget *);
         void imageCropDialogIsHidden(QWidget *);
@@ -130,6 +126,16 @@ Q_SIGNALS:
         void setSearchFocus();
 
         void searchEnd();
+        void myProfileBack();
+
+        void compactModeChanged();
+        void showSnapsChanged();
+        void mailBoxOpened();
+
+        void logout();
+        void authError(const int _error);
+        void contacts();
+        void showHeader(QString);
 
     public:
         static InterConnector& instance();
@@ -157,6 +163,13 @@ Q_SIGNALS:
         void setFocusOnInput();
         void onSendMessage(const QString&);
 
+        int getSemiwindowsCount() const;
+        void incSemiwindowsCount();
+        void decSemiwindowsCount();
+
+        bool isSemiWindowsTouchSwallowed() const;
+        void setSemiwindowsTouchSwallowed(bool _val);
+
     public Q_SLOTS:
         void open_url(const QUrl& url);
 
@@ -172,5 +185,8 @@ Q_SIGNALS:
 
         Ui::MainWindow* MainWindow_;
         bool dragOverlay_;
+
+        int semiWindowsCount_;
+        bool semiWindowsTouchSwallowed_;
     };
 }

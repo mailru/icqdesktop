@@ -8,6 +8,6 @@ Ui--LiveChatProfile
 QLabel#LiveChatMembersCount
 {
 	font-size: 12dip;
-	color: #696969;
+	color: #767676;
 }
 

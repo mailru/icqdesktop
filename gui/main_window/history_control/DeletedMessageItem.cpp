@@ -13,4 +13,9 @@ namespace Ui
     {
     }
 
+	void DeletedMessageItem::setQuoteSelection()
+	{
+		/// TODO-quote
+		assert(0);
+	}
 }

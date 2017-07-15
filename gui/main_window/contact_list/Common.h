@@ -12,49 +12,14 @@ enum class FontWeight;
 
 FONTS_NS_END
 
+namespace Ui
+{
+    class TextEditEx;
+}
+
 namespace ContactList
 {
-	typedef std::unique_ptr<QTextBrowser> QTextBrowserUptr;
-
-	class DipPixels
-	{
-	public:
-		explicit DipPixels(const int _px) : Px_(_px) {}
-
-		int px() const;
-
-		const DipPixels operator+(const DipPixels& _rhs) const { return DipPixels(Px_ + _rhs.Px_); }
-
-		const DipPixels operator-(const DipPixels& _rhs) const { return DipPixels(Px_ - _rhs.Px_); }
-
-		const DipPixels operator*(const DipPixels& _rhs) const { return DipPixels(Px_ * _rhs.Px_); }
-
-		const DipPixels operator/(const DipPixels& _rhs) const { return DipPixels(Px_ / _rhs.Px_); }
-
-        bool operator < (const DipPixels& _other) const
-        {
-            return Px_ < _other.Px_;
-        }
-
-	private:
-		int Px_;
-	};
-
-	class DipFont
-	{
-	public:
-        DipFont(const Fonts::FontFamily _family, const Fonts::FontWeight _weight, const DipPixels _size);
-
-		QFont font() const;
-
-	private:
-		DipPixels Size_;
-
-        Fonts::FontFamily Family_;
-
-        Fonts::FontWeight Weight_;
-
-	};
+	typedef std::unique_ptr<Ui::TextEditEx> TextEditExUptr;
 
 	struct VisualDataBase
 	{
@@ -66,7 +31,7 @@ namespace ContactList
 			const bool _isHovered,
 			const bool _isSelected,
 			const QString& _contactName,
-			const bool _haveLastSeen,
+			const bool _hasLastSeen,
 			const QDateTime& _lastSeen,
 			const bool _isWithCheckBox,
             bool _isChatMember,
@@ -89,13 +54,13 @@ namespace ContactList
 
 		const bool IsSelected_;
 
-		const bool HaveLastSeen_;
+		const bool HasLastSeen_;
 
 		const QDateTime LastSeen_;
 
-		bool IsOnline() const { return HaveLastSeen_ && !LastSeen_.isValid(); }
+		bool IsOnline() const { return HasLastSeen_ && !LastSeen_.isValid(); }
 
-		bool HasLastSeen() const { return HaveLastSeen_; }
+		bool HasLastSeen() const { return HasLastSeen_; }
 
 		const bool isCheckedBox_;
 
@@ -123,34 +88,28 @@ namespace ContactList
         QString Status_;
 	};
 
-	const auto dip = [](const int _px) { return DipPixels(_px); };
+	QString FormatTime(const QDateTime &_time);
 
-	const auto dif = [](const Fonts::FontFamily _family, const Fonts::FontWeight _weight, const int _sizePx) { return DipFont(_family, _weight, dip(_sizePx)); };
+	TextEditExUptr CreateTextBrowser(const QString& _name, const QString& _stylesheet, const int _textHeight);
 
-	QString FormatTime(const QDateTime &time);
-
-	QTextBrowserUptr CreateTextBrowser(const QString& _name, const QString& _stylesheet, const int _textHeight);
-
-	DipPixels ItemWidth(bool fromAlert, bool _isWithCheckBox, bool _isShortView, bool _isPictureOnlyView = false);
+    QLineEdit *CreateTextBrowser2(const QString& _name, const QString& _stylesheet, const int _textHeight);
+    
+	int ItemWidth(bool _fromAlert, bool _isWithCheckBox, bool _isPictureOnlyView = false);
 
     struct ViewParams;
-    DipPixels ItemWidth(const ViewParams& _viewParams);
+    int ItemWidth(const ViewParams& _viewParams);
 
     int CorrectItemWidth(int _itemWidth, int _fixedWidth);
 
-	DipPixels ItemLength(bool _isWidth, double _koeff, DipPixels _addWidth);
-
-    int ContactItemHeight();
-    int GroupItemHeight();
-    int SearchInAllChatsHeight();
+	int ItemLength(bool _isWidth, double _koeff, int _addWidth);
+    int ItemLength(bool _isWidth, double _koeff, int _addWidth, QWidget* parent);
 
     bool IsPictureOnlyView();
 
     struct ViewParams
     {
-        ViewParams(int _regim, bool _shortView, int _fixedWidth, int _leftMargin, int _rightMargin)
+        ViewParams(int _regim, int _fixedWidth, int _leftMargin, int _rightMargin)
             : regim_(_regim)
-            , shortView_(_shortView)
             , fixedWidth_(_fixedWidth)
             , leftMargin_(_leftMargin)
             , rightMargin_(_rightMargin)
@@ -159,7 +118,6 @@ namespace ContactList
 
         ViewParams()
             : regim_(-1)
-            , shortView_(false)
             , fixedWidth_(-1)
             , leftMargin_(0)
             , rightMargin_(0)
@@ -167,7 +125,6 @@ namespace ContactList
         {}
 
         int regim_;
-        bool shortView_;
         int fixedWidth_;
         int leftMargin_;
         int rightMargin_;
@@ -177,137 +134,157 @@ namespace ContactList
     class ContactListParams
     {
     public:
-        const DipPixels itemHeight() const { return is_cl_ ? dip(44) : dip(68); }
-        const DipPixels itemPadding() const { return dip(16); }
-        const DipPixels checkboxWidth() const { return dip(20); }
-        const DipPixels remove_size() const { return dip(20); }
-        const DipPixels approve_size() const { return dip(32); }
-        const DipPixels role_offset() const { return  dip(24); }
-        const DipPixels role_ver_offset() const { return dip(4); }
 
-        const DipPixels itemWidth() const { return dip(333); }
-        const DipPixels itemWidthAlert() const { return dip(320); }
-
-        const DipPixels itemLeftBorder() const { return itemPadding(); }
-
-        DipPixels avatarX() const
+        //Common
+        const int itemHeight() const { return isCl_ ? Utils::scale_value(44) : Utils::scale_value(64); }
+        const int itemWidth() const { return Utils::scale_value(320); }
+        const int itemHorPadding() const { return  Utils::scale_value(16); }
+        const int itemContentPadding() const { return Utils::scale_value(16); }
+        const int getItemMiddleY()
         {
-            if (!is_cl_)
-                return dip(16);
-            return withCheckBox_ ? checkboxWidth() + dip(24) + dip(10) : itemLeftBorder();
+            return avatarSize() / 2 + avatarY();
+        };
+        const int serviceItemHeight() { return  Utils::scale_value(24); }
+        const int serviceItemIconPadding() {return Utils::scale_value(12); }
+
+        //Contact avatar
+        int avatarX() const
+        {
+            if (!isCl_) return itemHorPadding();
+            return withCheckBox_ ? itemHorPadding() + checkboxSize() + Utils::scale_value(12) : itemHorPadding();
+        }
+        const int avatarY() const
+        {
+            return (itemHeight() - avatarSize()) / 2;
+        }
+        const int avatarSize() const
+        {
+            if (!isCl_) return Utils::scale_value(48);
+            return Utils::scale_value(32);
         }
 
-        const DipPixels avatarY() const
+        //Contact name
+        int GetContactNameX() const
         {
-            if (!is_cl_)
-                return dip(6);
-            return dip(6);
+            if (!isCl_) return  avatarX() + avatarSize() + itemContentPadding();
+            return (avatarX() + avatarSize() + Utils::scale_value(12) + leftMargin_);
         }
-        const DipPixels avatarW() const
+        const int nameY() { return  Utils::scale_value(10); }
+        const int nameYForMailStatus() { return  Utils::scale_value(20); }
+        const int contactNameFontSize() { return Utils::scale_value(16); }
+        const int contactNameHeight() { return  Utils::scale_value(22); }
+        const int contactNameCenterY() { return  Utils::scale_value(10); }
+        const int contactNameTopY() { return  Utils::scale_value(2); }
+        QString getContactNameStylesheet(const QString& _fontColor, const Fonts::FontWeight _fontWeight)
         {
-            if (!is_cl_)
-                return dip(56);
-            return dip(32);
-        }
-        const DipPixels avatarH() const
-        {
-            if (!is_cl_)
-                return dip(56);
-            return dip(32);
-        }
+            assert(_fontWeight > Fonts::FontWeight::Min);
+            assert(_fontWeight < Fonts::FontWeight::Max);
 
-        const DipPixels timeFontSize() const { return dip(12); }
-        const DipPixels timeY() const { return !is_cl_ ? avatarY() + dip(24) : dip(27); }
-        const DipFont timeFont() const
-        {
-            return dif(Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), 12);
-        }
-        const QColor timeFontColor() const { return QColor(0x69, 0x69, 0x69); }
-
-        const DipPixels onlineSignLeftPadding() const { return dip(12); }
-        const DipPixels onlineSignSize() const { return  dip(4); }
-        const DipPixels onlineSignY() const { return  dip(18); }
-        const QColor onlineSignColor() const { return QColor("#579e1c"); }
-
-        DipPixels GetContactNameX() const
-        {
-            if (!is_cl_)
-                return  avatarX() + avatarW() + dip(13);
-            return (avatarX() + avatarW() + dip(12) + DipPixels(Utils::unscale_value(leftMargin_)));
-        }
-
-        const DipPixels contactNameRightPadding (){ return  dip(12);}
-        const DipPixels contactNameFontSize (){ return is_cl_ ? dip(16) : dip(17);}
-        const DipPixels contactNameHeight (){ return  dip(24);}
-        const DipPixels contactNameCenterY (){ return  dip(10);}
-        const DipPixels contactNameTopY (){ return  dip(2);}
-        const DipPixels nameY (){ return  dip(12);}
-
-        QString getContactNameStylesheet(const QString& fontColor, const Fonts::FontWeight fontWeight)
-        {
-            assert(fontWeight > Fonts::FontWeight::Min);
-            assert(fontWeight < Fonts::FontWeight::Max);
-
-            const auto fontQss = Fonts::appFontFullQss(contactNameFontSize().px(), Fonts::defaultAppFontFamily(), fontWeight);
-
+            const auto fontQss = Fonts::appFontFullQss(contactNameFontSize(), Fonts::defaultAppFontFamily(), _fontWeight);
             const auto result =
-                QString("%1; color: %2; background-color: transparent;")
-                .arg(fontQss)
-                .arg(fontColor);
+                QString("%1; color: %2; background-color: transparent;").arg(fontQss).arg(_fontColor);
 
             return result;
         };
 
-        DipPixels GetStatusX()
+        const QColor getNameFontColor(bool _isSelected, bool _isMemberChecked) const
         {
-            return GetContactNameX();
+            return _isSelected ? QColor("#ffffff") : _isMemberChecked ? QColor("#579e1c") : QColor("#000000");
         }
 
-        const DipPixels statusY (){ return  dip(21);}
-        const DipPixels statusFontSize (){ return  dip(13);}
-        const DipPixels statusHeight (){ return  dip(20);}
-        const QString getStatusStylesheet ()
+        //Message
+        const int messageFontSize() { return  Utils::scale_value(14); }
+        const int messageHeight() { return  Utils::scale_value(24); }
+        const int messageX() { return  GetContactNameX(); }
+        const int messageY() const { return  Utils::scale_value(30); }
+        const QString getRecentsMessageFontColor(const bool _isUnread)
         {
-            return QString("font: %1 %2px \"%3\"; color: #696969; background-color: transparent")
+            const auto color = Utils::rgbaStringFromColor(_isUnread ? "#000000" : "#767676");
+
+            return color;
+        };
+
+        const QString getMessageStylesheet(const bool _isUnread, const bool _isSelected)
+        {
+            const auto fontWeight = Fonts::FontWeight::Normal;
+            const auto fontQss = Fonts::appFontFullQss(messageFontSize(), Fonts::defaultAppFontFamily(), fontWeight);
+            const auto fontColor = _isSelected ? "#ffffff" : getRecentsMessageFontColor(_isUnread);
+            const auto result =
+                QString("%1; color: %2; background-color: transparent").arg(fontQss).arg(fontColor);
+
+            return result;
+        };
+
+        //Unknown contacts page
+        const int unknownsUnreadsY(bool _pictureOnly)
+        {
+            return _pictureOnly ? Utils::scale_value(4) : Utils::scale_value(14);
+        }
+        const int unknownsItemHeight() { return  Utils::scale_value(40); }
+
+        //Contact status
+        int GetStatusX() { return GetContactNameX(); }
+        const int statusY() { return  Utils::scale_value(21); }
+        const int statusHeight() { return  Utils::scale_value(20); }
+        const QString getStatusStylesheet(bool _isSelected)
+        {
+            return QString("font: %1 %2px \"%3\"; color: %4; background-color: transparent")
                 .arg(Fonts::defaultAppFontQssWeight())
-                .arg(statusFontSize().px())
-                .arg(Fonts::defaultAppFontQssName());
+                .arg(Utils::scale_value(13))
+                .arg(Fonts::defaultAppFontQssName())
+                .arg(_isSelected ? "#ffffff" : "#767676");
         };
 
-        DipPixels GetAddContactX()
+        //Time
+        const int timeY() const
         {
-            return GetContactNameX();
+            return !isCl_ ? avatarY() + Utils::scale_value(24) : Utils::scale_value(27);
+        }
+        const QFont timeFont() const { return Fonts::appFontScaled(12); }
+        const QColor timeFontColor(bool _isSelected) const
+        {
+            return _isSelected ? QColor("#ffffff") : QColor("#767676");
         }
 
-        const DipPixels addContactY (){ return  dip(30);}
-        const DipFont addContactFont (){ return  dif(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Semibold, 16);}
-        const DipFont emptyIgnoreListFont (){ return dif(Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), 16);}
-        const DipFont findInAllChatsFont (){ return dif(Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), 16);}
-        const QColor emptyIgnoreListColor(){ return QColor("#000000");}
+        //Additional options
+        const int checkboxSize() const { return Utils::scale_value(20); }
+        const QSize removeSize() const { return QSize(Utils::scale_value(28), Utils::scale_value(24)); }
+        const int role_offset() const { return  Utils::scale_value(24); }
+        const int role_ver_offset() const { return Utils::scale_value(4); }
 
-        DipPixels GetGroupX()
-        {
-            return GetAddContactX();
-        }
-        const DipPixels groupY (){ return dip(17);}
-        const DipFont groupFont (){ return dif(Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), 12);}
-        const QColor groupColor(){ return QColor("#579e1c");}
+        //Groups in Contact list
+        const int groupY() { return Utils::scale_value(17); }
+        const QFont groupFont() { return Fonts::appFontScaled(12); }
+        const QColor groupColor() { return QColor("#579e1c"); }
 
-        const DipPixels dragOverlayPadding (){ return dip(8);}
-        const DipPixels dragOverlayBorderWidth (){ return dip(2);}
-        const DipPixels dragOverlayBorderRadius (){ return dip(8);}
-        const DipPixels dragOverlayVerPadding (){ return  dip(1);}
+        //Unreads counter
+        const QFont unreadsFont() { return Fonts::appFontScaled(13, Fonts::FontWeight::Medium); }
+        const int unreadsPadding() { return  Utils::scale_value(8); }
 
-        const DipPixels official_hor_padding (){ return  dip(6);}
-        const DipPixels official_ver_padding (){ return  dip(4);}
+        //Last seen
+        int lastReadY() const { return  Utils::scale_value(38); }
+        int getLastReadAvatarSize() const { return Utils::scale_value(12); }
+        const int getlastReadLeftMargin() const { return Utils::scale_value(4); }
+        const int getlastReadRightMargin() const { return Utils::scale_value(4); }
 
-        const int getItemMiddleY()
-        {
-            return avatarH().px() / 2.0 + avatarY().px();
-        };
 
-        ContactListParams(bool _is_cl)
-            : is_cl_(_is_cl)
+        const QFont emptyIgnoreListFont() { return Fonts::appFontScaled(16); }
+
+        //Search in the dialog
+        const QColor searchInAllChatsColor() { return QColor("#579e1c"); }
+        const QFont searchInAllChatsFont() { return Fonts::appFontScaled(14, Fonts::FontWeight::Medium); }
+        const int searchInAllChatsHeight() { return   Utils::scale_value(48); }
+        const int searchInAllChatsY() { return Utils::scale_value(28); }
+
+        const int dragOverlayPadding() { return Utils::scale_value(8); }
+        const int dragOverlayBorderWidth() { return Utils::scale_value(2); }
+        const int dragOverlayBorderRadius() { return Utils::scale_value(8); }
+        const int dragOverlayVerPadding() { return  Utils::scale_value(1); }
+
+        const int official_hor_padding() { return  Utils::scale_value(6); }
+
+        ContactListParams(bool _isCl)
+            : isCl_(_isCl)
             , withCheckBox_(false)
             , leftMargin_(0)
         {}
@@ -334,12 +311,12 @@ namespace ContactList
 
         bool isCL() const
         {
-            return is_cl_;
+            return isCl_;
         }
 
         void setIsCL(bool _isCl)
         {
-            is_cl_ = _isCl;
+            isCl_ = _isCl;
         }
 
         void resetParams()
@@ -348,99 +325,14 @@ namespace ContactList
             withCheckBox_ = false;
         }
 
-        const QString getNameFontColor(const bool isUnread)
-        {
-            const auto color =
-                isUnread ?
-                Utils::rgbaStringFromColor(Ui::CommonStyle::getTextCommonColor()) :
-                    Utils::rgbaStringFromColor(Ui::CommonStyle::getTextCommonColor());
-
-            return color;
-        };
-
-        const QString getMessageFontColor(const bool isUnread)
-        {
-            const auto color = (isUnread ? Utils::rgbaStringFromColor(Ui::CommonStyle::getTextCommonColor()) : "#696969");
-
-            return color;
-        };
-
-        const QString getFontWeight(const bool isUnread)
-        {
-            const auto fontWeight = (isUnread ? Fonts::FontWeight::Semibold : Fonts::FontWeight::Normal);
-
-            const auto fontWeightQss = Fonts::appFontWeightQss(fontWeight);
-
-            return fontWeightQss;
-        };
-
-        const DipPixels serviceItemHeight (){ return  dip(25);}
-        const DipPixels unknownsItemHeight (){ return  dip(44);}
-		const DipPixels itemHorPadding (){ return  dip(16);}
-		const DipPixels itemHorPaddingUnknown (){ return  dip(9);}
-        const DipPixels favoritesStatusPadding (){ return  dip(4);}
-
-        const QString getRecentsNameFontColor(const bool isUnread);
-
-        const QString getRecentsMessageFontColor(const bool isUnread);
-
-        const QString getRecentsFontWeight(const bool isUnread);
-
-
-		const DipPixels nameHeight (){ return  dip(24);}
-        const DipPixels messageFontSize (){ return  dip(15);}
-		const DipPixels messageHeight (){ return  dip(24);}
-		const DipPixels messageX (){ return  GetContactNameX();}
-		const DipPixels messageY (){ return  dip(34);}
-
-		const QString getMessageStylesheet(const bool isUnread)
-        {
-            const auto fontWeight = Fonts::FontWeight::Normal;
-
-            const auto fontQss = Fonts::appFontFullQss(messageFontSize().px(), Fonts::defaultAppFontFamily(), fontWeight);
-
-            const auto fontColor = getRecentsMessageFontColor(isUnread);
-
-            const auto result =
-                QString("%1; color: %2; background-color: transparent")
-                    .arg(fontQss)
-                    .arg(fontColor);
-
-            return result;
-        };
-
-		const DipPixels deliveryStateY (){ return  avatarY() + dip(11);}
-		const DipPixels deliveryStateRightPadding (){ return  dip(4);}
-
-
-		const DipFont unreadsFont (){ return  dif(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Semibold, 13);}
-		const DipPixels unreadsPadding (){ return  dip(6);}
-		const DipPixels unreadsMinimumExtent (){ return  dip(20);}
-		const DipPixels unreadsY (){ return is_cl_ ? dip(12) : dip(24);}
-		const DipPixels unreadsLeftPadding (){ return  dip(12);}
-
-        const DipPixels lastReadY (){ return  dip(38);}
-
-        const DipFont unknownsUnreadsFont (){ return  dif(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Semibold, 13);}
-        const DipPixels unknownsUnreadsPadding (){ return  dip(6);}
-        const DipPixels unknownsUnreadsMinimumExtent (){ return  dip(20);}
-        const DipPixels unknownsUnreadsY (){ return  dip(9);}
-        const DipPixels unknownsUnreadsLeftPadding (){ return  dip(12);}
-
-        int getLastReadAvatarSize() const { return Utils::scale_value(16); }
-
-        const DipPixels interPadding() const { return  dip(6);}
-        const DipPixels interLeftPadding() const { return  dip(12);}
-
-
-        const DipPixels addContactSize() const { return  dip(30); }
+        const int favoritesStatusPadding() { return  Utils::scale_value(4); }
+        
         QRect& addContactFrame()
         {
             static QRect addContactFrameRect(0, 0, 0, 0);
             return addContactFrameRect;
         }
 
-        const DipPixels removeContactSize() const { return dip(20); }
         QRect& removeContactFrame()
         {
             static QRect removeContactFrameRect(0, 0, 0, 0);
@@ -453,8 +345,18 @@ namespace ContactList
             return deleteAllFrameRect;
         }
 
+        //snaps
+        const int snapItemHeight() const { return Utils::scale_value(116); }
+        const int snapItemWidth() const { return Utils::scale_value(68); }
+        const int snapGradientHeight() const { return Utils::scale_value(40); }
+        const int snapPreviewHeight() const { return Utils::scale_value(100); }
+        const int snapPreviewWidth() const { return Utils::scale_value(60); }
+        const int snapLeftPadding() const { return Utils::scale_value(4); }
+        const int snapTopPadding() const { return Utils::scale_value(4); }
+        const int snapNameBottomPadding() const { return Utils::scale_value(12); }
+
     private:
-        bool is_cl_;
+        bool isCl_;
         bool withCheckBox_;
         int leftMargin_;
     };
@@ -463,17 +365,23 @@ namespace ContactList
 
     ContactListParams& GetRecentsParams(int _regim);
 
-    void RenderAvatar(QPainter &painter, int _x, const QPixmap& _avatar, ContactList::ContactListParams& _contactListPx);
+    void RenderAvatar(QPainter &_painter, int _x, const QPixmap& _avatar, ContactList::ContactListParams& _contactList);
 
-    void RenderMouseState(QPainter &painter, const bool isHovered, const bool isSelected, const ContactList::ContactListParams& _contactListPx, const ContactList::ViewParams& viewParams_);
+    void RenderMouseState(QPainter &_painter, const bool isHovered, const bool _isSelected, const ContactList::ContactListParams& _contactList, const ContactList::ViewParams& _viewParams);
 
-    void RenderContactName(QPainter &painter, const ContactList::VisualDataBase &visData, const int y, const int rightBorderPx, ContactList::ViewParams _viewParams, ContactList::ContactListParams& _contactListPx);
+    void RenderContactName(QPainter &_painter, const ContactList::VisualDataBase &_visData, const int _y, const int _rightMargin, ContactList::ViewParams _viewParams, ContactList::ContactListParams& _contactList);
 
-    int RenderDate(QPainter &painter, const QDateTime &date, const VisualDataBase &item, ContactListParams& _contactListPx, const ViewParams& viewParams_);
+    int RenderDate(QPainter &_painter, const QDateTime &_date, const VisualDataBase &_item, ContactListParams& _contactList, const ViewParams& _viewParams);
 
-    int RenderRemove(QPainter &painter, ContactListParams& _contactListPx, const ViewParams& viewParams_);
+    int RenderAddContact(QPainter &_painter, int& _rightMargin, bool _isSelected, ContactListParams& _recentParams);
+    
+    void RenderCheckbox(QPainter &_painter, const VisualDataBase &_visData, ContactListParams& _contactList);
 
-    int GetXOfRemoveImg(bool _isWithCheckBox, bool _shortView, int width);
+    int RenderRemove(QPainter &_painter, bool _isSelected, ContactListParams& _contactList, const ViewParams& _viewParams);
+
+    int GetXOfRemoveImg(int width);
+
+    bool IsSelectMembers(int regim);
 }
 
 namespace Logic

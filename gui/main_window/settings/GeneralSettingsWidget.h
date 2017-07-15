@@ -30,14 +30,28 @@ namespace Ui
     public:
         GeneralSettings(QWidget * _parent);
 
-        public Q_SLOTS:
-            void recvUserProxy();
-
-
-    public:
-
         TextEmojiWidget* connectionTypeChooser_;
         GeneralCreator::addSwitcherWidgets launchMinimized_;
+        GeneralCreator::addSwitcherWidgets sounds_;
+
+    public Q_SLOTS:
+        void recvUserProxy();
+
+    private Q_SLOTS: 
+        void value_changed(QString);
+    };
+
+    class NotificationSettings : public QWidget
+    {
+        Q_OBJECT
+
+    public:
+        NotificationSettings(QWidget * _parent);
+
+        GeneralCreator::addSwitcherWidgets sounds_;
+
+    private Q_SLOTS: 
+       void value_changed(QString);
     };
 
     class GeneralSettingsWidget : public QStackedWidget
@@ -75,7 +89,7 @@ namespace Ui
         voiceAndVideo_;
 
         GeneralSettings* general_;
-        QWidget* notifications_;
+        NotificationSettings* notifications_;
         QWidget* themes_;
         QWidget* about_;
         QWidget* contactus_;
@@ -89,7 +103,7 @@ namespace Ui
             static void initGeneral(GeneralSettings* _parent, std::map<std::string, Synchronizator>& _collector);
             static void initVoiceVideo(QWidget* _parent, VoiceAndVideoOptions& _voiceAndVideo);
             static void initThemes(QWidget* _parent);
-            static void initNotifications(QWidget* _parent, std::map<std::string, Synchronizator>& _collector);
+            static void initNotifications(NotificationSettings* _parent, std::map<std::string, Synchronizator>& _collector);
             static void initContactUs(QWidget* _parent, std::map<std::string, Synchronizator> &/*collector*/);
             static void initAttachUin(QWidget* _parent, std::map<std::string, Synchronizator> &/*collector*/);
             static void initAttachPhone(QWidget* _parent, std::map<std::string, Synchronizator> &/*collector*/);

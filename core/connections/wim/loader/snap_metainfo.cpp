@@ -10,19 +10,20 @@ snap_metainfo::snap_metainfo(
     const uint64_t _id,
     const std::string &_mini_preview_uri,
     const std::string &_full_preview_uri,
+    const std::string &_iphone_preview_uri,
     const int64_t _expire_utc,
     const std::string _author_uin,
-    const std::string _author_name)
+    const std::string _author_name,
+    const std::string& _ttl_id)
     : id_(_id)
     , mini_preview_uri_(_mini_preview_uri)
     , full_preview_uri_(_full_preview_uri)
+    , iphone_preview_uri_(_iphone_preview_uri)
     , expire_utc_(_expire_utc)
     , author_uin_(_author_uin)
     , author_name_(_author_name)
+    , ttl_id_(_ttl_id)
 {
-    assert(id_ > 0);
-    assert(!mini_preview_uri_.empty() ||
-           !full_preview_uri_.empty());
     assert(expire_utc_ >= 0);
     assert(!author_uin_.empty());
     assert(!author_name_.empty());
@@ -62,6 +63,11 @@ const std::string& snap_metainfo::get_mini_preview_uri() const
     return mini_preview_uri_;
 }
 
+const std::string& snap_metainfo::get_iphone_preview_uri() const
+{
+    return iphone_preview_uri_;
+}
+
 int64_t snap_metainfo::get_expire_utc() const
 {
     assert(expire_utc_ >= 0);
@@ -76,20 +82,24 @@ void snap_metainfo::serialize(icollection* _collection) const
     coll.set<int64_t>("expire_utc", expire_utc_);
     coll.set<std::string>("author_uin", author_uin_);
     coll.set<std::string>("author_name", author_name_);
+    coll.set<std::string>("mini_preview_uri", mini_preview_uri_);
+    coll.set<std::string>("full_preview_uri", full_preview_uri_);
+    coll.set<std::string>("iphone_preview_uri", iphone_preview_uri_);
+    coll.set<std::string>("ttl_id", ttl_id_);
 }
 
-Str2StrMap format_get_metainfo_params(const std::string &_ttl_id)
+str_2_str_map format_get_metainfo_params(const std::string &_ttl_id)
 {
     assert(!_ttl_id.empty());
 
-    Str2StrMap result;
+    str_2_str_map result;
 
     result.emplace("ttl_id", _ttl_id);
 
     return result;
 }
 
-snap_metainfo_uptr parse_json(InOut char *_json)
+snap_metainfo_uptr parse_json(InOut char *_json, const std::string& _ttl_id)
 {
     assert(_json);
 
@@ -99,11 +109,29 @@ snap_metainfo_uptr parse_json(InOut char *_json)
         return nullptr;
     }
 
+    uint64_t snap_id = 0;
     auto iter_snap_id = doc.FindMember("snap_id");
-    if ((iter_snap_id == doc.MemberEnd()) ||
-        !iter_snap_id->value.IsString())
+    if ((iter_snap_id != doc.MemberEnd()) && iter_snap_id->value.IsString())
     {
-        return nullptr;
+        try
+        {
+            snap_id = std::stoull(iter_snap_id->value.GetString());
+        }
+        catch (std::invalid_argument&)
+        {
+            assert(!"invalid snap id format");
+            return nullptr;
+        }
+        catch (std::out_of_range&)
+        {
+            assert(!"invalid snap id value");
+        }
+
+        if (snap_id == 0)
+        {
+            assert(!"snap id cannot be zero");
+            return nullptr;
+        }
     }
 
     auto iter_author_uin = doc.FindMember("author_uin");
@@ -155,25 +183,11 @@ snap_metainfo_uptr parse_json(InOut char *_json)
         full_preview_uri = iter_static600->value.GetString();
     }
 
-    uint64_t snap_id = 0;
-    try
+    std::string iphone_preview_uri;
+    auto iter_iphone = node_file.FindMember("mdpi");
+    if (iter_iphone != node_file.MemberEnd() && iter_iphone->value.IsString())
     {
-        snap_id = std::stoull(iter_snap_id->value.GetString());
-    }
-    catch (std::invalid_argument&)
-    {
-        assert(!"invalid snap id format");
-        return nullptr;
-    }
-    catch (std::out_of_range&)
-    {
-        assert(!"invalid snap id value");
-    }
-
-    if (snap_id == 0)
-    {
-        assert(!"snap id cannot be zero");
-        return nullptr;
+        iphone_preview_uri = iter_iphone->value.GetString();
     }
 
     int64_t expire = 0;
@@ -197,7 +211,7 @@ snap_metainfo_uptr parse_json(InOut char *_json)
         return nullptr;
     }
 
-    snap_metainfo_uptr info(new snap_metainfo(snap_id, mini_preview_uri, full_preview_uri, expire, author_uin, author_name));
+    snap_metainfo_uptr info(new snap_metainfo(snap_id, mini_preview_uri, full_preview_uri, iphone_preview_uri, expire, author_uin, author_name, _ttl_id));
 
     return info;
 }

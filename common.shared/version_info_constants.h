@@ -3,9 +3,9 @@
 
 #ifdef __linux__ // linux
 
-#define VERSION_INFO_STR "10.0.3051"
-#define VER_FILEVERSION 10,0,3051
-#define VER_FILEVERSION_STR "10.0.3051"
+#define VERSION_INFO_STR "10.0.3070"
+#define VER_FILEVERSION 10,0,3070
+#define VER_FILEVERSION_STR "10.0.3070"
 
 #elif __APPLE__ // mac
 

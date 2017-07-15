@@ -109,8 +109,6 @@ namespace Data
 
 		qint64 GetLastId() const;
 
-		const QStringList& GetNotificationKeys() const;
-
         core::message_type GetType() const;
 
         const HistoryControl::VoipEventInfoSptr& GetVoipEvent() const;
@@ -142,8 +140,6 @@ namespace Data
         void SetIndentBefore(const bool indentBefore);
 
 		void SetLastId(const qint64 lastId);
-
-		void SetNotificationKeys(const QStringList &keys);
 
 		void SetOutgoing(const bool isOutgoing);
 
@@ -178,8 +174,6 @@ namespace Data
 		qint64 LastId_;
 
 		QString Text_;
-
-		QStringList NotificationKeys_;
 
         QString ChatSender_;
 
@@ -266,6 +260,8 @@ namespace Data
         QString SearchTerm_;
         qint64 SearchedMsgId_;
         int SearchPriority_;
+        QString MailId_;
+        QString Email_;
 
 	private:
 		QString Text_;
@@ -274,6 +270,15 @@ namespace Data
 
     struct Quote
     {
+        enum Type
+        {
+            text = 1,
+            link = 0,
+            file_sharing = 2,
+            quote = 3,
+            other = 100
+        };
+
         QString text_;
         QString senderId_;
         QString chatId_;
@@ -290,6 +295,8 @@ namespace Data
         bool isFirstQuote_;
         bool isLastQuote_;
         
+        Quote::Type type_;
+
         Quote()
             : time_(-1)
             , id_(-1)
@@ -299,6 +306,7 @@ namespace Data
             , isFirstQuote_(false)
             , isLastQuote_(false)
             , isForward_(false)
+            , type_(Quote::Type::text)
         {
         }
         

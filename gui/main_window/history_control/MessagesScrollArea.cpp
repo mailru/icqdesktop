@@ -18,6 +18,7 @@
 #include "MessagesScrollAreaLayout.h"
 
 #include "MessagesScrollArea.h"
+#include "../../gui_settings.h"
 
 namespace
 {
@@ -141,7 +142,19 @@ namespace Ui
                 this, &MessagesScrollArea::onIdleUserActivityTimeout,
                 Qt::QueuedConnection);
 
+		connect(Layout_, &MessagesScrollAreaLayout::updateHistoryPosition, this, &MessagesScrollArea::onUpdateHistoryPosition);
+        connect(Layout_, &MessagesScrollAreaLayout::recreateAvatarRect, this, &MessagesScrollArea::recreateAvatarRect);
         Utils::grabTouchWidget(this);
+    }
+
+	void MessagesScrollArea::onUpdateHistoryPosition(int32_t position, int32_t offset)
+	{
+		emit updateHistoryPosition(position, offset);
+	}
+
+    void MessagesScrollArea::onWheelEvent(QWheelEvent* e)
+    {
+        QCoreApplication::sendEvent(this, e);
     }
 
     void MessagesScrollArea::insertWidget(const Logic::MessageKey &key, QWidget *widget)
@@ -203,10 +216,8 @@ namespace Ui
         return Layout_->containsWidget(widget);
     }
 
-    void MessagesScrollArea::removeWidget(QWidget *widget)
+    void MessagesScrollArea::eraseContact(QWidget* widget)
     {
-        assert(widget);
-
         if (auto messageItem = qobject_cast<Ui::MessageItem*>(widget))
         {
             contacts_.erase(messageItem->getMchatSenderAimId());
@@ -215,11 +226,19 @@ namespace Ui
         {
             contacts_.erase(complexItem->getSenderAimid());
         }
+    }
+
+    void MessagesScrollArea::removeWidget(QWidget *widget)
+    {
+        assert(widget);
+
+        eraseContact(widget);
 
         Layout_->removeWidget(widget);
 
         updateScrollbar();
     }
+
 
     void MessagesScrollArea::replaceWidget(const Logic::MessageKey &key, QWidget *widget)
     {
@@ -403,7 +422,7 @@ namespace Ui
         enumerateWidgets(
         [&result] (QWidget* _item, const bool)
         {
-            QString selected_full;
+            //QString selected_full;
 
             if (auto messageItem = qobject_cast<Ui::MessageItem*>(_item))
             {
@@ -414,8 +433,7 @@ namespace Ui
                 result.push_back(messageItem->getQuote());
                 return true;
             }
-
-            if (auto complexItem = qobject_cast<Ui::ComplexMessage::ComplexMessageItem*>(_item))
+            else if (auto complexItem = qobject_cast<Ui::ComplexMessage::ComplexMessageItem*>(_item))
             {
 
                 QString selectedText = complexItem->getSelectedText(false);
@@ -711,12 +729,21 @@ namespace Ui
 
     bool MessagesScrollArea::event(QEvent *e)
     {
+		/// TODO - Check for hiding scrollbar with resize history window
+		/*
+		if (e->type() == QEvent::Resize)
+		{
+			Layout_->updateScrollbar();
+			Layout_->updateBounds();
+		}
+		*/
         if (e->type() == QEvent::TouchBegin)
         {
             TouchScrollInProgress_ = true;
             QTouchEvent* te = static_cast<QTouchEvent*>(e);
             PrevTouchPoint_ = te->touchPoints().first().pos();
             e->accept();
+
             return true;
         }
         else if (e->type() == QEvent::TouchUpdate)
@@ -757,6 +784,7 @@ namespace Ui
         {
             TouchScrollInProgress_ = false;
             e->accept();
+
             return true;
         }
 
@@ -858,6 +886,7 @@ namespace Ui
         }
 
         scrollValue_ = value;
+        Layout_->updateDistanceForViewportItems();
     }
 
     void MessagesScrollArea::applySelection(const bool forShift)

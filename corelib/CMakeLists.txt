@@ -24,6 +24,7 @@ add_definitions(-DCORELIB_EXPORTS)
 
 if(MSVC)
     set(SYSTEM_LIBRARIES Ws2_32 Wldap32)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD.lib")
 elseif(APPLE)
     find_library(MAC_VIDEO_TOOLBOX VideoToolbox)
     find_library(MAC_CORE_VIDEO CoreVideo)
@@ -100,7 +101,6 @@ elseif(LINUX)
     use_precompiled_header_linux(PCH_BIN "${SUBPROJECT_ROOT}/stdafx.h" ${SUBPROJECT_SOURCES})
     add_library(${PROJECT_NAME} ${SUBPROJECT_SOURCES} ${SUBPROJECT_HEADERS} ${PCH_BIN})
 endif()
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_range_for)
 
 if(ICQ_CORELIB_STATIC_LINKING)
     target_link_libraries(${PROJECT_NAME}
@@ -109,7 +109,8 @@ if(ICQ_CORELIB_STATIC_LINKING)
         ${Boost_LIBRARIES}
         ${OPENSSL_LIBRARIES}
         ${LIBCRYPTO_LIBRARIES}
-        ${CURL_LIBRARIES})
+        ${CURL_LIBRARIES}
+        ${LIBEVENT_LIBRARIES})
 else()
     target_link_libraries(${PROJECT_NAME}
         ${SYSTEM_LIBRARIES}
@@ -119,5 +120,6 @@ else()
         ${LIBCRYPTO_LIBRARIES}
         ${CURL_LIBRARIES}
         ${VOIP_LIBRARIES}
-        ${ZLIB_LIBRARIES})
+        ${ZLIB_LIBRARIES}
+        ${LIBEVENT_LIBRARIES})
 endif()

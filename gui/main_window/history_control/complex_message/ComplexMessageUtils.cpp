@@ -19,7 +19,7 @@ QSize limitSize(const QSize &size, const QSize &maxSize)
         const auto needScaleDownWidth = (result.width() > maxWidth);
         if (needScaleDownWidth)
         {
-            const auto scaleDownK = ((double)maxWidth / (double)(result.width() + 1));
+            const auto scaleDownK = ((double)maxWidth / (double)(result.width()));
             result *= scaleDownK;
         }
     }
@@ -32,7 +32,7 @@ QSize limitSize(const QSize &size, const QSize &maxSize)
         const auto needScaleDownHeight = (result.height() > maxHeight);
         if (needScaleDownHeight)
         {
-            const auto scaleDownK = ((double)maxHeight / (double)(result.height() + 1));
+            const auto scaleDownK = ((double)maxHeight / (double)(result.height()));
             result *= scaleDownK;
         }
     }

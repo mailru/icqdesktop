@@ -21,17 +21,18 @@ namespace core
     {
         active_scheme_ = false;
 
-         hosts_.emplace("api.icq.net", "api.ic2ster.com");
-         hosts_.emplace("bos.icq.net", "bos.ic2ster.com");
-         hosts_.emplace("api.login.icq.net", "apilogin.ic2ster.com");
-         hosts_.emplace("icq.com", "www.ic2ster.com");
-         hosts_.emplace("www.icq.com", "www.ic2ster.com");
-         hosts_.emplace("files.icq.com", "files-com.ic2ster.com");
-         hosts_.emplace("files.icq.net", "files-net.ic2ster.com");
-         hosts_.emplace("rapi.icq.net", "rapi.ic2ster.com");
-         hosts_.emplace("pymk.icq.net", "pymk.ic2ster.com");
-         hosts_.emplace("files-upload.icq.com", "files-upload.ic2ster.com");
-         hosts_.emplace("clientapi.icq.net", "clientapi.ic2ster.com");
+        hosts_.emplace("api.icq.net", "api.ic2ster.com");
+        hosts_.emplace("bos.icq.net", "bos.ic2ster.com");
+        hosts_.emplace("api.login.icq.net", "apilogin.ic2ster.com");
+        hosts_.emplace("icq.com", "www.ic2ster.com");
+        hosts_.emplace("www.icq.com", "www.ic2ster.com");
+        hosts_.emplace("files.icq.com", "files-com.ic2ster.com");
+        hosts_.emplace("files.icq.net", "files-net.ic2ster.com");
+        hosts_.emplace("rapi.icq.net", "rapi.ic2ster.com");
+        hosts_.emplace("pymk.icq.net", "pymk.ic2ster.com");
+        hosts_.emplace("files-upload.icq.com", "files-upload.ic2ster.com");
+        hosts_.emplace("clientapi.icq.net", "clientapi.ic2ster.com");
+        hosts_.emplace("store.icq.com", "store.ic2ster.com");
     }
 
     bool hosts_map::parse(tools::binary_stream& _bs)
@@ -305,6 +306,11 @@ namespace core
         changed_ = true;
 
         hosts_.change_scheme();
+    }
+
+    bool hosts_config::is_alt_scheme() const
+    {
+        return hosts_.get_active_scheme();
     }
 }
 

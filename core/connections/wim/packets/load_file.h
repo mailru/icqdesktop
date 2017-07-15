@@ -29,8 +29,6 @@ namespace core
             virtual int32_t execute_request(std::shared_ptr<core::http_request_simple> _request) override;							
         public:
 
-            virtual int32_t execute() override;
-
             load_file(const wim_packet_params& _params, const web_file_info& _info);
             virtual ~load_file();
 

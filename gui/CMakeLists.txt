@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.4)
 
 if(APPLE)
-    project(ICQ)
+    if(IS_ICQ)
+        project(ICQ)
+    elseif(IS_AGENT)
+        project(Mail.Ru_Agent)
+    endif()
 else()
     project(icq)
 endif()
@@ -100,7 +104,11 @@ elseif(APPLE)
         message(STATUS "updates: off")
     endif()
 
+if(IS_ICQ)
     set(MACOSX_BUNDLE_ICON_FILE ${ICQ_MAC_ROOT}/icons-bundle-icq.icns)
+elseif(IS_AGENT)
+    set(MACOSX_BUNDLE_ICON_FILE ${ICQ_MAC_ROOT}/icons-bundle-agent.icns)
+endif()
     set_source_files_properties(${MACOSX_BUNDLE_ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 elseif(LINUX)
     add_definitions(-include "stdafx.h")
@@ -116,7 +124,7 @@ elseif(LINUX)
         ${ICQ_EXTERNAL_PLATFORM}/system/libgpg-error.a
         ${ICQ_EXTERNAL_PLATFORM}/system/libtasn1.a
         ${ICQ_EXTERNAL_PLATFORM}/system/libstdc++.a
-        -Wl,-Bdynamic -ldl -lpthread -lX11)
+        -Wl,-Bdynamic -ldl -lpthread -lX11 -lX11-xcb -lxcb)
     if(LINUX32)
         set(SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${ICQ_EXTERNAL_PLATFORM}/system/libp11-kit.a)
     endif()
@@ -229,9 +237,19 @@ if(MSVC)
     add_custom_command(OUTPUT ${ICQ_RESOURCES_OUTPUT}
         COMMAND ${ICQ_RCC_EXE} ${ICQ_RESOURCES} -o ${ICQ_RESOURCES_OUTPUT} --binary
         DEPENDS ${ICQ_QM_FILES} ${ICQ_RESOURCES} ${ICQ_RESOURCE_FILES})
-    set(rc_file "${SUBPROJECT_ROOT}/Resource.rc")
-    set(ADDITIONAL_FILES ${ADDITIONAL_FILES} ${rc_file})
-    source_group("sources" FILES ${rc_file})
+
+    set(RC_FILE "${SUBPROJECT_ROOT}/Resource.rc")
+    if(IS_ICQ)
+        set(RC_SOURCE "${SUBPROJECT_ROOT}/Resource-icq.rc")
+    else()
+        set(RC_SOURCE "${SUBPROJECT_ROOT}/Resource-agent.rc")
+    endif()
+    add_custom_command(OUTPUT ${RC_FILE}
+        DEPENDS ${RC_SOURCE}
+        COMMAND ${CMAKE_COMMAND} -E copy ${RC_SOURCE} ${RC_FILE})
+    add_custom_target(generate_rc DEPENDS ${RC_FILE})
+    source_group("sources" FILES ${RC_FILE})
+    set(ADDITIONAL_FILES ${ADDITIONAL_FILES} ${RC_FILE})
 else()
     set(ICQ_RESOURCES_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/qresource.cpp")
     add_custom_command(OUTPUT ${ICQ_RESOURCES_OUTPUT}
@@ -271,16 +289,12 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32
     ${ICQ_RESOURCE_FILES}
     ${MACOSX_BUNDLE_ICON_FILE})
 set_property(DIRECTORY ${SUBPROJECT_ROOT} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_range_for)
 
-if(LINUX)
-    target_link_libraries(${PROJECT_NAME}
-        ${OPEN_AL_LIBRARIES}
-        ${FFMPEG_LIBRARIES}
-        ${PREPROCESSOR_LIBRARIES}
-        ${QT_LIBRARIES}
-        ${SYSTEM_LIBRARIES})
-else()
+if(MSVC)
+    #add_dependencies(${PROJECT_NAME} GENERATE_RC)
+endif()
+
+if(ICQ_CORELIB_STATIC_LINKING)
     target_link_libraries(${PROJECT_NAME}
         ${OPEN_AL_LIBRARIES}
         ${FFMPEG_LIBRARIES}
@@ -288,11 +302,20 @@ else()
         ${QT_LIBRARIES}
         ${SYSTEM_LIBRARIES}
         corelib)
+else()
+    target_link_libraries(${PROJECT_NAME}
+        ${OPEN_AL_LIBRARIES}
+        ${FFMPEG_LIBRARIES}
+        ${PREPROCESSOR_LIBRARIES}
+        ${QT_LIBRARIES}
+        ${ZLIB_LIBRARIES}
+        ${SYSTEM_LIBRARIES})
+    add_dependencies(${PROJECT_NAME} corelib)
 endif()
 
 if(MSVC)
     if(ICQ_DEBUG)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:\"libcmt\"")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:\"libcmt.lib\"")
     endif()
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 endif()
@@ -305,13 +328,20 @@ if(APPLE)
     set(ICQ_BUNDLE_DIR "${ICQ_BUNDLE}/Contents")
 
     set(ICQ_PLIST "${ICQ_BUNDLE_DIR}/Info.plist")
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND cp -f "${ICQ_MAC_ROOT}/imosx-icq-Info.plist" ${ICQ_PLIST})
     set(PLIST_BUDDY "/usr/libexec/PlistBuddy")
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${PLIST_BUDDY} -c "Set :CFBundleExecutable ${PROJECT_NAME}" ${ICQ_PLIST} VERBATIM)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${PLIST_BUDDY} -c "Set :CFBundleName ${PROJECT_NAME}" ${ICQ_PLIST} VERBATIM)
+
+    if(IS_ICQ)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND cp -f "${ICQ_MAC_ROOT}/imosx-icq-Info.plist" ${ICQ_PLIST})
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${PLIST_BUDDY} -c "Set :CFBundleExecutable ${PROJECT_NAME}" ${ICQ_PLIST} VERBATIM)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${PLIST_BUDDY} -c "Set :CFBundleName ${PROJECT_NAME}" ${ICQ_PLIST} VERBATIM)
+    elseif(IS_AGENT)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND cp -f "${ICQ_MAC_ROOT}/imosx-agent-Info.plist" ${ICQ_PLIST})
+    endif()
+
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${PLIST_BUDDY} -c "Set :LSMinimumSystemVersion 10.7" ${ICQ_PLIST} VERBATIM)
 
@@ -334,4 +364,23 @@ if(APPLE)
         COMMAND ${CMAKE_COMMAND} -E make_directory ${ICQ_RESOURCES_BUNDLE_DIR})
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy "${ICQ_MAC_ROOT}/dsa_pub.pem" ${ICQ_RESOURCES_BUNDLE_DIR})
+
+    if(ICQ_QT_DYNAMIC)
+        set(ICQ_PLUGINS_BUNDLE_DIR "${ICQ_BUNDLE_DIR}/PlugIns")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${ICQ_PLUGINS_BUNDLE_DIR})
+
+        set(ICQ_PLUGINS_PLATFORMS_BUNDLE_DIR "${ICQ_PLUGINS_BUNDLE_DIR}/platforms")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${ICQ_PLUGINS_PLATFORMS_BUNDLE_DIR})
+
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND cp -f ${QT_PLUGINS_TO_COPY} ${ICQ_PLUGINS_PLATFORMS_BUNDLE_DIR})
+
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND cp -f ${QT_LIBRARIES_TO_COPY} ${ICQ_FRAMEWORKS_BUNDLE_DIR})
+
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND install_name_tool -add_rpath @loader_path/../Frameworks ${ICQ_BUNDLE_DIR}/MacOS/${PROJECT_NAME})
+    endif()
 endif()

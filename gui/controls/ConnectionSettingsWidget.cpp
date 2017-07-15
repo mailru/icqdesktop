@@ -59,7 +59,7 @@ namespace Ui
                 updateVisibleParams(ix);
                 addressEdit_->setFocus();
             },
-                false, false, [](bool) -> QString { return ""; });
+                [](bool) -> QString { return ""; });
         }
 
         {

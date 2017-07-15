@@ -14,8 +14,4 @@ namespace History
 	const Themes::IThemePixmapSptr& GetIconByFilename(const QString &filename);
 
     Themes::PixmapResourceId GetIconIdByFilename(const QString &filename);
-
-    bool IsImageExtension(const QString &ext);
-
-    bool IsVideoExtension(const QString &ext);
 }

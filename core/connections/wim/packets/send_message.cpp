@@ -54,6 +54,7 @@ int32_t send_message::init_request(std::shared_ptr<core::http_request_simple> _r
 
     _request->set_url(ss_url.str());
     _request->set_keep_alive();
+    _request->set_priority(top_priority);
     _request->push_post_parameter("f", "json");
     _request->push_post_parameter("aimsid", escape_symbols(get_params().aimsid_));
     _request->push_post_parameter("t", escape_symbols(aimid_));

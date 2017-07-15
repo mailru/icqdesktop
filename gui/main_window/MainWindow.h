@@ -33,8 +33,11 @@ namespace Ui
     class TrayIcon;
     class HistoryControlPage;
     class BackgroundWidget;
-    class MultimediaViewer;
-
+    class DialogPlayer;
+    class UnreadMailWidget;
+    class UnreadMsgWidget;
+    class MainWindow;
+    
     class ShadowWindow : public QWidget
     {
         Q_OBJECT
@@ -59,20 +62,31 @@ namespace Ui
     class TitleWidgetEventFilter : public QObject
     {
         Q_OBJECT
-Q_SIGNALS:
-
+    
+    Q_SIGNALS:
         void doubleClick();
+        void logoDoubleClick();
         void moveRequest(QPoint);
         void checkPosition();
 
     public:
         TitleWidgetEventFilter(QObject* _parent);
+        void addIgnoredWidget(QWidget* _widget);
+
+    private:
+        void showContextMenu(QPoint _pos);
+        void showLogoContextMenu();
 
     protected:
         bool eventFilter(QObject* _obj, QEvent* _event);
 
     private:
-        QPoint clickPos;
+        bool dragging_;
+        QPoint clickPos_;
+        MainWindow* mainWindow_;
+        std::set<QWidget*> ignoredWidgets_;
+        QWidget* windowIcon_;
+        QTimer* iconTimer_;
     };
 
     class MainWindow : public QMainWindow, QAbstractNativeEventFilter
@@ -85,7 +99,7 @@ Q_SIGNALS:
     public Q_SLOTS:
         void showPromoPage();
         void closePromoPage();
-        void showLoginPage();
+        void showLoginPage(const bool _is_auth_error);
         void showMainPage();
         void showMigrateAccountPage(QString _accountId);
         void checkForUpdates();
@@ -125,17 +139,14 @@ Q_SIGNALS:
         void onVoipCallCreated(const voip_manager::ContactEx& _contact_ex);
         void onVoipCallDestroyed(const voip_manager::ContactEx& _contact_ex);
 		void onShowVideoWindow();
-        void onAppConfig();
+        void onMyInfoReceived();
 
     public:
-        MainWindow(QApplication* _app);
+        MainWindow(QApplication* _app, const bool _has_valid_login);
         ~MainWindow();
 
         void openGallery(const QString& _aimId, const Data::Image& _image, const QString& _localPath);
         void closeGallery();
-
-        void playVideo(const QString& _path);
-        void closeVideo();
 
         void activateFromEventLoop();
         bool isActive() const;
@@ -144,10 +155,14 @@ Q_SIGNALS:
 
         int getScreen() const;
         void skipRead(); //skip next sending last read by window activation
+        void hideMenu();
+
+        void closePopups();
 
         HistoryControlPage* getHistoryPage(const QString& _aimId) const;
         MainPage* getMainPage() const;
-
+        QPushButton* getWindowLogo() const;
+        
         void insertTopWidget(const QString& _aimId, QWidget* _widget);
         void removeTopWidget(const QString& _aimId);
 
@@ -160,13 +175,17 @@ Q_SIGNALS:
         void setFocusOnInput();
         void onSendMessage(const QString&);
 
+        int getTitleHeight() const;
+        bool isMaximized() const;
+
+        void setTitleIconsVisible(bool _unreadMsgVisible, bool _unreadMailVisible);
+
     private:
         void initSizes();
         void initSettings();
         void resize(int w, int h);
         void showMaximized();
-        void showNormal();
-        bool isMaximized();
+        void showNormal();        
         void updateState();
 
     protected:
@@ -199,6 +218,8 @@ Q_SIGNALS:
         QHBoxLayout *titleLayout_;
         QPushButton *logo_;
         QLabel *title_;
+        UnreadMsgWidget *unreadMsg_;
+        UnreadMailWidget *unreadMail_;
         QSpacerItem *spacer_;
         QPushButton *hideButton_;
         QPushButton *maximizeButton_;
@@ -206,7 +227,7 @@ Q_SIGNALS:
         BackgroundWidget *stackedWidget_;
         ShadowWindow* Shadow_;
         CallPanelMainEx* callPanelMainEx;
-        MultimediaViewer* mplayer_;
+        DialogPlayer* ffplayer_;
 
         bool SkipRead_;
         bool TaskBarIconHidden_;

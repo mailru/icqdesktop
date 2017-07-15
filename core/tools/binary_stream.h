@@ -3,13 +3,62 @@
 
 #pragma once
 
+#include <fstream>
+
 #include "scope.h"
 
 namespace core
 {
     namespace tools
     {
+        class stream
+        {
+        public:
+            virtual ~stream()
+            {
+            }
+
+            virtual void write(const char* _data, uint32_t _size) = 0;
+
+            virtual uint32_t all_size() const = 0;
+
+            virtual void close() {}
+        };
+
+        class file_output_stream
+            : public stream
+        {
+        public:
+            explicit file_output_stream(std::ofstream&& _file)
+                : file_(std::forward<std::ofstream>(_file))
+                , bytes_writed_(0)
+            {
+            }
+
+            void write(const char* _data, uint32_t _size) override
+            {
+                file_.write(_data, _size);
+                if (file_.good())
+                    bytes_writed_ += _size;
+            }
+
+            uint32_t all_size() const override
+            {
+                return bytes_writed_;
+            }
+
+            void close() override
+            {
+                file_.close();
+            }
+
+        private:
+            std::ofstream file_;
+            uint32_t bytes_writed_;
+        };
+
         class binary_stream
+            : public stream
         {
             typedef std::vector<char>	data_buffer;
 
@@ -107,14 +156,16 @@ namespace core
                 write((const char*) &_val, sizeof(t_));
             }
 
-            void write(const char* _data, uint32_t _size)
+            void write_stream(std::istream& _source);
+
+            void write(const char* _data, uint32_t _size) override
             {
                 if (_size == 0)
                     return;
 
                 uint32_t size_need = input_cursor_ + _size;
                 if (size_need > buffer_.size())
-                    buffer_.resize(size_need*2);
+                    buffer_.resize(size_need + 1); // +1 it '\0' at the end of the buffer
 
                 memcpy(&buffer_[input_cursor_], _data, _size);
                 input_cursor_ += _size;
@@ -184,7 +235,7 @@ namespace core
                 input_cursor_ = _value;
             }
 
-            uint32_t all_size() const
+            uint32_t all_size() const override
             {
                 return buffer_.size();
             }

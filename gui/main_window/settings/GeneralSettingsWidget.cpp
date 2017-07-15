@@ -90,9 +90,7 @@ namespace Ui
         setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
         QHBoxLayout* mainLayout;
-        mainLayout = new QHBoxLayout();
-        mainLayout->setSpacing(0);
-        mainLayout->setContentsMargins(0, 0, 0, 0);
+        mainLayout = Utils::emptyHLayout();
 
         std::map<std::string, Synchronizator> collector;
 
@@ -101,7 +99,7 @@ namespace Ui
         Creator::initGeneral(general_, collector);
         addWidget(general_);
 
-        notifications_ = new QWidget(this);
+        notifications_ = new NotificationSettings(this);
         notifications_->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
         Creator::initNotifications(notifications_, collector);
         addWidget(notifications_);
@@ -327,6 +325,7 @@ namespace Ui
     GeneralSettings::GeneralSettings(QWidget* _parent)
         : QWidget(_parent)
     {
+        connect(get_gui_settings(), &Ui::qt_gui_settings::changed, this, &GeneralSettings::value_changed);
     }
 
     void GeneralSettings::recvUserProxy()
@@ -341,5 +340,31 @@ namespace Ui
         auto connectionTypeName = str.str();
         if (connectionTypeChooser_)
             connectionTypeChooser_->setText(QString(connectionTypeName.c_str()));
+    }
+
+    void GeneralSettings::value_changed(QString name)
+    {
+        if (name == settings_sounds_enabled)
+        {
+            sounds_.check_->blockSignals(true);
+            sounds_.check_->setChecked(get_gui_settings()->get_value<bool>(settings_sounds_enabled, true));
+            sounds_.check_->blockSignals(false);
+        }
+    }
+
+    NotificationSettings::NotificationSettings(QWidget* _parent)
+        : QWidget(_parent)
+    {
+        connect(get_gui_settings(), &Ui::qt_gui_settings::changed, this, &NotificationSettings::value_changed);
+    }
+
+    void NotificationSettings::value_changed(QString name)
+    {
+        if (name == settings_sounds_enabled)
+        {
+            sounds_.check_->blockSignals(true);
+            sounds_.check_->setChecked(get_gui_settings()->get_value<bool>(settings_sounds_enabled, true));
+            sounds_.check_->blockSignals(false);
+        }
     }
 }

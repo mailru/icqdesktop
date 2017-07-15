@@ -21,6 +21,5 @@ namespace launch
         const QString& getExecutable() const;
     };
 
-
     int main(int argc, char *argv[]);
 }

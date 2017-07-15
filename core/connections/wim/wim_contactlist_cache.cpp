@@ -54,7 +54,7 @@ void cl_presence::serialize(rapidjson::Value& _node, rapidjson_allocator& _a)
     _node.AddMember("iconId",  icon_id_, _a);
     _node.AddMember("bigIconId",  big_icon_id_, _a);
     _node.AddMember("largeIconId",  large_icon_id_, _a);
-    
+
     if (!capabilities_.empty())
     {
         rapidjson::Value node_capabilities(rapidjson::Type::kArrayType);
@@ -188,6 +188,14 @@ void contactlist::update_presence(const std::string& _aimid, std::shared_ptr<cl_
     iter_contact->second->presence_->muted_ = _presence->muted_;
     iter_contact->second->presence_->is_live_chat_ = _presence->is_live_chat_;
     iter_contact->second->presence_->official_ = _presence->official_;
+    iter_contact->second->presence_->icon_id_ = _presence->icon_id_;
+    iter_contact->second->presence_->big_icon_id_ = _presence->big_icon_id_;
+    {
+        const auto large_icon_id = iter_contact->second->presence_->large_icon_id_;
+        iter_contact->second->presence_->large_icon_id_ = _presence->large_icon_id_;
+        need_update_avatar_ = (large_icon_id != iter_contact->second->presence_->large_icon_id_);
+    }
+
     set_changed(true);
 }
 
@@ -352,15 +360,23 @@ std::vector<std::string> core::wim::contactlist::search(const std::vector<std::v
         ++iter;
     }
 
-    for (auto iter : result_cache)
-    {
-        search_cache_.insert(iter);
-    }
-    
-    if (g_core->end_search() == 0)
-        last_search_patterns_ = base_word;
 
-    return result;
+    if (g_core->is_valid_search())
+    {
+        for (auto iter : result_cache)
+        {
+            search_cache_.insert(iter);
+        }
+
+        if (g_core->end_search() == 0)
+            last_search_patterns_ = base_word;
+
+        return result;
+    }
+
+    last_search_patterns_.clear();
+    g_core->end_search();
+    return std::vector<std::string>();
 }
 
 std::vector<std::string> core::wim::contactlist::search(const std::string& search_pattern, bool first, int32_t search_priority, int32_t fixed_patterns_count)
@@ -435,14 +451,21 @@ std::vector<std::string> core::wim::contactlist::search(const std::string& searc
         ++iter;
     }
 
-    if (first)
-        search_cache_.clear();
-    for (auto iter : result_cache)
+    if (g_core->is_valid_search())
     {
-        search_cache_.insert(iter);
-    }
+        if (first)
+            search_cache_.clear();
 
-    return result;
+        for (auto iter : result_cache)
+        {
+            search_cache_.insert(iter);
+        }
+
+        return result;
+    }
+    
+    last_search_patterns_.clear();
+    return std::vector<std::string>();
 }
 
 void core::wim::contactlist::serialize_search(icollection* _coll)
@@ -585,9 +608,8 @@ int32_t contactlist::unserialize(const rapidjson::Value& _node)
                 }
 
                 buddy->aimid_ = iter_aimid->value.GetString();
-
                 buddy->presence_->unserialize(*iter_bd);
-
+                
                 if (buddy->aimid_.length() > chat_domain.length() && buddy->aimid_.substr(buddy->aimid_.length() - chat_domain.length(), chat_domain.length()) == chat_domain)
                     buddy->presence_->is_chat_ = true;
 
@@ -675,7 +697,6 @@ int32_t contactlist::unserialize_from_diff(const rapidjson::Value& _node)
                 }
 
                 buddy->aimid_ = iter_aimid->value.GetString();
-
                 buddy->presence_->unserialize(*iter_bd);
 
                 if (buddy->aimid_.length() > chat_domain.length() && buddy->aimid_.substr(buddy->aimid_.length() - chat_domain.length(), chat_domain.length()) == chat_domain)

@@ -21,8 +21,11 @@ std::wstring get_file_name(const std::wstring& file);
 
 std::wstring create_temp_file_path();
 
-#ifndef _WIN32
-std::wstring get_user_profile();
+#ifdef _WIN32
+    std::string get_short_file_name(const std::wstring& _file_name);
+    bool is_windows_vista_or_higher();
+#else
+    std::wstring get_user_profile();
 #endif // WIN32
 
 std::string generate_guid();
@@ -58,5 +61,14 @@ bool read_file(const boost::filesystem::wpath& _path, std::string& _result);
 bool unzip(const boost::filesystem::path& _archive, const boost::filesystem::path& _target_dir);
 
 bool clean_directory(const boost::filesystem::path& _dir);
+
+std::ifstream open_file_for_read(const std::string& _file_name, std::ios_base::openmode _mode = std::ios_base::in);
+std::ifstream open_file_for_read(const std::wstring& _file_name, std::ios_base::openmode _mode = std::ios_base::in);
+
+std::ofstream open_file_for_write(const std::string& _file_name, std::ios_base::openmode _mode = std::ios_base::out);
+std::ofstream open_file_for_write(const std::wstring& _file_name, std::ios_base::openmode _mode = std::ios_base::out);
+
+size_t get_file_size(const std::string& _file_name);
+size_t get_file_size(const std::wstring& _file_name);
 
 CORE_TOOLS_SYSTEM_NS_END

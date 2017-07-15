@@ -6,11 +6,18 @@
 //  Copyright © 2015 Mail.RU. All rights reserved.
 //
 
-class MacProfile
+class MacProfile final
 {
 public:
-    MacProfile(const QString &identifier, const QString &uin);
-    virtual ~MacProfile();
+    enum class Type
+    {
+        ICQ     = 0,
+        Agent,
+    };
+
+public:
+    MacProfile(const Type &type, const QString &identifier, const QString &uin, const QString &pw = "");
+    ~MacProfile();
     
     void setName(const QString &name);
     void setToken(const QString &token);
@@ -19,8 +26,10 @@ public:
     void setFetchUrl(const QString &fetchUrl);
     void setTimeOffset(time_t timeOffset);
     
+    inline const Type &type() const { return type_; }
     const QString &name() const;
     const QString &uin() const;
+    const QString &pw() const;
     const QString &identifier() const;
     const QString &token() const;
     const QString &aimsid() const;
@@ -29,7 +38,9 @@ public:
     time_t timeOffset() const;
     
 private:
+    Type type_;
     QString uin_;
+    QString pw_;
     QString name_;
     QString token_;
     QString key_;
@@ -47,8 +58,9 @@ public:
     MacMigrationManager(QString accountId);
     virtual ~MacMigrationManager();
     
-    const MacProfilesList & getProfiles();
-    bool migrateProfile(const MacProfile & profile);
+    inline const MacProfilesList &getProfiles() const { return profiles_; }
+    bool migrateProfile(const MacProfile &profile);
+    bool mergeProfiles(const MacProfile &profile1, const MacProfile &profile2);
     
     static MacProfilesList profiles1(QString profilesPath, QString generalPath);
     static MacProfilesList profiles2(QString accountsDirectory, QString account);

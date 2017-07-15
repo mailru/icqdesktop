@@ -724,7 +724,7 @@ namespace Logic
         return -1;
     }
 
-    bool ContactDialog::isHasPending() const
+    bool ContactDialog::hasPending() const
     {
         if (!pendingMessages_)
         {
@@ -809,9 +809,9 @@ namespace Logic
 
         connect(
             Ui::GetDispatcher(),
-            &Ui::core_dispatcher::dlgState,
+            &Ui::core_dispatcher::dlgStates,
             this,
-            &MessagesModel::dlgState,
+            &MessagesModel::dlgStates,
             Qt::QueuedConnection);
 
         connect(
@@ -822,9 +822,12 @@ namespace Logic
             Qt::DirectConnection);
     }
 
-    void MessagesModel::dlgState(Data::DlgState _state)
+    void MessagesModel::dlgStates(std::shared_ptr<QList<Data::DlgState>> _states)
     {
-        emit readByClient(_state.AimId_, _state.TheirsLastRead_);
+        for (auto _state : *_states)
+        {
+            emit readByClient(_state.AimId_, _state.TheirsLastRead_);
+        }
     }
 
     void MessagesModel::fileSharingUploadingResult(
@@ -979,6 +982,8 @@ namespace Logic
             }
         }
 
+        //qDebug("insertedMessages %i", insertedMessages.size());
+
         for (auto iter : insertedMessages)
         {
             if (!updatedValues.contains(iter->first))
@@ -1050,6 +1055,7 @@ namespace Logic
 
         if (_option != Ui::MessagesBuddiesOpt::Requested || _regim == model_regim::jump_to_bottom)
         {
+            //qDebug("updatedValues:%i", updatedValues.size());
             emitUpdated(updatedValues, _aimId, _hole ? HOLE : BASE);
         }
         else
@@ -1064,6 +1070,12 @@ namespace Logic
 
     void MessagesModel::messageBuddies(std::shared_ptr<Data::MessageBuddies> _buddies, QString _aimId, Ui::MessagesBuddiesOpt _option, bool _havePending, qint64 _seq, int64_t _last_msgid)
     {
+        //qDebug("messageBuddies %i", _buddies->size());
+        //for (auto& val : *_buddies)
+        //{
+        //    qDebug("  id:%lld", val->ToKey().getId());
+        //}
+
         assert(_option > Ui::MessagesBuddiesOpt::Min);
         assert(_option < Ui::MessagesBuddiesOpt::Max);
         assert(_buddies);
@@ -1077,11 +1089,6 @@ namespace Logic
         if (build::is_debug())
         {
             traceBuddies(_buddies, _seq);
-        }
-
-        if (isDlgState && !_buddies->empty())
-        {
-            sendDeliveryNotifications(*_buddies);
         }
 
         auto regim = model_regim::normal_load;
@@ -1444,56 +1451,6 @@ namespace Logic
         return result;
     }
 
-    void MessagesModel::sendDeliveryNotifications(const Data::MessageBuddies& _msgs)
-    {
-        assert(!_msgs.empty());
-
-        __INFO(
-            "delivery",
-            "sending delivery notifications to widgets\n" <<
-            "	count=<" << _msgs.size() << ">");
-
-        for (const auto& msg : _msgs)
-        {
-            assert(msg->CheckInvariant());
-
-            if (!msg->IsOutgoing())
-            {
-                // only outgoing messages can be delivered
-                continue;
-            }
-
-            if (msg->InternalId_.isEmpty())
-            {
-                // we should not notify outgoing message items recovered from the storage
-                continue;
-            }
-
-            if (msg->IsDeliveredToClient())
-            {
-                __TRACE(
-                    "delivery",
-                    "sending delivery notification\n" <<
-                    "	type=<client>\n" <<
-                    "	dst=<" << msg->InternalId_ << ">");
-
-            //    emit deliveredToClient(msg->InternalId_);
-                continue;
-            }
-
-            if (msg->IsDeliveredToServer())
-            {
-                __TRACE(
-                    "delivery",
-                    "sending delivery notification\n" <<
-                    "	type=<server>\n" <<
-                    "	dst=<" << msg->InternalId_ << ">");
-
-                emit deliveredToServer(msg->InternalId_);
-            }
-        }
-    }
-
     void MessagesModel::removeDateItemIfOutdated(const QString& _aimId, const Data::MessageBuddy& _msg)
     {
         assert(_msg.HasId());
@@ -1584,7 +1541,9 @@ namespace Logic
         auto parent = &_messageItem;
 
         std::unique_ptr<HistoryControl::MessageContentWidget> item;
+
         const auto previewsEnabled = Ui::get_gui_settings()->get_value<bool>(settings_show_video_and_images, true);
+
 
         item.reset(
             new HistoryControl::FileSharingWidget(
@@ -1819,6 +1778,7 @@ namespace Logic
 
     void MessagesModel::requestMessages(const QString& _aimId, qint64 _messageId, bool _toOlder, bool _needPrefetch, bool _is_jump_to_bottom)
     {
+        //qDebug("request message : %lld %i %i", _messageId, _toOlder, _needPrefetch);
         assert(!_aimId.isEmpty());
 
         if (!requestedContact_.contains(_aimId))
@@ -1853,9 +1813,10 @@ namespace Logic
         Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
         collection.set_value_as_qstring("contact", _aimId);
         collection.set_value_as_int64("from", _messageId == -1 ? lastId : _messageId);
-        collection.set_value_as_int64("count", Data::PRELOAD_MESSAGES_COUNT);
-        collection.set_value_as_bool("to_older", _toOlder);
+        collection.set_value_as_int64("count_early", _toOlder ? Data::PRELOAD_MESSAGES_COUNT : 0);
+        collection.set_value_as_int64("count_later", _toOlder ? 0 : Data::PRELOAD_MESSAGES_COUNT);
         collection.set_value_as_bool("need_prefetch", _needPrefetch);
+		collection.set_value_as_int64("last_read_msg", -1);
         auto seq = Ui::GetDispatcher()->post_message_to_core("archive/messages/get", collection.get());
         sequences_ << seq;
 
@@ -1925,10 +1886,11 @@ namespace Logic
                 NormalizeAimId(_msg.GetChatSender()) :
                 _msg.AimId_;
 
-        const auto previewsEnabled = Ui::get_gui_settings()->get_value<bool>(settings_show_video_and_images, true);
-        const auto isSitePreview = (
-            previewsEnabled &&
-            (_msg.GetPreviewableLinkType() == preview_type::site));
+
+        const bool previewsEnabled = Ui::get_gui_settings()->get_value<bool>(settings_show_video_and_images, true);
+        const bool isSitePreview = ((previewsEnabled && (_msg.GetPreviewableLinkType() == preview_type::site)));
+        const bool is_not_auth = (!_msg.Chat_ && Logic::getContactListModel()->isNotAuth(_msg.AimId_));
+
         if (isSitePreview || !_msg.Quotes_.isEmpty() || _msg.IsSticker() || _msg.ContainsPttAudio())
         {
             QString senderFriendly;
@@ -1958,12 +1920,14 @@ namespace Logic
                     senderFriendly,
                     _msg.Quotes_,
                     _msg.GetSticker(),
-                    _msg.IsOutgoing()));
+                    _msg.IsOutgoing(),
+                    is_not_auth));
 
             item->setContact(_msg.AimId_);
             item->setTime(_msg.GetTime());
             item->setHasAvatar(_msg.HasAvatar());
             item->setTopMargin(_msg.GetIndentBefore());
+            item->setDeliveredToServer(_msg.IsDeliveredToServer(), true);
 
             if (_msg.Chat_ && !senderFriendly.isEmpty())
             {
@@ -1978,7 +1942,6 @@ namespace Logic
         std::unique_ptr<Ui::MessageItem> messageItem(new Ui::MessageItem(_parent));
         messageItem->setContact(_msg.AimId_);
         messageItem->setId(_msg.Id_, _msg.AimId_);
-        messageItem->setNotificationKeys(_msg.GetNotificationKeys());
         messageItem->setSender(sender);
         messageItem->setHasAvatar(_msg.HasAvatar());
         if (_msg.HasAvatar())
@@ -1993,6 +1956,7 @@ namespace Logic
         messageItem->setTime(_msg.GetTime());
         messageItem->setDate(_msg.GetDate());
         messageItem->setDeleted(_msg.IsDeleted());
+        messageItem->setNotAuth(is_not_auth);
 
         if (_msg.IsFileSharing())
         {
@@ -2122,14 +2086,14 @@ namespace Logic
         return iter;
     }
 
-    void MessagesModel::contactChanged(QString contact, qint64 _messageId)
+    void MessagesModel::contactChanged(QString contact, qint64 _messageId, qint64 quote_id)
     {
         if (contact.isEmpty())
         {
             return;
         }
 
-        Ui::GetDispatcher()->raiseContactDownloadsPriority(contact);
+        Ui::GetDispatcher()->contactSwitched(contact);
 
         const ContactDialog* dialog = getContactDialogConst(contact);
 
@@ -2236,6 +2200,7 @@ namespace Logic
         if (result.isEmpty())
             subscribed_ << aimId;
 
+        //qDebug("tail : %lld %i %lld", _mess_id, result.size(), key.getId());
         return result;
     }
 
@@ -2374,6 +2339,7 @@ namespace Logic
             subscribed_ << aimId;
         }
 
+        //qDebug("more : %i %lld %lld", result.size(), key.getId(), firstKey.getId());
         return result;
     }
 
@@ -2584,6 +2550,7 @@ namespace Logic
                     buddy.AimId_,
                     buddy.Quotes_,
                     buddy.GetSticker(),
+                    false,
                     false));
 
             return item->formatRecentsText();
@@ -2657,7 +2624,7 @@ namespace Logic
         return newId == -1 ? _id : newId;
     }
 
-    bool MessagesModel::isHasPending(const QString& _aimId) const
+    bool MessagesModel::hasPending(const QString& _aimId) const
     {
         const ContactDialog* dialog = getContactDialogConst(_aimId);
         if (!dialog)
@@ -2665,7 +2632,7 @@ namespace Logic
             return false;
         }
 
-        return dialog->isHasPending();
+        return dialog->hasPending();
     }
 
     void MessagesModel::eraseHistory(const QString& _aimid)
@@ -2680,6 +2647,11 @@ namespace Logic
         }
 
         Ui::GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::history_delete);
+    }
+
+    void MessagesModel::emitQuote(int64_t quote_id)
+    {
+        emit quote(quote_id);
     }
 
     ContactDialog& MessagesModel::getContactDialog(const QString& _aimid)

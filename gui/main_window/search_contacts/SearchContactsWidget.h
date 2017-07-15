@@ -12,6 +12,11 @@ namespace Ui
     {
         Q_OBJECT
 
+    Q_SIGNALS:
+        void active();
+
+    private:
+
         QVBoxLayout* rootLayout_;
         SearchFilters* filtersWidget_;
         SearchResults* resultsWidget_;
@@ -23,12 +28,12 @@ namespace Ui
 
         std::shared_ptr<bool>	ref_;
 
-        void onSearchResult2(gui_coll_helper _coll);
-        void search2(const std::string& _keyword, const std::string& _phoneNumber, const std::string& _tag);
+        void onSearchResult(gui_coll_helper _coll);
+        void search(const std::string& _keyword, const std::string& _phoneNumber, const std::string& _tag);
 
     private Q_SLOTS:
 
-        void onSearch2(search_params _filters);
+        void onSearch(search_params _filters);
         void onNeedMoreResults(int);
         void onAddContact(QString _contact);
         void onMsgContact(QString _contact);
@@ -38,6 +43,7 @@ namespace Ui
     protected:
 
         virtual void paintEvent(QPaintEvent* _e) override;
+        virtual void mouseReleaseEvent(QMouseEvent* _e) override;
 
     public:
 

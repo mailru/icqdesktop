@@ -14,14 +14,14 @@ Ui--Smiles--TabButton
 
 Ui--Smiles--TabButton::hover
 {
-	background: rgba(202, 230, 179, 30%);
+	background: #ebebeb;
 	background-repeat: no-repeat;
 	background-position: center center;
 }
 
 Ui--Smiles--TabButton::checked
 {
-	background: rgba(202, 230, 179, 40%);
+	background: #ebebeb;
 	border-bottom-color: #579e1c;
 	border-bottom-width: 2dip;
 	border-bottom-style: solid;
@@ -31,7 +31,7 @@ Ui--Smiles--TabButton::checked
 
 Ui--Smiles--TabButton[underline="false"]
 {
-	background: #ebebeb;
+	background: #ffffff;
 	min-height: 40dip;
 	max-height: 40dip;
 }
@@ -39,13 +39,13 @@ Ui--Smiles--TabButton[underline="false"]
 Ui--Smiles--TabButton::hover[underline="false"]
 {
 	border-bottom: none;
-	background: rgba(202, 230, 179, 40%);
+	background: #ebebeb;
 }
 
 Ui--Smiles--TabButton::checked[underline="false"]
 {
 	border-bottom: none;
-	background: rgba(202, 230, 179, 40%);
+	background: #ebebeb;
 }
 
 
@@ -53,7 +53,7 @@ Ui--Smiles--Toolbar
 {
 	padding: 0;
 	margin: 0;
-	background: #ebebeb;
+	background: #ffffff;
 	border-color: #d7d7d7;
 	border-width: 1dip;
 	border-style: solid;
@@ -71,20 +71,19 @@ Ui--Smiles--Toolbar#smiles_cat_selector
 
 QWidget#scroll_area_widget
 {
-	background: #ebebeb;
+	background: #ffffff;
 }
 
 QTableView
 {
-	selection-background-color: rgba(202, 230, 179, 40%);
-	background: #ebebeb;
+	background: #ffffff;
 	border: none;
 }
 
 QScrollArea
 {
 	border: none;
-	background: #ebebeb;
+	background: #ffffff;
 }
 
 QLabel#set_header
@@ -103,5 +102,5 @@ Ui--Smiles--SmilesMenu
 	border-top-color: #d7d7d7;
 	border-top-width: 1dip;
 	border-top-style: solid;
-	background: #ebebeb;
+	background: #ffffff;
 }

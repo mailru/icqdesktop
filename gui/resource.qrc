@@ -12,52 +12,93 @@
     <file>resources/fonts/OpenSans-Light.ttf</file>
     <file>resources/fonts/OpenSans-Semibold.ttf</file>
     <file>resources/fonts/OpenSans-Regular.ttf</file>
-    <file>resources/contr_profile_100.png</file>
-    <file>resources/contr_profile_125.png</file>
-    <file>resources/contr_profile_150.png</file>
-    <file>resources/contr_profile_200.png</file>
-    <file>resources/contr_notifysettings_100.png</file>
-    <file>resources/contr_notifysettings_125.png</file>
-    <file>resources/contr_notifysettings_150.png</file>
-    <file>resources/contr_notifysettings_200.png</file>
-    <file>resources/contr_video_100.png</file>
-    <file>resources/contr_video_125.png</file>
-    <file>resources/contr_video_150.png</file>
-    <file>resources/contr_video_200.png</file>
-    <file>resources/contr_about_100.png</file>
-    <file>resources/contr_about_125.png</file>
-    <file>resources/contr_about_150.png</file>
-    <file>resources/contr_about_200.png</file>
-    <file>resources/contr_contact_us_100.png</file>
-    <file>resources/contr_contact_us_125.png</file>
-    <file>resources/contr_contact_us_150.png</file>
-    <file>resources/contr_contact_us_200.png</file>
-    <file>resources/contr_signout_100.png</file>
-    <file>resources/contr_signout_125.png</file>
-    <file>resources/contr_signout_150.png</file>
-    <file>resources/contr_signout_200.png</file>
-    <file>resources/contr_privacy_100.png</file>
-    <file>resources/contr_privacy_125.png</file>
-    <file>resources/contr_privacy_150.png</file>
-    <file>resources/contr_privacy_200.png</file>
-    <file>resources/cl_badges_official_100.png</file>
-    <file>resources/cl_badges_official_125.png</file>
-    <file>resources/cl_badges_official_150.png</file>
-    <file>resources/cl_badges_official_200.png</file>
+    <file>resources/settings/settings_general_100.png</file>
+    <file>resources/settings/settings_general_125.png</file>
+    <file>resources/settings/settings_general_150.png</file>
+    <file>resources/settings/settings_general_200.png</file>
+    <file>resources/settings/settings_general_100_active.png</file>
+    <file>resources/settings/settings_general_125_active.png</file>
+    <file>resources/settings/settings_general_150_active.png</file>
+    <file>resources/settings/settings_general_200_active.png</file>
+    <file>resources/settings/settings_themes_100.png</file>
+    <file>resources/settings/settings_themes_125.png</file>
+    <file>resources/settings/settings_themes_150.png</file>
+    <file>resources/settings/settings_themes_200.png</file>
+    <file>resources/settings/settings_themes_100_active.png</file>
+    <file>resources/settings/settings_themes_125_active.png</file>
+    <file>resources/settings/settings_themes_150_active.png</file>
+    <file>resources/settings/settings_themes_200_active.png</file>
+    <file>resources/settings/settings_profile_100.png</file>
+    <file>resources/settings/settings_profile_125.png</file>
+    <file>resources/settings/settings_profile_150.png</file>
+    <file>resources/settings/settings_profile_200.png</file>
+    <file>resources/settings/settings_profile_100_active.png</file>
+    <file>resources/settings/settings_profile_125_active.png</file>
+    <file>resources/settings/settings_profile_150_active.png</file>
+    <file>resources/settings/settings_profile_200_active.png</file>
+    <file>resources/settings/settings_notify_100.png</file>
+    <file>resources/settings/settings_notify_125.png</file>
+    <file>resources/settings/settings_notify_150.png</file>
+    <file>resources/settings/settings_notify_200.png</file>
+    <file>resources/settings/settings_notify_100_active.png</file>
+    <file>resources/settings/settings_notify_125_active.png</file>
+    <file>resources/settings/settings_notify_150_active.png</file>
+    <file>resources/settings/settings_notify_200_active.png</file>
+    <file>resources/settings/settings_video_100.png</file>
+    <file>resources/settings/settings_video_125.png</file>
+    <file>resources/settings/settings_video_150.png</file>
+    <file>resources/settings/settings_video_200.png</file>
+    <file>resources/settings/settings_video_100_active.png</file>
+    <file>resources/settings/settings_video_125_active.png</file>
+    <file>resources/settings/settings_video_150_active.png</file>
+    <file>resources/settings/settings_video_200_active.png</file>
+    <file>resources/settings/settings_about_100.png</file>
+    <file>resources/settings/settings_about_125.png</file>
+    <file>resources/settings/settings_about_150.png</file>
+    <file>resources/settings/settings_about_200.png</file>
+    <file>resources/settings/settings_about_100_active.png</file>
+    <file>resources/settings/settings_about_125_active.png</file>
+    <file>resources/settings/settings_about_150_active.png</file>
+    <file>resources/settings/settings_about_200_active.png</file>
+    <file>resources/settings/settings_feedback_100.png</file>
+    <file>resources/settings/settings_feedback_125.png</file>
+    <file>resources/settings/settings_feedback_150.png</file>
+    <file>resources/settings/settings_feedback_200.png</file>
+    <file>resources/settings/settings_feedback_100_active.png</file>
+    <file>resources/settings/settings_feedback_125_active.png</file>
+    <file>resources/settings/settings_feedback_150_active.png</file>
+    <file>resources/settings/settings_feedback_200_active.png</file>
+    <file>resources/settings/settings_signout_100.png</file>
+    <file>resources/settings/settings_signout_125.png</file>
+    <file>resources/settings/settings_signout_150.png</file>
+    <file>resources/settings/settings_signout_200.png</file>
+    <file>resources/settings/settings_signout_100_active.png</file>
+    <file>resources/settings/settings_signout_125_active.png</file>
+    <file>resources/settings/settings_signout_150_active.png</file>
+    <file>resources/settings/settings_signout_200_active.png</file>
+    <file>resources/official_badge_blue_100.png</file>
+    <file>resources/official_badge_blue_125.png</file>
+    <file>resources/official_badge_blue_150.png</file>
+    <file>resources/official_badge_blue_200.png</file>
+    <file>resources/badge_official_small_100.png</file>
+    <file>resources/badge_official_small_125.png</file>
+    <file>resources/badge_official_small_150.png</file>
+    <file>resources/badge_official_small_200.png</file>
     <file>utils/common_style.qss</file>
+    <file>main_window/main_menu.qss</file>
     <file>main_window/accounts_page.qss</file>
     <file>main_window/login_page.qss</file>
     <file>main_window/main_window.qss</file>
     <file>main_window/input_widget/input_widget.qss</file>
+    <file>main_window/input_widget/input_widget_snaps.qss</file>
     <file>main_window/livechats/LiveChats.qss</file>
     <file>main_window/smiles_menu/smiles_menu.qss</file>
     <file>main_window/search_contacts/search_contacts.qss</file>
     <file>main_window/history_control/history_control.qss</file>
     <file>main_window/settings/contact_us.qss</file>
-    <file>main_window/settings/profile_settings.qss</file>
     <file>main_window/settings/general_settings.qss</file>
+    <file>main_window/settings/settings_tab.qss</file>
     <file>main_window/contact_list/contact_list.qss</file>
-    <file>main_window/contact_list/SettingsTab.qss</file>
     <file>controls/controls_style.qss</file>
     <file>main_window/sidebar/Sidebar.qss</file>
     <file>main_window/mplayer/mstyles.qss</file>
@@ -65,216 +106,230 @@
     <file>voip/video_panel.qss</file>
     <file>voip/volume_control.qss</file>
     <file>voip/mask_panel.qss</file>
+    <file>voip/video_conference_dialog.qss</file>
+    <file>resources/alert_magent_100.png</file>
+    <file>resources/alert_magent_125.png</file>
+    <file>resources/alert_magent_150.png</file>
+    <file>resources/alert_magent_200.png</file>
     <file>resources/main_window/appicon.ico</file>
+    <file>resources/main_window/appicon_agent.ico</file>
+    <file>resources/main_window/appicon_100.png</file>
+    <file>resources/main_window/appicon_125.png</file>
+    <file>resources/main_window/appicon_150.png</file>
+    <file>resources/main_window/appicon_200.png</file>
+    <file>resources/main_window/appicon_agent_100.png</file>
+    <file>resources/main_window/appicon_agent_125.png</file>
+    <file>resources/main_window/appicon_agent_150.png</file>
+    <file>resources/main_window/appicon_agent_200.png</file>
     <file>resources/main_window/appicon_overlay.png</file>
     <file>resources/main_window/appicon_unread.ico</file>
+    <file>resources/main_window/appicon_unread_agent.ico</file>
     <file>resources/main_window/appicon_tray.ico</file>
+    <file>resources/main_window/appicon_tray_agent.ico</file>
     <file>resources/main_window/appicon_tray_unread.ico</file>
-    <file>resources/main_window/appicon.png</file>
-    <file>resources/tabs_contacts_100.png</file>
-    <file>resources/tabs_contacts_100_active.png</file>
-    <file>resources/tabs_contacts_100_hover.png</file>
-    <file>resources/tabs_recents_100.png</file>
-    <file>resources/tabs_recents_100_active.png</file>
-    <file>resources/tabs_recents_100_hover.png</file>
-    <file>resources/tabs_livechats_100.png</file>
-    <file>resources/tabs_livechats_100_active.png</file>
-    <file>resources/tabs_livechats_100_hover.png</file>
-    <file>resources/tabs_settings_100.png</file>
-    <file>resources/tabs_settings_100_active.png</file>
-    <file>resources/tabs_settings_100_hover.png</file>
-    <file>resources/contr_search_100.png</file>
-    <file>resources/contr_search_100_hover.png</file>
-    <file>resources/contr_search_100_active.png</file>
-    <file>resources/contr_compose_100.png</file>
-    <file>resources/contr_compose_100_active.png</file>
-    <file>resources/contr_compose_100_hover.png</file>
-    <file>resources/widgets/content_check_100.png</file>
-    <file>resources/widgets/content_uncheck_100.png</file>
-    <file>resources/widgets/content_dropdown_black_close_100.png</file>
-    <file>resources/widgets/content_dropdown_black_open_100.png</file>
-    <file>resources/widgets/content_dropdown_close_100.png</file>
-    <file>resources/widgets/content_dropdown_open_100.png</file>
-    <file>resources/contr_clear_100.png</file>
-    <file>resources/contr_clear_100_hover.png</file>
-    <file>resources/contr_clear_100_active.png</file>
+    <file>resources/main_window/appicon_tray_unread_agent.ico</file>
+    <file>resources/main_window/tray_email.ico</file> 
+    
+    <file>resources/explore_100.png</file>
+    <file>resources/explore_125.png</file>
+    <file>resources/explore_150.png</file>
+    <file>resources/explore_200.png</file>
+    <file>resources/explore_100_active.png</file>
+    <file>resources/explore_125_active.png</file>
+    <file>resources/explore_150_active.png</file>
+    <file>resources/explore_200_active.png</file>
+    
+    <file>resources/magent_100.png</file>
+    <file>resources/magent_125.png</file>
+    <file>resources/magent_150.png</file>
+    <file>resources/magent_200.png</file>
+    <file>resources/magent_100_hover.png</file>
+    <file>resources/magent_125_hover.png</file>
+    <file>resources/magent_150_hover.png</file>
+    <file>resources/magent_200_hover.png</file>
+
+    <file>resources/add_contact_100.png</file>
+    <file>resources/add_contact_125.png</file>
+    <file>resources/add_contact_150.png</file>
+    <file>resources/add_contact_200.png</file>
+
+    <file>resources/snaps_100.png</file>
+    <file>resources/snaps_125.png</file>
+    <file>resources/snaps_150.png</file>
+    <file>resources/snaps_200.png</file>
+    
+    <file>resources/contacts_100.png</file>
+    <file>resources/contacts_125.png</file>
+    <file>resources/contacts_150.png</file>
+    <file>resources/contacts_200.png</file>
+    
+    <file>resources/create_chat_100.png</file>
+    <file>resources/create_chat_125.png</file>
+    <file>resources/create_chat_150.png</file>
+    <file>resources/create_chat_200.png</file>
+
+    <file>resources/basic_elements/contr_basic_back_100.png</file>
+    <file>resources/basic_elements/contr_basic_back_125.png</file>
+    <file>resources/basic_elements/contr_basic_back_150.png</file>
+    <file>resources/basic_elements/contr_basic_back_200.png</file>
+
+    <file>resources/basic_elements/close_big_b_100.png</file>
+    <file>resources/basic_elements/close_big_b_125.png</file>
+    <file>resources/basic_elements/close_big_b_150.png</file>
+    <file>resources/basic_elements/close_big_b_200.png</file>
+    
+    <file>resources/basic_elements/contr_back_100.png</file>
+    <file>resources/basic_elements/contr_back_100_hover.png</file>
+    <file>resources/basic_elements/contr_back_125.png</file>
+    <file>resources/basic_elements/contr_back_125_hover.png</file>
+    <file>resources/basic_elements/contr_back_150.png</file>
+    <file>resources/basic_elements/contr_back_150_hover.png</file>
+    <file>resources/basic_elements/contr_back_200.png</file>
+    <file>resources/basic_elements/contr_back_200_hover.png</file>
+
+    <file>resources/basic_elements/content_check_100.png</file>
+    <file>resources/basic_elements/content_check_125.png</file>
+    <file>resources/basic_elements/content_check_150.png</file>
+    <file>resources/basic_elements/content_check_200.png</file>
+    <file>resources/basic_elements/content_uncheck_100.png</file>
+    <file>resources/basic_elements/content_uncheck_125.png</file>
+    <file>resources/basic_elements/content_uncheck_150.png</file>
+    <file>resources/basic_elements/content_uncheck_200.png</file>
+
+    <file>resources/basic_elements/close_a_100.png</file>
+    <file>resources/basic_elements/close_a_125.png</file>
+    <file>resources/basic_elements/close_a_150.png</file>
+    <file>resources/basic_elements/close_a_200.png</file>
+    <file>resources/basic_elements/close_b_100.png</file>
+    <file>resources/basic_elements/close_b_125.png</file>
+    <file>resources/basic_elements/close_b_150.png</file>
+    <file>resources/basic_elements/close_b_200.png</file>
+    <file>resources/basic_elements/close_c_100.png</file>
+    <file>resources/basic_elements/close_c_125.png</file>
+    <file>resources/basic_elements/close_c_150.png</file>
+    <file>resources/basic_elements/close_c_200.png</file>
+    <file>resources/basic_elements/close_d_100.png</file>
+    <file>resources/basic_elements/close_d_125.png</file>
+    <file>resources/basic_elements/close_d_150.png</file>
+    <file>resources/basic_elements/close_d_200.png</file>
+    <file>resources/basic_elements/arrow_small_a_100.png</file>
+    <file>resources/basic_elements/arrow_small_a_125.png</file>
+    <file>resources/basic_elements/arrow_small_a_150.png</file>
+    <file>resources/basic_elements/arrow_small_a_200.png</file>
+    <file>resources/basic_elements/arrow_small_b_100.png</file>
+    <file>resources/basic_elements/arrow_small_b_125.png</file>
+    <file>resources/basic_elements/arrow_small_b_150.png</file>
+    <file>resources/basic_elements/arrow_small_b_200.png</file>
+    <file>resources/basic_elements/arrow_small_c_100.png</file>
+    <file>resources/basic_elements/arrow_small_c_125.png</file>
+    <file>resources/basic_elements/arrow_small_c_150.png</file>
+    <file>resources/basic_elements/arrow_small_c_200.png</file>
+    
     <file>resources/main_window/pat_100.png</file>
+    <file>resources/main_window/pat_125.png</file>
+    <file>resources/main_window/pat_150.png</file>
+    <file>resources/main_window/pat_200.png</file>
     <file>resources/main_window/pat_thumb_100.png</file>
     <file>resources/main_window/pat_thumb_125.png</file>
     <file>resources/main_window/pat_thumb_150.png</file>
     <file>resources/main_window/pat_thumb_200.png</file>
-    <file>resources/contr_call_big_100.png</file>
-    <file>resources/contr_call_big_100_hover.png</file>
-    <file>resources/contr_call_big_100_active.png</file>
-    <file>resources/contr_videocall_big_100.png</file>
-    <file>resources/contr_videocall_big_100_hover.png</file>
-    <file>resources/contr_videocall_big_100_active.png</file>
-    <file>resources/contr_videocall_bigdisable_100.png</file>
-    <file>resources/contr_options_round_100.png</file>
-    <file>resources/contr_options_round_100_hover.png</file>
-    <file>resources/contr_options_round_100_active.png</file>
-    <file>resources/contr_options_round_125.png</file>
-    <file>resources/contr_options_round_125_hover.png</file>
-    <file>resources/contr_options_round_125_active.png</file>
-    <file>resources/contr_options_round_150.png</file>
-    <file>resources/contr_options_round_150_hover.png</file>
-    <file>resources/contr_options_round_150_active.png</file>
-    <file>resources/contr_options_round_200.png</file>
-    <file>resources/contr_options_round_200_hover.png</file>
-    <file>resources/contr_options_round_200_active.png</file>
-
-    <file>resources/contr_back_100.png</file>
-    <file>resources/contr_back_100_hover.png</file>
-    <file>resources/contr_back_100_active.png</file>
-    <file>resources/contr_back_125.png</file>
-    <file>resources/contr_back_125_hover.png</file>
-    <file>resources/contr_back_125_active.png</file>
-    <file>resources/contr_back_150.png</file>
-    <file>resources/contr_back_150_hover.png</file>
-    <file>resources/contr_back_150_active.png</file>
-    <file>resources/contr_back_200.png</file>
-    <file>resources/contr_back_200_hover.png</file>
-    <file>resources/contr_back_200_active.png</file>
+    
+    <file>resources/options_round_100.png</file>
+    <file>resources/options_round_100_hover.png</file>
+    <file>resources/options_round_100_active.png</file>
+    <file>resources/options_round_125.png</file>
+    <file>resources/options_round_125_hover.png</file>
+    <file>resources/options_round_125_active.png</file>
+    <file>resources/options_round_150.png</file>
+    <file>resources/options_round_150_hover.png</file>
+    <file>resources/options_round_150_active.png</file>
+    <file>resources/options_round_200.png</file>
+    <file>resources/options_round_200_hover.png</file>
+    <file>resources/options_round_200_active.png</file>
 
     <file>resources/content_forwardmsg_100.png</file>
     <file>resources/content_forwardmsg_125.png</file>
     <file>resources/content_forwardmsg_150.png</file>
     <file>resources/content_forwardmsg_200.png</file>
 
+    <file>resources/icon_favorites_100.png</file>
+    <file>resources/icon_favorites_125.png</file>
+    <file>resources/icon_favorites_150.png</file>
+    <file>resources/icon_favorites_200.png</file>
+
+    <file>resources/icon_recents_100.png</file>
+    <file>resources/icon_recents_125.png</file>
+    <file>resources/icon_recents_150.png</file>
+    <file>resources/icon_recents_200.png</file>
+
     <file>resources/placeholders/content_illustration_emptylivechat_100.png</file>
     <file>resources/placeholders/content_illustration_emptylivechat_125.png</file>
     <file>resources/placeholders/content_illustration_emptylivechat_150.png</file>
     <file>resources/placeholders/content_illustration_emptylivechat_200.png</file>
 
-    <file>resources/tabs_contacts_125.png</file>
-    <file>resources/tabs_contacts_125_active.png</file>
-    <file>resources/tabs_contacts_125_hover.png</file>
-    <file>resources/tabs_recents_125.png</file>
-    <file>resources/tabs_recents_125_active.png</file>
-    <file>resources/tabs_recents_125_hover.png</file>
-    <file>resources/tabs_livechats_125.png</file>
-    <file>resources/tabs_livechats_125_active.png</file>
-    <file>resources/tabs_livechats_125_hover.png</file>
-    <file>resources/tabs_settings_125.png</file>
-    <file>resources/tabs_settings_125_active.png</file>
-    <file>resources/tabs_settings_125_hover.png</file>
-    <file>resources/contr_search_125.png</file>
-    <file>resources/contr_search_125_active.png</file>
-    <file>resources/contr_search_125_hover.png</file>
-    <file>resources/contr_compose_125.png</file>
-    <file>resources/contr_compose_125_active.png</file>
-    <file>resources/contr_compose_125_hover.png</file>
-    <file>resources/widgets/content_check_125.png</file>
-    <file>resources/widgets/content_uncheck_125.png</file>
-    <file>resources/widgets/content_dropdown_black_close_125.png</file>
-    <file>resources/widgets/content_dropdown_black_open_125.png</file>
-    <file>resources/widgets/content_dropdown_close_125.png</file>
-    <file>resources/widgets/content_dropdown_open_125.png</file>
-    <file>resources/contr_clear_125.png</file>
-    <file>resources/contr_clear_125_hover.png</file>
-    <file>resources/contr_clear_125_active.png</file>
-    <file>resources/main_window/pat_125.png</file>
-    <file>resources/contr_call_big_125.png</file>
-    <file>resources/contr_call_big_125_hover.png</file>
-    <file>resources/contr_call_big_125_active.png</file>
-    <file>resources/contr_videocall_big_125.png</file>
-    <file>resources/contr_videocall_big_125_hover.png</file>
-    <file>resources/contr_videocall_big_125_active.png</file>
-    <file>resources/contr_videocall_bigdisable_125.png</file>
-    <file>resources/tabs_contacts_150.png</file>
-    <file>resources/tabs_contacts_150_active.png</file>
-    <file>resources/tabs_contacts_150_hover.png</file>
-    <file>resources/tabs_recents_150.png</file>
-    <file>resources/tabs_recents_150_active.png</file>
-    <file>resources/tabs_recents_150_hover.png</file>
-    <file>resources/tabs_livechats_150.png</file>
-    <file>resources/tabs_livechats_150_active.png</file>
-    <file>resources/tabs_livechats_150_hover.png</file>
-    <file>resources/tabs_settings_150.png</file>
-    <file>resources/tabs_settings_150_active.png</file>
-    <file>resources/tabs_settings_150_hover.png</file>
-    <file>resources/contr_search_150.png</file>
-    <file>resources/contr_search_150_active.png</file>
-    <file>resources/contr_search_150_hover.png</file>
-    <file>resources/contr_compose_150.png</file>
-    <file>resources/contr_compose_150_active.png</file>
-    <file>resources/contr_compose_150_hover.png</file>
-    <file>resources/widgets/content_check_150.png</file>
-    <file>resources/widgets/content_uncheck_150.png</file>
-    <file>resources/widgets/content_dropdown_black_close_150.png</file>
-    <file>resources/widgets/content_dropdown_black_open_150.png</file>
-    <file>resources/widgets/content_dropdown_close_150.png</file>
-    <file>resources/widgets/content_dropdown_open_150.png</file>
-    <file>resources/contr_clear_150.png</file>
-    <file>resources/contr_clear_150_hover.png</file>
-    <file>resources/contr_clear_150_active.png</file>
-    <file>resources/main_window/pat_150.png</file>
-    <file>resources/contr_call_big_150.png</file>
-    <file>resources/contr_call_big_150_hover.png</file>
-    <file>resources/contr_call_big_150_active.png</file>
-    <file>resources/contr_videocall_big_150.png</file>
-    <file>resources/contr_videocall_big_150_hover.png</file>
-    <file>resources/contr_videocall_big_150_active.png</file>
-    <file>resources/contr_videocall_bigdisable_150.png</file>
-    <file>resources/tabs_contacts_200.png</file>
-    <file>resources/tabs_contacts_200_active.png</file>
-    <file>resources/tabs_contacts_200_hover.png</file>
-    <file>resources/tabs_recents_200.png</file>
-    <file>resources/tabs_recents_200_active.png</file>
-    <file>resources/tabs_recents_200_hover.png</file>
-    <file>resources/tabs_livechats_200.png</file>
-    <file>resources/tabs_livechats_200_active.png</file>
-    <file>resources/tabs_livechats_200_hover.png</file>
-    <file>resources/tabs_settings_200.png</file>
-    <file>resources/tabs_settings_200_active.png</file>
-    <file>resources/tabs_settings_200_hover.png</file>
-    <file>resources/contr_search_200.png</file>
-    <file>resources/contr_search_200_active.png</file>
-    <file>resources/contr_search_200_hover.png</file>
-    <file>resources/contr_compose_200.png</file>
-    <file>resources/contr_compose_200_active.png</file>
-    <file>resources/contr_compose_200_hover.png</file>
 
     <file>resources/content_addphoto_100.png</file>
-    <file>resources/content_addphoto_100_active.png</file>
-    <file>resources/content_addphoto_100_hover.png</file>
     <file>resources/content_addphoto_125.png</file>
-    <file>resources/content_addphoto_125_active.png</file>
-    <file>resources/content_addphoto_125_hover.png</file>
     <file>resources/content_addphoto_150.png</file>
-    <file>resources/content_addphoto_150_active.png</file>
-    <file>resources/content_addphoto_150_hover.png</file>
     <file>resources/content_addphoto_200.png</file>
-    <file>resources/content_addphoto_200_active.png</file>
-    <file>resources/content_addphoto_200_hover.png</file>
-    <file>resources/content_ignorelist_100.png</file>
-    <file>resources/content_ignorelist_125.png</file>
-    <file>resources/content_ignorelist_150.png</file>
-    <file>resources/content_ignorelist_200.png</file>
-    <file>resources/content_oldaccount_100.png</file>
-    <file>resources/content_oldaccount_125.png</file>
-    <file>resources/content_oldaccount_150.png</file>
-    <file>resources/content_oldaccount_200.png</file>
 
     <file>resources/main_window/content_logo_100.png</file>
     <file>resources/main_window/content_logo_125.png</file>
     <file>resources/main_window/content_logo_150.png</file>
     <file>resources/main_window/content_logo_200.png</file>
 
-    <file>resources/content_status_online_100.png</file>
-    <file>resources/content_status_online_125.png</file>
-    <file>resources/content_status_online_150.png</file>
-    <file>resources/content_status_online_200.png</file>
+    <file>resources/main_window/content_logo_agent_100.png</file>
+    <file>resources/main_window/content_logo_agent_125.png</file>
+    <file>resources/main_window/content_logo_agent_150.png</file>
+    <file>resources/main_window/content_logo_agent_200.png</file>
+	
+	  <file>resources/main_window/capture/i_magent_100.png</file>
+    <file>resources/main_window/capture/i_magent_125.png</file>
+    <file>resources/main_window/capture/i_magent_150.png</file>
+    <file>resources/main_window/capture/i_magent_200.png</file>
+    <file>resources/main_window/capture/i_magent_100_active.png</file>
+    <file>resources/main_window/capture/i_magent_125_active.png</file>
+    <file>resources/main_window/capture/i_magent_150_active.png</file>
+    <file>resources/main_window/capture/i_magent_200_active.png</file>
+    
+	  <file>resources/main_window/capture/i_recents_100.png</file>
+    <file>resources/main_window/capture/i_recents_125.png</file>
+    <file>resources/main_window/capture/i_recents_150.png</file>
+    <file>resources/main_window/capture/i_recents_200.png</file>
+    <file>resources/main_window/capture/i_recents_100_active.png</file>
+    <file>resources/main_window/capture/i_recents_125_active.png</file>
+    <file>resources/main_window/capture/i_recents_150_active.png</file>
+    <file>resources/main_window/capture/i_recents_200_active.png</file>
 
-    <file>resources/content_status_invisible_100.png</file>
-    <file>resources/content_status_invisible_125.png</file>
-    <file>resources/content_status_invisible_150.png</file>
-    <file>resources/content_status_invisible_200.png</file>
+    <file>resources/statuses/status_online_100.png</file>
+    <file>resources/statuses/status_online_125.png</file>
+    <file>resources/statuses/status_online_150.png</file>
+    <file>resources/statuses/status_online_200.png</file>
 
-    <file>resources/content_status_dnd_100.png</file>
-    <file>resources/content_status_dnd_125.png</file>
-    <file>resources/content_status_dnd_150.png</file>
-    <file>resources/content_status_dnd_200.png</file>
+    <file>resources/statuses/status_online_agent_100.png</file>
+    <file>resources/statuses/status_online_agent_125.png</file>
+    <file>resources/statuses/status_online_agent_150.png</file>
+    <file>resources/statuses/status_online_agent_200.png</file>
+
+    <file>resources/statuses/status_invisible_100.png</file>
+    <file>resources/statuses/status_invisible_125.png</file>
+    <file>resources/statuses/status_invisible_150.png</file>
+    <file>resources/statuses/status_invisible_200.png</file>
+
+    <file>resources/statuses/status_invisible_agent_100.png</file>
+    <file>resources/statuses/status_invisible_agent_125.png</file>
+    <file>resources/statuses/status_invisible_agent_150.png</file>
+    <file>resources/statuses/status_invisible_agent_200.png</file>
+
+    <file>resources/statuses/status_dnd_100.png</file>
+    <file>resources/statuses/status_dnd_125.png</file>
+    <file>resources/statuses/status_dnd_150.png</file>
+    <file>resources/statuses/status_dnd_200.png</file>
+
+    <file>resources/statuses/status_dnd_agent_100.png</file>
+    <file>resources/statuses/status_dnd_agent_125.png</file>
+    <file>resources/statuses/status_dnd_agent_150.png</file>
+    <file>resources/statuses/status_dnd_agent_200.png</file>
 
     <file>resources/placeholders/content_illustration_good_100.png</file>
     <file>resources/placeholders/content_illustration_good_125.png</file>
@@ -299,20 +354,15 @@
     <file>resources/gifs/r_spiner150.gif</file>
     <file>resources/gifs/r_spiner200.gif</file>
 
-    <file>resources/cl_favorites_100.png</file>
-    <file>resources/cl_favorites_125.png</file>
-    <file>resources/cl_favorites_150.png</file>
-    <file>resources/cl_favorites_200.png</file>
+    <file>resources/basic_elements/arrow_small_green_100.png</file>
+    <file>resources/basic_elements/arrow_small_green_125.png</file>
+    <file>resources/basic_elements/arrow_small_green_150.png</file>
+    <file>resources/basic_elements/arrow_small_green_200.png</file>
 
-    <file>resources/cl_group_close_100.png</file>
-    <file>resources/cl_group_close_125.png</file>
-    <file>resources/cl_group_close_150.png</file>
-    <file>resources/cl_group_close_200.png</file>
-
-    <file>resources/cl_group_open_100.png</file>
-    <file>resources/cl_group_open_125.png</file>
-    <file>resources/cl_group_open_150.png</file>
-    <file>resources/cl_group_open_200.png</file>
+    <file>resources/basic_elements/arrow_small_up_green_100.png</file>
+    <file>resources/basic_elements/arrow_small_up_green_125.png</file>
+    <file>resources/basic_elements/arrow_small_up_green_150.png</file>
+    <file>resources/basic_elements/arrow_small_up_green_200.png</file>
 
     <file>resources/placeholders/content_badge_appstore_CS_100.png</file>
     <file>resources/placeholders/content_badge_appstore_CS_125.png</file>
@@ -374,16 +424,6 @@
     <file>resources/placeholders/content_badge_gplay_EN_150.png</file>
     <file>resources/placeholders/content_badge_gplay_EN_200.png</file>
 
-    <file>resources/widgets/content_check_200.png</file>
-    <file>resources/widgets/content_uncheck_200.png</file>
-    <file>resources/widgets/content_dropdown_black_close_200.png</file>
-    <file>resources/widgets/content_dropdown_black_open_200.png</file>
-    <file>resources/widgets/content_dropdown_close_200.png</file>
-    <file>resources/widgets/content_dropdown_open_200.png</file>
-    <file>resources/contr_clear_200.png</file>
-    <file>resources/contr_clear_200_hover.png</file>
-    <file>resources/contr_clear_200_active.png</file>
-    <file>resources/main_window/pat_200.png</file>
     <file>resources/placeholders/content_placeholder_recents_100.png</file>
     <file>resources/placeholders/content_placeholder_recents_125.png</file>
     <file>resources/placeholders/content_placeholder_recents_150.png</file>
@@ -414,25 +454,7 @@
     <file>resources/promo_pages/coach_4_125.jpg</file>
     <file>resources/promo_pages/coach_4_150.jpg</file>
     <file>resources/promo_pages/coach_4_200.jpg</file>
-    <file>resources/contr_writemsg_big_100.png</file>
-    <file>resources/contr_writemsg_big_100_hover.png</file>
-    <file>resources/contr_writemsg_big_100_active.png</file>
-    <file>resources/contr_writemsg_big_125.png</file>
-    <file>resources/contr_writemsg_big_125_hover.png</file>
-    <file>resources/contr_writemsg_big_125_active.png</file>
-    <file>resources/contr_writemsg_big_150.png</file>
-    <file>resources/contr_writemsg_big_150_hover.png</file>
-    <file>resources/contr_writemsg_big_150_active.png</file>
-    <file>resources/contr_writemsg_big_200.png</file>
-    <file>resources/contr_writemsg_big_200_hover.png</file>
-    <file>resources/contr_writemsg_big_200_active.png</file>
-    <file>resources/contr_call_big_200.png</file>
-    <file>resources/contr_call_big_200_hover.png</file>
-    <file>resources/contr_call_big_200_active.png</file>
-    <file>resources/contr_videocall_big_200.png</file>
-    <file>resources/contr_videocall_big_200_hover.png</file>
-    <file>resources/contr_videocall_big_200_active.png</file>
-    <file>resources/contr_videocall_bigdisable_200.png</file>
+
     <file>resources/smiles_menu/picker_tab_emoji_100.png</file>
     <file>resources/smiles_menu/picker_tab_emoji_125.png</file>
     <file>resources/smiles_menu/picker_tab_emoji_150.png</file>
@@ -489,104 +511,91 @@
     <file>resources/smiles_menu/picker_shadow_right_125.png</file>
     <file>resources/smiles_menu/picker_shadow_right_150.png</file>
     <file>resources/smiles_menu/picker_shadow_right_200.png</file>
-    <file>resources/input_widget/contr_attachfiles_100.png</file>
-    <file>resources/input_widget/contr_attachfiles_100_active.png</file>
-    <file>resources/input_widget/contr_attachfiles_100_hover.png</file>
-    <file>resources/input_widget/contr_attachfiles_125.png</file>
-    <file>resources/input_widget/contr_attachfiles_125_active.png</file>
-    <file>resources/input_widget/contr_attachfiles_125_hover.png</file>
-    <file>resources/input_widget/contr_attachfiles_150.png</file>
-    <file>resources/input_widget/contr_attachfiles_150_active.png</file>
-    <file>resources/input_widget/contr_attachfiles_150_hover.png</file>
-    <file>resources/input_widget/contr_attachfiles_200.png</file>
-    <file>resources/input_widget/contr_attachfiles_200_active.png</file>
-    <file>resources/input_widget/contr_attachfiles_200_hover.png</file>
-    <file>resources/input_widget/contr_send_100.png</file>
-    <file>resources/input_widget/contr_send_100_active.png</file>
-    <file>resources/input_widget/contr_send_100_disable.png</file>
-    <file>resources/input_widget/contr_send_100_hover.png</file>
-    <file>resources/input_widget/contr_send_125.png</file>
-    <file>resources/input_widget/contr_send_125_active.png</file>
-    <file>resources/input_widget/contr_send_125_disable.png</file>
-    <file>resources/input_widget/contr_send_125_hover.png</file>
-    <file>resources/input_widget/contr_send_150.png</file>
-    <file>resources/input_widget/contr_send_150_active.png</file>
-    <file>resources/input_widget/contr_send_150_disable.png</file>
-    <file>resources/input_widget/contr_send_150_hover.png</file>
-    <file>resources/input_widget/contr_send_200.png</file>
-    <file>resources/input_widget/contr_send_200_active.png</file>
-    <file>resources/input_widget/contr_send_200_disable.png</file>
-    <file>resources/input_widget/contr_send_200_hover.png</file>
-    <file>resources/input_widget/contr_smile_100.png</file>
-    <file>resources/input_widget/contr_smile_100_active.png</file>
-    <file>resources/input_widget/contr_smile_100_hover.png</file>
-    <file>resources/input_widget/contr_smile_125.png</file>
-    <file>resources/input_widget/contr_smile_125_active.png</file>
-    <file>resources/input_widget/contr_smile_125_hover.png</file>
-    <file>resources/input_widget/contr_smile_150.png</file>
-    <file>resources/input_widget/contr_smile_150_active.png</file>
-    <file>resources/input_widget/contr_smile_150_hover.png</file>
-    <file>resources/input_widget/contr_smile_200.png</file>
-    <file>resources/input_widget/contr_smile_200_active.png</file>
-    <file>resources/input_widget/contr_smile_200_hover.png</file>
+    
+    <file>resources/input_widget/attachfiles_100.png</file>
+    <file>resources/input_widget/attachfiles_100_active.png</file>
+    <file>resources/input_widget/attachfiles_100_hover.png</file>
+    <file>resources/input_widget/attachfiles_125.png</file>
+    <file>resources/input_widget/attachfiles_125_active.png</file>
+    <file>resources/input_widget/attachfiles_125_hover.png</file>
+    <file>resources/input_widget/attachfiles_150.png</file>
+    <file>resources/input_widget/attachfiles_150_active.png</file>
+    <file>resources/input_widget/attachfiles_150_hover.png</file>
+    <file>resources/input_widget/attachfiles_200.png</file>
+    <file>resources/input_widget/attachfiles_200_active.png</file>
+    <file>resources/input_widget/attachfiles_200_hover.png</file>
+    <file>resources/input_widget/send_100.png</file>
+    <file>resources/input_widget/send_100_pressed.png</file>
+    <file>resources/input_widget/send_100_disable.png</file>
+    <file>resources/input_widget/send_100_hover.png</file>
+    <file>resources/input_widget/send_125.png</file>
+    <file>resources/input_widget/send_125_pressed.png</file>
+    <file>resources/input_widget/send_125_disable.png</file>
+    <file>resources/input_widget/send_125_hover.png</file>
+    <file>resources/input_widget/send_150.png</file>
+    <file>resources/input_widget/send_150_pressed.png</file>
+    <file>resources/input_widget/send_150_disable.png</file>
+    <file>resources/input_widget/send_150_hover.png</file>
+    <file>resources/input_widget/send_200.png</file>
+    <file>resources/input_widget/send_200_pressed.png</file>
+    <file>resources/input_widget/send_200_disable.png</file>
+    <file>resources/input_widget/send_200_hover.png</file>
+    <file>resources/input_widget/smile_100.png</file>
+    <file>resources/input_widget/smile_100_active.png</file>
+    <file>resources/input_widget/smile_100_hover.png</file>
+    <file>resources/input_widget/smile_125.png</file>
+    <file>resources/input_widget/smile_125_active.png</file>
+    <file>resources/input_widget/smile_125_hover.png</file>
+    <file>resources/input_widget/smile_150.png</file>
+    <file>resources/input_widget/smile_150_active.png</file>
+    <file>resources/input_widget/smile_150_hover.png</file>
+    <file>resources/input_widget/smile_200.png</file>
+    <file>resources/input_widget/smile_200_active.png</file>
+    <file>resources/input_widget/smile_200_hover.png</file>
+    
     <file>resources/main_window/contr_minimize_100.png</file>
-    <file>resources/main_window/contr_minimize_100_hover.png</file>
-    <file>resources/main_window/contr_minimize_100_active.png</file>
     <file>resources/main_window/contr_minimize_125.png</file>
-    <file>resources/main_window/contr_minimize_125_hover.png</file>
-    <file>resources/main_window/contr_minimize_125_active.png</file>
     <file>resources/main_window/contr_minimize_150.png</file>
-    <file>resources/main_window/contr_minimize_150_hover.png</file>
-    <file>resources/main_window/contr_minimize_150_active.png</file>
     <file>resources/main_window/contr_minimize_200.png</file>
-    <file>resources/main_window/contr_minimize_200_hover.png</file>
-    <file>resources/main_window/contr_minimize_200_active.png</file>
     <file>resources/main_window/contr_smallwindow_100.png</file>
-    <file>resources/main_window/contr_smallwindow_100_hover.png</file>
-    <file>resources/main_window/contr_smallwindow_100_active.png</file>
     <file>resources/main_window/contr_smallwindow_125.png</file>
-    <file>resources/main_window/contr_smallwindow_125_hover.png</file>
-    <file>resources/main_window/contr_smallwindow_125_active.png</file>
     <file>resources/main_window/contr_smallwindow_150.png</file>
-    <file>resources/main_window/contr_smallwindow_150_hover.png</file>
-    <file>resources/main_window/contr_smallwindow_150_active.png</file>
     <file>resources/main_window/contr_smallwindow_200.png</file>
-    <file>resources/main_window/contr_smallwindow_200_hover.png</file>
-    <file>resources/main_window/contr_smallwindow_200_active.png</file>
     <file>resources/main_window/contr_bigwindow_100.png</file>
-    <file>resources/main_window/contr_bigwindow_100_hover.png</file>
-    <file>resources/main_window/contr_bigwindow_100_active.png</file>
     <file>resources/main_window/contr_bigwindow_125.png</file>
-    <file>resources/main_window/contr_bigwindow_125_hover.png</file>
-    <file>resources/main_window/contr_bigwindow_125_active.png</file>
     <file>resources/main_window/contr_bigwindow_150.png</file>
-    <file>resources/main_window/contr_bigwindow_150_hover.png</file>
-    <file>resources/main_window/contr_bigwindow_150_active.png</file>
     <file>resources/main_window/contr_bigwindow_200.png</file>
-    <file>resources/main_window/contr_bigwindow_200_hover.png</file>
-    <file>resources/main_window/contr_bigwindow_200_active.png</file>
     <file>resources/main_window/contr_close_100.png</file>
     <file>resources/main_window/contr_close_100_hover.png</file>
-    <file>resources/main_window/contr_close_100_active.png</file>
     <file>resources/main_window/contr_close_125.png</file>
     <file>resources/main_window/contr_close_125_hover.png</file>
-    <file>resources/main_window/contr_close_125_active.png</file>
     <file>resources/main_window/contr_close_150.png</file>
     <file>resources/main_window/contr_close_150_hover.png</file>
-    <file>resources/main_window/contr_close_150_active.png</file>
     <file>resources/main_window/contr_close_200.png</file>
     <file>resources/main_window/contr_close_200_hover.png</file>
-    <file>resources/main_window/contr_close_200_active.png</file>
 
-    <file>resources/contr_call_bigdisable_100.png</file>
-    <file>resources/contr_call_bigdisable_125.png</file>
-    <file>resources/contr_call_bigdisable_150.png</file>
-    <file>resources/contr_call_bigdisable_200.png</file>
+    <file>resources/photo_100.png</file>
+    <file>resources/photo_125.png</file>
+    <file>resources/photo_150.png</file>
+    <file>resources/photo_200.png</file>
+    
+    <file>resources/contr_writemsg_big_100.png</file>
+    <file>resources/contr_writemsg_big_100_hover.png</file>
+    <file>resources/contr_writemsg_big_125.png</file>
+    <file>resources/contr_writemsg_big_125_hover.png</file>
+    <file>resources/contr_writemsg_big_150.png</file>
+    <file>resources/contr_writemsg_big_150_hover.png</file>
+    <file>resources/contr_writemsg_big_200.png</file>
+    <file>resources/contr_writemsg_big_200_hover.png</file>
 
-    <file>resources/contr_attach_100.png</file>
-    <file>resources/contr_attach_125.png</file>
-    <file>resources/contr_attach_150.png</file>
-    <file>resources/contr_attach_200.png</file>
+    <file>resources/contr_writemsg_mini_100.png</file>
+    <file>resources/contr_writemsg_mini_100_hover.png</file>
+    <file>resources/contr_writemsg_mini_125.png</file>
+    <file>resources/contr_writemsg_mini_125_hover.png</file>
+    <file>resources/contr_writemsg_mini_150.png</file>
+    <file>resources/contr_writemsg_mini_150_hover.png</file>
+    <file>resources/contr_writemsg_mini_200.png</file>
+    <file>resources/contr_writemsg_mini_200_hover.png</file>
 
     <file>resources/contr_writemsg_bigdisable_100.png</file>
     <file>resources/contr_writemsg_bigdisable_125.png</file>
@@ -598,177 +607,163 @@
     <file>resources/contr_wallpaper_select_150.png</file>
     <file>resources/contr_wallpaper_select_200.png</file>
 
-    <file>resources/contr_addpeople_round_100.png</file>
-    <file>resources/contr_addpeople_round_100_hover.png</file>
-    <file>resources/contr_addpeople_round_100_active.png</file>
-    <file>resources/contr_addpeople_round_125.png</file>
-    <file>resources/contr_addpeople_round_125_hover.png</file>
-    <file>resources/contr_addpeople_round_125_active.png</file>
-    <file>resources/contr_addpeople_round_150.png</file>
-    <file>resources/contr_addpeople_round_150_hover.png</file>
-    <file>resources/contr_addpeople_round_150_active.png</file>
-    <file>resources/contr_addpeople_round_200.png</file>
-    <file>resources/contr_addpeople_round_200_hover.png</file>
-    <file>resources/contr_addpeople_round_200_active.png</file>
+    <file>resources/add_members_100.png</file>
+    <file>resources/add_members_100_hover.png</file>
+    <file>resources/add_members_125.png</file>
+    <file>resources/add_members_125_hover.png</file>
+    <file>resources/add_members_150.png</file>
+    <file>resources/add_members_150_hover.png</file>
+    <file>resources/add_members_200.png</file>
+    <file>resources/add_members_200_hover.png</file>
+    
     <file>resources/contr_addpeople_big_100.png</file>
     <file>resources/contr_addpeople_big_100_hover.png</file>
-    <file>resources/contr_addpeople_big_100_active.png</file>
     <file>resources/contr_addpeople_big_125.png</file>
     <file>resources/contr_addpeople_big_125_hover.png</file>
-    <file>resources/contr_addpeople_big_125_active.png</file>
     <file>resources/contr_addpeople_big_150.png</file>
     <file>resources/contr_addpeople_big_150_hover.png</file>
-    <file>resources/contr_addpeople_big_150_active.png</file>
     <file>resources/contr_addpeople_big_200.png</file>
     <file>resources/contr_addpeople_big_200_hover.png</file>
-    <file>resources/contr_addpeople_big_200_active.png</file>
 
-    <file>resources/widgets/content_switch_on_100.png</file>
-    <file>resources/widgets/content_switch_on_125.png</file>
-    <file>resources/widgets/content_switch_on_150.png</file>
-    <file>resources/widgets/content_switch_on_200.png</file>
-    <file>resources/widgets/content_switch_on_dis_100.png</file>
-    <file>resources/widgets/content_switch_on_dis_125.png</file>
-    <file>resources/widgets/content_switch_on_dis_150.png</file>
-    <file>resources/widgets/content_switch_on_dis_200.png</file>
-    <file>resources/widgets/content_switch_off_100.png</file>
-    <file>resources/widgets/content_switch_off_125.png</file>
-    <file>resources/widgets/content_switch_off_150.png</file>
-    <file>resources/widgets/content_switch_off_200.png</file>
-    <file>resources/widgets/content_switch_dis_100.png</file>
-    <file>resources/widgets/content_switch_dis_125.png</file>
-    <file>resources/widgets/content_switch_dis_150.png</file>
-    <file>resources/widgets/content_switch_dis_200.png</file>
+    <file>resources/basic_elements/content_switch_on_100.png</file>
+    <file>resources/basic_elements/content_switch_on_125.png</file>
+    <file>resources/basic_elements/content_switch_on_150.png</file>
+    <file>resources/basic_elements/content_switch_on_200.png</file>
+    <file>resources/basic_elements/content_switch_on_dis_100.png</file>
+    <file>resources/basic_elements/content_switch_on_dis_125.png</file>
+    <file>resources/basic_elements/content_switch_on_dis_150.png</file>
+    <file>resources/basic_elements/content_switch_on_dis_200.png</file>
+    <file>resources/basic_elements/content_switch_off_100.png</file>
+    <file>resources/basic_elements/content_switch_off_125.png</file>
+    <file>resources/basic_elements/content_switch_off_150.png</file>
+    <file>resources/basic_elements/content_switch_off_200.png</file>
+    <file>resources/basic_elements/content_switch_dis_100.png</file>
+    <file>resources/basic_elements/content_switch_dis_125.png</file>
+    <file>resources/basic_elements/content_switch_dis_150.png</file>
+    <file>resources/basic_elements/content_switch_dis_200.png</file>
 
-    <file>resources/widgets/content_selectbar_100.png</file>
-    <file>resources/widgets/content_selectbar_100_hover.png</file>
-    <file>resources/widgets/content_selectbar_100_active.png</file>
-    <file>resources/widgets/content_selectbar_125.png</file>
-    <file>resources/widgets/content_selectbar_125_hover.png</file>
-    <file>resources/widgets/content_selectbar_125_active.png</file>
-    <file>resources/widgets/content_selectbar_150.png</file>
-    <file>resources/widgets/content_selectbar_150_hover.png</file>
-    <file>resources/widgets/content_selectbar_150_active.png</file>
-    <file>resources/widgets/content_selectbar_200.png</file>
-    <file>resources/widgets/content_selectbar_200_hover.png</file>
-    <file>resources/widgets/content_selectbar_200_active.png</file>
+    <file>resources/basic_elements/content_selectbar_100.png</file>
+    <file>resources/basic_elements/content_selectbar_100_hover.png</file>
+    <file>resources/basic_elements/content_selectbar_100_active.png</file>
+    <file>resources/basic_elements/content_selectbar_125.png</file>
+    <file>resources/basic_elements/content_selectbar_125_hover.png</file>
+    <file>resources/basic_elements/content_selectbar_125_active.png</file>
+    <file>resources/basic_elements/content_selectbar_150.png</file>
+    <file>resources/basic_elements/content_selectbar_150_hover.png</file>
+    <file>resources/basic_elements/content_selectbar_150_active.png</file>
+    <file>resources/basic_elements/content_selectbar_200.png</file>
+    <file>resources/basic_elements/content_selectbar_200_hover.png</file>
+    <file>resources/basic_elements/content_selectbar_200_active.png</file>
 
-    <file>resources/cl_addcontact_100.png</file>
-    <file>resources/cl_addcontact_100_active.png</file>
-    <file>resources/cl_addcontact_100_hover.png</file>
-    <file>resources/contr_call_mini_100.png</file>
-    <file>resources/contr_call_mini_100_active.png</file>
-    <file>resources/contr_call_mini_100_hover.png</file>
-    <file>resources/contr_writemsg_mini_100.png</file>
-    <file>resources/contr_writemsg_mini_100_active.png</file>
-    <file>resources/contr_writemsg_mini_100_hover.png</file>
-    <file>resources/cl_addcontact_125.png</file>
-    <file>resources/cl_addcontact_125_active.png</file>
-    <file>resources/cl_addcontact_125_hover.png</file>
-    <file>resources/contr_call_mini_125.png</file>
-    <file>resources/contr_call_mini_125_active.png</file>
-    <file>resources/contr_call_mini_125_hover.png</file>
-    <file>resources/contr_writemsg_mini_125.png</file>
-    <file>resources/contr_writemsg_mini_125_active.png</file>
-    <file>resources/contr_writemsg_mini_125_hover.png</file>
-    <file>resources/cl_addcontact_150.png</file>
-    <file>resources/cl_addcontact_150_active.png</file>
-    <file>resources/cl_addcontact_150_hover.png</file>
-    <file>resources/contr_call_mini_150.png</file>
-    <file>resources/contr_call_mini_150_active.png</file>
-    <file>resources/contr_call_mini_150_hover.png</file>
-    <file>resources/contr_writemsg_mini_150.png</file>
-    <file>resources/contr_writemsg_mini_150_active.png</file>
-    <file>resources/contr_writemsg_mini_150_hover.png</file>
-    <file>resources/cl_addcontact_200.png</file>
-    <file>resources/cl_addcontact_200_active.png</file>
-    <file>resources/cl_addcontact_200_hover.png</file>
-    <file>resources/contr_call_mini_200.png</file>
-    <file>resources/contr_call_mini_200_active.png</file>
-    <file>resources/contr_call_mini_200_hover.png</file>
-    <file>resources/contr_writemsg_mini_200.png</file>
-    <file>resources/contr_writemsg_mini_200_active.png</file>
-    <file>resources/contr_writemsg_mini_200_hover.png</file>
+    <file>resources/basic_elements/cl_addcontact_100.png</file>
+    <file>resources/basic_elements/cl_addcontact_100_hover.png</file>
+    <file>resources/basic_elements/cl_addcontact_125.png</file>
+    <file>resources/basic_elements/cl_addcontact_125_hover.png</file>
+    <file>resources/basic_elements/cl_addcontact_150.png</file>
+    <file>resources/basic_elements/cl_addcontact_150_hover.png</file>
+    <file>resources/basic_elements/cl_addcontact_200.png</file>
+    <file>resources/basic_elements/cl_addcontact_200_hover.png</file>
 
     <file>resources/video_panel/icq_logo_watermark_100.png</file>
     <file>resources/video_panel/icq_logo_watermark_125.png</file>
     <file>resources/video_panel/icq_logo_watermark_150.png</file>
     <file>resources/video_panel/icq_logo_watermark_200.png</file>
 
-    <file>resources/controls_cotext_addimg_100.png</file>
-    <file>resources/controls_cotext_addimg_100_active.png</file>
-    <file>resources/controls_cotext_addimg_100_hover.png</file>
-    <file>resources/controls_cotext_addimg_125.png</file>
-    <file>resources/controls_cotext_addimg_125_active.png</file>
-    <file>resources/controls_cotext_addimg_125_hover.png</file>
-    <file>resources/controls_cotext_addimg_150.png</file>
-    <file>resources/controls_cotext_addimg_150_active.png</file>
-    <file>resources/controls_cotext_addimg_150_hover.png</file>
-    <file>resources/controls_cotext_addimg_200.png</file>
-    <file>resources/controls_cotext_addimg_200_active.png</file>
-    <file>resources/controls_cotext_addimg_200_hover.png</file>
-
-    <file>resources/controls_cotext_close_100.png</file>
-    <file>resources/controls_cotext_close_100_active.png</file>
-    <file>resources/controls_cotext_close_100_hover.png</file>
-    <file>resources/controls_cotext_close_125.png</file>
-    <file>resources/controls_cotext_close_125_active.png</file>
-    <file>resources/controls_cotext_close_125_hover.png</file>
-    <file>resources/controls_cotext_close_150.png</file>
-    <file>resources/controls_cotext_close_150_active.png</file>
-    <file>resources/controls_cotext_close_150_hover.png</file>
-    <file>resources/controls_cotext_close_200.png</file>
-    <file>resources/controls_cotext_close_200_active.png</file>
-    <file>resources/controls_cotext_close_200_hover.png</file>
+    <file>resources/attach_image_100.png</file>
+    <file>resources/attach_image_100_hover.png</file>
+    <file>resources/attach_image_125.png</file>
+    <file>resources/attach_image_125_hover.png</file>
+    <file>resources/attach_image_150.png</file>
+    <file>resources/attach_image_150_hover.png</file>
+    <file>resources/attach_image_200.png</file>
+    <file>resources/attach_image_200_hover.png</file>
 
     <file>resources/video_panel/videoctrl_chat_100.png</file>
-    <file>resources/video_panel/videoctrl_chat_100_active.png</file>
     <file>resources/video_panel/videoctrl_chat_100_hover.png</file>
     <file>resources/video_panel/videoctrl_add_100.png</file>
-    <file>resources/video_panel/videoctrl_add_100_active.png</file>
     <file>resources/video_panel/videoctrl_add_100_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_100.png</file>
-    <file>resources/video_panel/videoctrl_camera_100_active.png</file>
     <file>resources/video_panel/videoctrl_camera_100_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_off_100.png</file>
-    <file>resources/video_panel/videoctrl_camera_off_100_active.png</file>
     <file>resources/video_panel/videoctrl_camera_off_100_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_100.png</file>
-    <file>resources/video_panel/videoctrl_micro_100_active.png</file>
     <file>resources/video_panel/videoctrl_micro_100_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_off_100.png</file>
-    <file>resources/video_panel/videoctrl_micro_off_100_active.png</file>
     <file>resources/video_panel/videoctrl_micro_off_100_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_100.png</file>
-    <file>resources/video_panel/videoctrl_volume_100_active.png</file>
     <file>resources/video_panel/videoctrl_volume_100_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_off_100.png</file>
-    <file>resources/video_panel/videoctrl_volume_off_100_active.png</file>
     <file>resources/video_panel/videoctrl_volume_off_100_hover.png</file>
     <file>resources/video_panel/videoctrl_settings_100.png</file>
-    <file>resources/video_panel/videoctrl_settings_100_active.png</file>
     <file>resources/video_panel/videoctrl_settings_100_hover.png</file>
-    <file>resources/video_panel/videoctrl_minimize_100.png</file>
-    <file>resources/video_panel/videoctrl_minimize_100_active.png</file>
-    <file>resources/video_panel/videoctrl_minimize_100_hover.png</file>
     <file>resources/video_panel/videoctrl_fullscreen_100.png</file>
-    <file>resources/video_panel/videoctrl_fullscreen_100_active.png</file>
     <file>resources/video_panel/videoctrl_fullscreen_100_hover.png</file>
     <file>resources/video_panel/videoctrl_decrease_100.png</file>
-    <file>resources/video_panel/videoctrl_decrease_100_active.png</file>
     <file>resources/video_panel/videoctrl_decrease_100_hover.png</file>
-    <file>resources/video_panel/videoctrl_close_100.png</file>
-    <file>resources/video_panel/videoctrl_close_100_active.png</file>
-    <file>resources/video_panel/videoctrl_close_100_hover.png</file>
+    
     <file>resources/contr_call_100.png</file>
-    <file>resources/contr_call_100_active.png</file>
     <file>resources/contr_call_100_hover.png</file>
+    <file>resources/contr_call_125.png</file>
+    <file>resources/contr_call_125_hover.png</file>
+    <file>resources/contr_call_150.png</file>
+    <file>resources/contr_call_150_hover.png</file>
+    <file>resources/contr_call_200.png</file>
+    <file>resources/contr_call_200_hover.png</file>
+
+    <file>resources/contr_call_mini_100.png</file>
+    <file>resources/contr_call_mini_100_hover.png</file>
+    <file>resources/contr_call_mini_125.png</file>
+    <file>resources/contr_call_mini_125_hover.png</file>
+    <file>resources/contr_call_mini_150.png</file>
+    <file>resources/contr_call_mini_150_hover.png</file>
+    <file>resources/contr_call_mini_200.png</file>
+    <file>resources/contr_call_mini_200_hover.png</file>
+
+    <file>resources/contr_call_big_100.png</file>
+    <file>resources/contr_call_big_100_hover.png</file>
+    <file>resources/contr_call_big_125.png</file>
+    <file>resources/contr_call_big_125_hover.png</file>
+    <file>resources/contr_call_big_150.png</file>
+    <file>resources/contr_call_big_150_hover.png</file>
+    <file>resources/contr_call_big_200.png</file>
+    <file>resources/contr_call_big_200_hover.png</file>
+    
+    <file>resources/contr_call_bigdisable_100.png</file>
+    <file>resources/contr_call_bigdisable_125.png</file>
+    <file>resources/contr_call_bigdisable_150.png</file>
+    <file>resources/contr_call_bigdisable_200.png</file>
+
     <file>resources/contr_videocall_100.png</file>
-    <file>resources/contr_videocall_100_active.png</file>
     <file>resources/contr_videocall_100_hover.png</file>
+    <file>resources/contr_videocall_125.png</file>
+    <file>resources/contr_videocall_125_hover.png</file>
+    <file>resources/contr_videocall_150.png</file>
+    <file>resources/contr_videocall_150_hover.png</file>
+    <file>resources/contr_videocall_200.png</file>
+    <file>resources/contr_videocall_200_hover.png</file>
+    
+    <file>resources/contr_videocall_big_100.png</file>
+    <file>resources/contr_videocall_big_100_hover.png</file>
+    <file>resources/contr_videocall_big_125.png</file>
+    <file>resources/contr_videocall_big_125_hover.png</file>
+    <file>resources/contr_videocall_big_150.png</file>
+    <file>resources/contr_videocall_big_150_hover.png</file>
+    <file>resources/contr_videocall_big_200.png</file>
+    <file>resources/contr_videocall_big_200_hover.png</file>
+    
+    <file>resources/contr_videocall_bigdisable_100.png</file>
+    <file>resources/contr_videocall_bigdisable_125.png</file>
+    <file>resources/contr_videocall_bigdisable_150.png</file>
+    <file>resources/contr_videocall_bigdisable_200.png</file>
+
     <file>resources/contr_endcall_100.png</file>
-    <file>resources/contr_endcall_100_active.png</file>
     <file>resources/contr_endcall_100_hover.png</file>
+    <file>resources/contr_endcall_125.png</file>
+    <file>resources/contr_endcall_125_hover.png</file>
+    <file>resources/contr_endcall_150.png</file>
+    <file>resources/contr_endcall_150_hover.png</file>
+    <file>resources/contr_endcall_200.png</file>
+    <file>resources/contr_endcall_200_hover.png</file>
 
     <file>resources/video_panel/content_securecall_100.png</file>
     <file>resources/video_panel/content_securecall_125.png</file>
@@ -781,239 +776,142 @@
 
     <!-- go chat -->
     <file>resources/video_panel/videoctrl_chat_mini_100.png</file>
-    <file>resources/video_panel/videoctrl_chat_mini_100_active.png</file>
     <file>resources/video_panel/videoctrl_chat_mini_100_hover.png</file>
     <file>resources/video_panel/videoctrl_chat_mini_125.png</file>
-    <file>resources/video_panel/videoctrl_chat_mini_125_active.png</file>
     <file>resources/video_panel/videoctrl_chat_mini_125_hover.png</file>
     <file>resources/video_panel/videoctrl_chat_mini_150.png</file>
-    <file>resources/video_panel/videoctrl_chat_mini_150_active.png</file>
     <file>resources/video_panel/videoctrl_chat_mini_150_hover.png</file>
     <file>resources/video_panel/videoctrl_chat_mini_200.png</file>
-    <file>resources/video_panel/videoctrl_chat_mini_200_active.png</file>
     <file>resources/video_panel/videoctrl_chat_mini_200_hover.png</file>
 
     <!-- camera enabled -->
     <file>resources/video_panel/videoctrl_camera_mini_100.png</file>
-    <file>resources/video_panel/videoctrl_camera_mini_100_active.png</file>
     <file>resources/video_panel/videoctrl_camera_mini_100_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_mini_125.png</file>
-    <file>resources/video_panel/videoctrl_camera_mini_125_active.png</file>
     <file>resources/video_panel/videoctrl_camera_mini_125_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_mini_150.png</file>
-    <file>resources/video_panel/videoctrl_camera_mini_150_active.png</file>
     <file>resources/video_panel/videoctrl_camera_mini_150_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_mini_200.png</file>
-    <file>resources/video_panel/videoctrl_camera_mini_200_active.png</file>
     <file>resources/video_panel/videoctrl_camera_mini_200_hover.png</file>
 
     <!-- camera disabled -->
     <file>resources/video_panel/videoctrl_camera_off_mini_100.png</file>
-    <file>resources/video_panel/videoctrl_camera_off_mini_100_active.png</file>
     <file>resources/video_panel/videoctrl_camera_off_mini_100_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_off_mini_125.png</file>
-    <file>resources/video_panel/videoctrl_camera_off_mini_125_active.png</file>
     <file>resources/video_panel/videoctrl_camera_off_mini_125_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_off_mini_150.png</file>
-    <file>resources/video_panel/videoctrl_camera_off_mini_150_active.png</file>
     <file>resources/video_panel/videoctrl_camera_off_mini_150_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_off_mini_200.png</file>
-    <file>resources/video_panel/videoctrl_camera_off_mini_200_active.png</file>
     <file>resources/video_panel/videoctrl_camera_off_mini_200_hover.png</file>
 
     <!-- mic enabled -->
     <file>resources/video_panel/videoctrl_micro_mini_100.png</file>
-    <file>resources/video_panel/videoctrl_micro_mini_100_active.png</file>
     <file>resources/video_panel/videoctrl_micro_mini_100_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_mini_125.png</file>
-    <file>resources/video_panel/videoctrl_micro_mini_125_active.png</file>
     <file>resources/video_panel/videoctrl_micro_mini_125_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_mini_150.png</file>
-    <file>resources/video_panel/videoctrl_micro_mini_150_active.png</file>
     <file>resources/video_panel/videoctrl_micro_mini_150_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_mini_200.png</file>
-    <file>resources/video_panel/videoctrl_micro_mini_200_active.png</file>
     <file>resources/video_panel/videoctrl_micro_mini_200_hover.png</file>
 
     <!-- mic disabled -->
     <file>resources/video_panel/videoctrl_micro_off_mini_100.png</file>
-    <file>resources/video_panel/videoctrl_micro_off_mini_100_active.png</file>
     <file>resources/video_panel/videoctrl_micro_off_mini_100_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_off_mini_125.png</file>
-    <file>resources/video_panel/videoctrl_micro_off_mini_125_active.png</file>
     <file>resources/video_panel/videoctrl_micro_off_mini_125_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_off_mini_150.png</file>
-    <file>resources/video_panel/videoctrl_micro_off_mini_150_active.png</file>
     <file>resources/video_panel/videoctrl_micro_off_mini_150_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_off_mini_200.png</file>
-    <file>resources/video_panel/videoctrl_micro_off_mini_200_active.png</file>
     <file>resources/video_panel/videoctrl_micro_off_mini_200_hover.png</file>
 
     <!-- sound enabled -->
     <file>resources/video_panel/videoctrl_volume_mini_100.png</file>
-    <file>resources/video_panel/videoctrl_volume_mini_100_active.png</file>
     <file>resources/video_panel/videoctrl_volume_mini_100_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_mini_125.png</file>
-    <file>resources/video_panel/videoctrl_volume_mini_125_active.png</file>
     <file>resources/video_panel/videoctrl_volume_mini_125_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_mini_150.png</file>
-    <file>resources/video_panel/videoctrl_volume_mini_150_active.png</file>
     <file>resources/video_panel/videoctrl_volume_mini_150_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_mini_200.png</file>
-    <file>resources/video_panel/videoctrl_volume_mini_200_active.png</file>
     <file>resources/video_panel/videoctrl_volume_mini_200_hover.png</file>
 
     <!-- sound disabled -->
     <file>resources/video_panel/videoctrl_volume_off_mini_100.png</file>
-    <file>resources/video_panel/videoctrl_volume_off_mini_100_active.png</file>
     <file>resources/video_panel/videoctrl_volume_off_mini_100_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_off_mini_125.png</file>
-    <file>resources/video_panel/videoctrl_volume_off_mini_125_active.png</file>
     <file>resources/video_panel/videoctrl_volume_off_mini_125_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_off_mini_150.png</file>
-    <file>resources/video_panel/videoctrl_volume_off_mini_150_active.png</file>
     <file>resources/video_panel/videoctrl_volume_off_mini_150_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_off_mini_200.png</file>
-    <file>resources/video_panel/videoctrl_volume_off_mini_200_active.png</file>
     <file>resources/video_panel/videoctrl_volume_off_mini_200_hover.png</file>
 
     <file>resources/video_panel/videoctrl_chat_125.png</file>
-    <file>resources/video_panel/videoctrl_chat_125_active.png</file>
     <file>resources/video_panel/videoctrl_chat_125_hover.png</file>
     <file>resources/video_panel/videoctrl_add_125.png</file>
-    <file>resources/video_panel/videoctrl_add_125_active.png</file>
     <file>resources/video_panel/videoctrl_add_125_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_125.png</file>
-    <file>resources/video_panel/videoctrl_camera_125_active.png</file>
     <file>resources/video_panel/videoctrl_camera_125_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_off_125.png</file>
-    <file>resources/video_panel/videoctrl_camera_off_125_active.png</file>
     <file>resources/video_panel/videoctrl_camera_off_125_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_125.png</file>
-    <file>resources/video_panel/videoctrl_micro_125_active.png</file>
     <file>resources/video_panel/videoctrl_micro_125_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_off_125.png</file>
-    <file>resources/video_panel/videoctrl_micro_off_125_active.png</file>
     <file>resources/video_panel/videoctrl_micro_off_125_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_125.png</file>
-    <file>resources/video_panel/videoctrl_volume_125_active.png</file>
     <file>resources/video_panel/videoctrl_volume_125_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_off_125.png</file>
-    <file>resources/video_panel/videoctrl_volume_off_125_active.png</file>
     <file>resources/video_panel/videoctrl_volume_off_125_hover.png</file>
     <file>resources/video_panel/videoctrl_settings_125.png</file>
-    <file>resources/video_panel/videoctrl_settings_125_active.png</file>
     <file>resources/video_panel/videoctrl_settings_125_hover.png</file>
-    <file>resources/video_panel/videoctrl_minimize_125.png</file>
-    <file>resources/video_panel/videoctrl_minimize_125_active.png</file>
-    <file>resources/video_panel/videoctrl_minimize_125_hover.png</file>
     <file>resources/video_panel/videoctrl_fullscreen_125.png</file>
-    <file>resources/video_panel/videoctrl_fullscreen_125_active.png</file>
     <file>resources/video_panel/videoctrl_fullscreen_125_hover.png</file>
     <file>resources/video_panel/videoctrl_decrease_125.png</file>
-    <file>resources/video_panel/videoctrl_decrease_125_active.png</file>
     <file>resources/video_panel/videoctrl_decrease_125_hover.png</file>
-    <file>resources/video_panel/videoctrl_close_125.png</file>
-    <file>resources/video_panel/videoctrl_close_125_active.png</file>
-    <file>resources/video_panel/videoctrl_close_125_hover.png</file>
-    <file>resources/contr_call_125.png</file>
-    <file>resources/contr_call_125_active.png</file>
-    <file>resources/contr_call_125_hover.png</file>
-    <file>resources/contr_videocall_125.png</file>
-    <file>resources/contr_videocall_125_active.png</file>
-    <file>resources/contr_videocall_125_hover.png</file>
-    <file>resources/contr_endcall_125.png</file>
-    <file>resources/contr_endcall_125_active.png</file>
-    <file>resources/contr_endcall_125_hover.png</file>
 
     <file>resources/video_panel/videoctrl_chat_150.png</file>
-    <file>resources/video_panel/videoctrl_chat_150_active.png</file>
     <file>resources/video_panel/videoctrl_chat_150_hover.png</file>
     <file>resources/video_panel/videoctrl_add_150.png</file>
-    <file>resources/video_panel/videoctrl_add_150_active.png</file>
     <file>resources/video_panel/videoctrl_add_150_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_150.png</file>
-    <file>resources/video_panel/videoctrl_camera_150_active.png</file>
     <file>resources/video_panel/videoctrl_camera_150_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_off_150.png</file>
-    <file>resources/video_panel/videoctrl_camera_off_150_active.png</file>
     <file>resources/video_panel/videoctrl_camera_off_150_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_150.png</file>
-    <file>resources/video_panel/videoctrl_micro_150_active.png</file>
     <file>resources/video_panel/videoctrl_micro_150_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_off_150.png</file>
-    <file>resources/video_panel/videoctrl_micro_off_150_active.png</file>
     <file>resources/video_panel/videoctrl_micro_off_150_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_150.png</file>
-    <file>resources/video_panel/videoctrl_volume_150_active.png</file>
     <file>resources/video_panel/videoctrl_volume_150_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_off_150.png</file>
-    <file>resources/video_panel/videoctrl_volume_off_150_active.png</file>
     <file>resources/video_panel/videoctrl_volume_off_150_hover.png</file>
     <file>resources/video_panel/videoctrl_settings_150.png</file>
-    <file>resources/video_panel/videoctrl_settings_150_active.png</file>
     <file>resources/video_panel/videoctrl_settings_150_hover.png</file>
-    <file>resources/video_panel/videoctrl_minimize_150.png</file>
-    <file>resources/video_panel/videoctrl_minimize_150_active.png</file>
-    <file>resources/video_panel/videoctrl_minimize_150_hover.png</file>
     <file>resources/video_panel/videoctrl_fullscreen_150.png</file>
-    <file>resources/video_panel/videoctrl_fullscreen_150_active.png</file>
     <file>resources/video_panel/videoctrl_fullscreen_150_hover.png</file>
     <file>resources/video_panel/videoctrl_decrease_150.png</file>
-    <file>resources/video_panel/videoctrl_decrease_150_active.png</file>
     <file>resources/video_panel/videoctrl_decrease_150_hover.png</file>
-    <file>resources/video_panel/videoctrl_close_150.png</file>
-    <file>resources/video_panel/videoctrl_close_150_active.png</file>
-    <file>resources/video_panel/videoctrl_close_150_hover.png</file>
-    <file>resources/contr_call_150.png</file>
-    <file>resources/contr_call_150_active.png</file>
-    <file>resources/contr_call_150_hover.png</file>
-    <file>resources/contr_videocall_150.png</file>
-    <file>resources/contr_videocall_150_active.png</file>
-    <file>resources/contr_videocall_150_hover.png</file>
-    <file>resources/contr_endcall_150.png</file>
-    <file>resources/contr_endcall_150_active.png</file>
-    <file>resources/contr_endcall_150_hover.png</file>
 
     <file>resources/video_panel/videoctrl_chat_200.png</file>
-    <file>resources/video_panel/videoctrl_chat_200_active.png</file>
     <file>resources/video_panel/videoctrl_chat_200_hover.png</file>
     <file>resources/video_panel/videoctrl_add_200.png</file>
-    <file>resources/video_panel/videoctrl_add_200_active.png</file>
     <file>resources/video_panel/videoctrl_add_200_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_200.png</file>
-    <file>resources/video_panel/videoctrl_camera_200_active.png</file>
     <file>resources/video_panel/videoctrl_camera_200_hover.png</file>
     <file>resources/video_panel/videoctrl_camera_off_200.png</file>
-    <file>resources/video_panel/videoctrl_camera_off_200_active.png</file>
     <file>resources/video_panel/videoctrl_camera_off_200_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_200.png</file>
-    <file>resources/video_panel/videoctrl_micro_200_active.png</file>
     <file>resources/video_panel/videoctrl_micro_200_hover.png</file>
     <file>resources/video_panel/videoctrl_micro_off_200.png</file>
-    <file>resources/video_panel/videoctrl_micro_off_200_active.png</file>
     <file>resources/video_panel/videoctrl_micro_off_200_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_200.png</file>
-    <file>resources/video_panel/videoctrl_volume_200_active.png</file>
     <file>resources/video_panel/videoctrl_volume_200_hover.png</file>
     <file>resources/video_panel/videoctrl_volume_off_200.png</file>
-    <file>resources/video_panel/videoctrl_volume_off_200_active.png</file>
     <file>resources/video_panel/videoctrl_volume_off_200_hover.png</file>
     <file>resources/video_panel/videoctrl_settings_200.png</file>
-    <file>resources/video_panel/videoctrl_settings_200_active.png</file>
     <file>resources/video_panel/videoctrl_settings_200_hover.png</file>
-    <file>resources/video_panel/videoctrl_minimize_200.png</file>
-    <file>resources/video_panel/videoctrl_minimize_200_active.png</file>
-    <file>resources/video_panel/videoctrl_minimize_200_hover.png</file>
     <file>resources/video_panel/videoctrl_fullscreen_200.png</file>
-    <file>resources/video_panel/videoctrl_fullscreen_200_active.png</file>
     <file>resources/video_panel/videoctrl_fullscreen_200_hover.png</file>
     <file>resources/video_panel/videoctrl_decrease_200.png</file>
-    <file>resources/video_panel/videoctrl_decrease_200_active.png</file>
     <file>resources/video_panel/videoctrl_decrease_200_hover.png</file>
-    <file>resources/video_panel/videoctrl_close_200.png</file>
-    <file>resources/video_panel/videoctrl_close_200_active.png</file>
-    <file>resources/video_panel/videoctrl_close_200_hover.png</file>
 
     <file>resources/video_panel/content_arrow_right_100.png</file>
     <file>resources/video_panel/content_arrow_right_125.png</file>
@@ -1021,28 +919,20 @@
     <file>resources/video_panel/content_arrow_right_200.png</file>
 
     <file>resources/video_panel/videoctrl_economy_on_200_hover.png</file>
-    <file>resources/video_panel/videoctrl_economy_on_200_active.png</file>
     <file>resources/video_panel/videoctrl_economy_on_200.png</file>
     <file>resources/video_panel/videoctrl_economy_on_150_hover.png</file>
-    <file>resources/video_panel/videoctrl_economy_on_150_active.png</file>
     <file>resources/video_panel/videoctrl_economy_on_150.png</file>
     <file>resources/video_panel/videoctrl_economy_on_125_hover.png</file>
-    <file>resources/video_panel/videoctrl_economy_on_125_active.png</file>
     <file>resources/video_panel/videoctrl_economy_on_125.png</file>
     <file>resources/video_panel/videoctrl_economy_on_100_hover.png</file>
-    <file>resources/video_panel/videoctrl_economy_on_100_active.png</file>
     <file>resources/video_panel/videoctrl_economy_on_100.png</file>
     <file>resources/video_panel/videoctrl_economy_off_200_hover.png</file>
-    <file>resources/video_panel/videoctrl_economy_off_200_active.png</file>
     <file>resources/video_panel/videoctrl_economy_off_200.png</file>
     <file>resources/video_panel/videoctrl_economy_off_150_hover.png</file>
-    <file>resources/video_panel/videoctrl_economy_off_150_active.png</file>
     <file>resources/video_panel/videoctrl_economy_off_150.png</file>
     <file>resources/video_panel/videoctrl_economy_off_125_hover.png</file>
-    <file>resources/video_panel/videoctrl_economy_off_125_active.png</file>
     <file>resources/video_panel/videoctrl_economy_off_125.png</file>
     <file>resources/video_panel/videoctrl_economy_off_100_hover.png</file>
-    <file>resources/video_panel/videoctrl_economy_off_100_active.png</file>
     <file>resources/video_panel/videoctrl_economy_off_100.png</file>
 
     <file>resources/video_panel/videoctrl_mask_right_200_hover.png</file>
@@ -1109,242 +999,317 @@
     <file>resources/video_panel/videoctrl_mask_up_200_active.png</file>
     <file>resources/video_panel/videoctrl_mask_up_200_disable.png</file>
     <file>resources/video_panel/videoctrl_mask_up_200_hover.png</file>
+    <file>resources/video_panel/close_mask_200.png</file>
+    <file>resources/video_panel/close_mask_150.png</file>
+    <file>resources/video_panel/close_mask_125.png</file>
+    <file>resources/video_panel/close_mask_100.png</file>
 
-    <file>resources/contr_call_200.png</file>
-    <file>resources/contr_call_200_active.png</file>
-    <file>resources/contr_call_200_hover.png</file>
-    <file>resources/contr_videocall_200.png</file>
-    <file>resources/contr_videocall_200_active.png</file>
-    <file>resources/contr_videocall_200_hover.png</file>
-    <file>resources/contr_endcall_200.png</file>
-    <file>resources/contr_endcall_200_active.png</file>
-    <file>resources/contr_endcall_200_hover.png</file>
+    <file>resources/video_panel/videoctrl_groupmode1_100.png</file>
+    <file>resources/video_panel/videoctrl_groupmode1_100_hover.png</file>
+    <file>resources/video_panel/videoctrl_groupmode1_125.png</file>
+    <file>resources/video_panel/videoctrl_groupmode1_125_hover.png</file>
+    <file>resources/video_panel/videoctrl_groupmode1_150.png</file>
+    <file>resources/video_panel/videoctrl_groupmode1_150_hover.png</file>
+    <file>resources/video_panel/videoctrl_groupmode1_200.png</file>
+    <file>resources/video_panel/videoctrl_groupmode1_200_hover.png</file>
+    <file>resources/video_panel/videoctrl_groupmode2_100.png</file>
+    <file>resources/video_panel/videoctrl_groupmode2_100_hover.png</file>
+    <file>resources/video_panel/videoctrl_groupmode2_125.png</file>
+    <file>resources/video_panel/videoctrl_groupmode2_125_hover.png</file>
+    <file>resources/video_panel/videoctrl_groupmode2_150.png</file>
+    <file>resources/video_panel/videoctrl_groupmode2_150_hover.png</file>
+    <file>resources/video_panel/videoctrl_groupmode2_200.png</file>
+    <file>resources/video_panel/videoctrl_groupmode2_200_hover.png</file>
+                                
+    <file>resources/video_panel/videoctrl_add_mini_100.png</file>
+    <file>resources/video_panel/videoctrl_add_mini_100_hover.png</file>
+    <file>resources/video_panel/videoctrl_add_mini_125.png</file>
+    <file>resources/video_panel/videoctrl_add_mini_125_hover.png</file>
+    <file>resources/video_panel/videoctrl_add_mini_150.png</file>
+    <file>resources/video_panel/videoctrl_add_mini_150_hover.png</file>
+    <file>resources/video_panel/videoctrl_add_mini_200.png</file>
+    <file>resources/video_panel/videoctrl_add_mini_200_hover.png</file>
+                               
+    <file>resources/context_menu/markread_100.png</file>
+    <file>resources/context_menu/markread_125.png</file>
+    <file>resources/context_menu/markread_150.png</file>
+    <file>resources/context_menu/markread_200.png</file>
+    
+    <file>resources/context_menu/onlyread_off_100.png</file>
+    <file>resources/context_menu/onlyread_off_125.png</file>
+    <file>resources/context_menu/onlyread_off_150.png</file>
+    <file>resources/context_menu/onlyread_off_200.png</file>
+    <file>resources/context_menu/onlyread_100.png</file>
+    <file>resources/context_menu/onlyread_125.png</file>
+    <file>resources/context_menu/onlyread_150.png</file>
+    <file>resources/context_menu/onlyread_200.png</file>
 
-	  <file>resources/dialog_markread_100.png</file>
-	  <file>resources/dialog_markread_125.png</file>
-	  <file>resources/dialog_markread_150.png</file>
-	  <file>resources/dialog_markread_200.png</file>
+    <file>resources/context_menu/markread_all_100.png</file>
+    <file>resources/context_menu/markread_all_125.png</file>
+    <file>resources/context_menu/markread_all_150.png</file>
+    <file>resources/context_menu/markread_all_200.png</file>
 
-      <file>resources/dialog_onlyread_off_100.png</file>
-      <file>resources/dialog_onlyread_off_125.png</file>
-      <file>resources/dialog_onlyread_off_150.png</file>
-      <file>resources/dialog_onlyread_off_200.png</file>
+    <file>resources/context_menu/ignore_100.png</file>
+    <file>resources/context_menu/ignore_125.png</file>
+    <file>resources/context_menu/ignore_150.png</file>
+    <file>resources/context_menu/ignore_200.png</file>
 
-      <file>resources/dialog_onlyread_100.png</file>
-      <file>resources/dialog_onlyread_125.png</file>
-      <file>resources/dialog_onlyread_150.png</file>
-      <file>resources/dialog_onlyread_200.png</file>
+    <file>resources/context_menu/closechat_100.png</file>
+    <file>resources/context_menu/closechat_125.png</file>
+    <file>resources/context_menu/closechat_150.png</file>
+    <file>resources/context_menu/closechat_200.png</file>
 
-	  <file>resources/dialog_markread_all_100.png</file>
-	  <file>resources/dialog_markread_all_125.png</file>
-	  <file>resources/dialog_markread_all_150.png</file>
-	  <file>resources/dialog_markread_all_200.png</file>
+    <file>resources/context_menu/closechat_all_100.png</file>
+    <file>resources/context_menu/closechat_all_125.png</file>
+    <file>resources/context_menu/closechat_all_150.png</file>
+    <file>resources/context_menu/closechat_all_200.png</file>
 
-	  <file>resources/dialog_ignore_100.png</file>
-	  <file>resources/dialog_ignore_125.png</file>
-	  <file>resources/dialog_ignore_150.png</file>
-	  <file>resources/dialog_ignore_200.png</file>
+    <file>resources/context_menu/callmenu_100.png</file>
+    <file>resources/context_menu/callmenu_125.png</file>
+    <file>resources/context_menu/callmenu_150.png</file>
+    <file>resources/context_menu/callmenu_200.png</file>
 
-	  <file>resources/dialog_closechat_100.png</file>
-	  <file>resources/dialog_closechat_125.png</file>
-	  <file>resources/dialog_closechat_150.png</file>
-	  <file>resources/dialog_closechat_200.png</file>
+    <file>resources/context_menu/delete_100.png</file>
+    <file>resources/context_menu/delete_125.png</file>
+    <file>resources/context_menu/delete_150.png</file>
+    <file>resources/context_menu/delete_200.png</file>
 
-	  <file>resources/dialog_closechat_all_100.png</file>
-	  <file>resources/dialog_closechat_all_125.png</file>
-	  <file>resources/dialog_closechat_all_150.png</file>
-	  <file>resources/dialog_closechat_all_200.png</file>
+    <file>resources/context_menu/spam_100.png</file>
+    <file>resources/context_menu/spam_125.png</file>
+    <file>resources/context_menu/spam_150.png</file>
+    <file>resources/context_menu/spam_200.png</file>
 
-	  <file>resources/dialog_callmenu_100.png</file>
-	  <file>resources/dialog_callmenu_125.png</file>
-	  <file>resources/dialog_callmenu_150.png</file>
-	  <file>resources/dialog_callmenu_200.png</file>
+    <file>resources/context_menu/mute_100.png</file>
+    <file>resources/context_menu/mute_125.png</file>
+    <file>resources/context_menu/mute_150.png</file>
+    <file>resources/context_menu/mute_200.png</file>
 
-	  <file>resources/dialog_delete_100.png</file>
-	  <file>resources/dialog_delete_125.png</file>
-	  <file>resources/dialog_delete_150.png</file>
-	  <file>resources/dialog_delete_200.png</file>
+    <file>resources/context_menu/unmute_100.png</file>
+    <file>resources/context_menu/unmute_125.png</file>
+    <file>resources/context_menu/unmute_150.png</file>
+    <file>resources/context_menu/unmute_200.png</file>
 
-	  <file>resources/dialog_spam_100.png</file>
-	  <file>resources/dialog_spam_125.png</file>
-	  <file>resources/dialog_spam_150.png</file>
-	  <file>resources/dialog_spam_200.png</file>
+    <file>resources/context_menu/profile_100.png</file>
+    <file>resources/context_menu/profile_125.png</file>
+    <file>resources/context_menu/profile_150.png</file>
+    <file>resources/context_menu/profile_200.png</file>
 
-    <file>resources/dialog_mute_100.png</file>
-    <file>resources/dialog_mute_125.png</file>
-    <file>resources/dialog_mute_150.png</file>
-    <file>resources/dialog_mute_200.png</file>
+    <file>resources/context_menu/quote_100.png</file>
+    <file>resources/context_menu/quote_125.png</file>
+    <file>resources/context_menu/quote_150.png</file>
+    <file>resources/context_menu/quote_200.png</file>
 
-    <file>resources/dialog_unmute_100.png</file>
-    <file>resources/dialog_unmute_125.png</file>
-    <file>resources/dialog_unmute_150.png</file>
-    <file>resources/dialog_unmute_200.png</file>
+    <file>resources/context_menu/forwardmsg_100.png</file>
+    <file>resources/context_menu/forwardmsg_125.png</file>
+    <file>resources/context_menu/forwardmsg_150.png</file>
+    <file>resources/context_menu/forwardmsg_200.png</file>
 
-    <file>resources/dialog_profile_100.png</file>
-    <file>resources/dialog_profile_125.png</file>
-    <file>resources/dialog_profile_150.png</file>
-    <file>resources/dialog_profile_200.png</file>
+    <file>resources/context_menu/copy_100.png</file>
+    <file>resources/context_menu/copy_125.png</file>
+    <file>resources/context_menu/copy_150.png</file>
+    <file>resources/context_menu/copy_200.png</file>
 
-    <file>resources/dialog_quote_100.png</file>
-    <file>resources/dialog_quote_125.png</file>
-    <file>resources/dialog_quote_150.png</file>
-    <file>resources/dialog_quote_200.png</file>
+    <file>resources/context_menu/quit_100.png</file>
+    <file>resources/context_menu/quit_125.png</file>
+    <file>resources/context_menu/quit_150.png</file>
+    <file>resources/context_menu/quit_200.png</file>
+    
+    <file>resources/context_menu/newchat_100.png</file>
+    <file>resources/context_menu/newchat_125.png</file>
+    <file>resources/context_menu/newchat_150.png</file>
+    <file>resources/context_menu/newchat_200.png</file>
 
-    <file>resources/dialog_forwardmsg_100.png</file>
-    <file>resources/dialog_forwardmsg_125.png</file>
-    <file>resources/dialog_forwardmsg_150.png</file>
-    <file>resources/dialog_forwardmsg_200.png</file>
+    <file>resources/context_menu/newgroup_100.png</file>
+    <file>resources/context_menu/newgroup_125.png</file>
+    <file>resources/context_menu/newgroup_150.png</file>
+    <file>resources/context_menu/newgroup_200.png</file>
 
-    <file>resources/dialog_copy_100.png</file>
-    <file>resources/dialog_copy_125.png</file>
-    <file>resources/dialog_copy_150.png</file>
-    <file>resources/dialog_copy_200.png</file>
+    <file>resources/context_menu/attach_100.png</file>
+    <file>resources/context_menu/attach_125.png</file>
+    <file>resources/context_menu/attach_150.png</file>
+    <file>resources/context_menu/attach_200.png</file>
 
-    <file>resources/dialog_quit_100.png</file>
-    <file>resources/dialog_quit_125.png</file>
-    <file>resources/dialog_quit_150.png</file>
-    <file>resources/dialog_quit_200.png</file>
+    <file>resources/context_menu/download_100.png</file>
+    <file>resources/context_menu/download_125.png</file>
+    <file>resources/context_menu/download_150.png</file>
+    <file>resources/context_menu/download_200.png</file>
 
-    <file>resources/contr_themes_100.png</file>
-    <file>resources/contr_themes_125.png</file>
-    <file>resources/contr_themes_150.png</file>
-    <file>resources/contr_themes_200.png</file>
+    <file>resources/context_menu/link_100.png</file>
+    <file>resources/context_menu/link_125.png</file>
+    <file>resources/context_menu/link_150.png</file>
+    <file>resources/context_menu/link_200.png</file>
 
-    <file>resources/dialog_newchat_100.png</file>
-    <file>resources/dialog_newchat_125.png</file>
-    <file>resources/dialog_newchat_150.png</file>
-    <file>resources/dialog_newchat_200.png</file>
+    <file>resources/context_menu/unfavorite_100.png</file>
+    <file>resources/context_menu/unfavorite_125.png</file>
+    <file>resources/context_menu/unfavorite_150.png</file>
+    <file>resources/context_menu/unfavorite_200.png</file>
 
-    <file>resources/dialog_newgroup_100.png</file>
-    <file>resources/dialog_newgroup_125.png</file>
-    <file>resources/dialog_newgroup_150.png</file>
-    <file>resources/dialog_newgroup_200.png</file>
+    <file>resources/context_menu/openbrowser_100.png</file>
+    <file>resources/context_menu/openbrowser_125.png</file>
+    <file>resources/context_menu/openbrowser_150.png</file>
+    <file>resources/context_menu/openbrowser_200.png</file>
 
-    <file>resources/dialog_attach_100.png</file>
-    <file>resources/dialog_attach_125.png</file>
-    <file>resources/dialog_attach_150.png</file>
-    <file>resources/dialog_attach_200.png</file>
+    <file>resources/user_king_100.png</file>
+    <file>resources/user_king_125.png</file>
+    <file>resources/user_king_150.png</file>
+    <file>resources/user_king_200.png</file>
 
-    <file>resources/dialog_download_100.png</file>
-    <file>resources/dialog_download_125.png</file>
-    <file>resources/dialog_download_150.png</file>
-    <file>resources/dialog_download_200.png</file>
-
-    <file>resources/dialog_link_100.png</file>
-    <file>resources/dialog_link_125.png</file>
-    <file>resources/dialog_link_150.png</file>
-    <file>resources/dialog_link_200.png</file>
-
-    <file>resources/dialog_unfavorite_100.png</file>
-    <file>resources/dialog_unfavorite_125.png</file>
-    <file>resources/dialog_unfavorite_150.png</file>
-    <file>resources/dialog_unfavorite_200.png</file>
-
-    <file>resources/dialog_openbrowser_100.png</file>
-    <file>resources/dialog_openbrowser_125.png</file>
-    <file>resources/dialog_openbrowser_150.png</file>
-    <file>resources/dialog_openbrowser_200.png</file>
-
-	<file>resources/user_king_100.png</file>
-	<file>resources/user_king_125.png</file>
-	<file>resources/user_king_150.png</file>
-	<file>resources/user_king_200.png</file>
-
-	<file>resources/user_ultraadmin_100.png</file>
-	<file>resources/user_ultraadmin_125.png</file>
-	<file>resources/user_ultraadmin_150.png</file>
-	<file>resources/user_ultraadmin_200.png</file>
+    <file>resources/user_ultraadmin_100.png</file>
+    <file>resources/user_ultraadmin_125.png</file>
+    <file>resources/user_ultraadmin_150.png</file>
+    <file>resources/user_ultraadmin_200.png</file>
 
     <file>resources/user_onlyread_100.png</file>
     <file>resources/user_onlyread_125.png</file>
     <file>resources/user_onlyread_150.png</file>
     <file>resources/user_onlyread_200.png</file>
 
-    <file>resources/sidebar_addmember_100.png</file>
-    <file>resources/sidebar_addmember_125.png</file>
-    <file>resources/sidebar_addmember_150.png</file>
-    <file>resources/sidebar_addmember_200.png</file>
-    <file>resources/sidebar_allmembers_100.png</file>
-    <file>resources/sidebar_allmembers_125.png</file>
-    <file>resources/sidebar_allmembers_150.png</file>
-    <file>resources/sidebar_allmembers_200.png</file>
-    <file>resources/sidebar_closechat_100.png</file>
-    <file>resources/sidebar_closechat_125.png</file>
-    <file>resources/sidebar_closechat_150.png</file>
-    <file>resources/sidebar_closechat_200.png</file>
-    <file>resources/sidebar_delete_100.png</file>
-    <file>resources/sidebar_delete_125.png</file>
-    <file>resources/sidebar_delete_150.png</file>
-    <file>resources/sidebar_delete_200.png</file>
-    <file>resources/sidebar_description_100.png</file>
-    <file>resources/sidebar_description_125.png</file>
-    <file>resources/sidebar_description_150.png</file>
-    <file>resources/sidebar_description_200.png</file>
-    <file>resources/sidebar_favorite_100.png</file>
-    <file>resources/sidebar_favorite_125.png</file>
-    <file>resources/sidebar_favorite_150.png</file>
-    <file>resources/sidebar_favorite_200.png</file>
-    <file>resources/sidebar_ignore_100.png</file>
-    <file>resources/sidebar_ignore_125.png</file>
-    <file>resources/sidebar_ignore_150.png</file>
-    <file>resources/sidebar_ignore_200.png</file>
-    <file>resources/sidebar_rename_100.png</file>
-    <file>resources/sidebar_rename_125.png</file>
-    <file>resources/sidebar_rename_150.png</file>
-    <file>resources/sidebar_rename_200.png</file>
-    <file>resources/sidebar_unfavorite_100.png</file>
-    <file>resources/sidebar_unfavorite_125.png</file>
-    <file>resources/sidebar_unfavorite_150.png</file>
-    <file>resources/sidebar_unfavorite_200.png</file>
-    <file>resources/sidebar_spam_100.png</file>
-    <file>resources/sidebar_spam_125.png</file>
-    <file>resources/sidebar_spam_150.png</file>
-    <file>resources/sidebar_spam_200.png</file>
-    <file>resources/sidebar_approve_100.png</file>
-    <file>resources/sidebar_approve_125.png</file>
-    <file>resources/sidebar_approve_150.png</file>
-    <file>resources/sidebar_approve_200.png</file>
-    <file>resources/sidebar_public_100.png</file>
-    <file>resources/sidebar_public_125.png</file>
-    <file>resources/sidebar_public_150.png</file>
-    <file>resources/sidebar_public_200.png</file>
+    <file>resources/mute_100.png</file>
+    <file>resources/mute_125.png</file>
+    <file>resources/mute_150.png</file>
+    <file>resources/mute_200.png</file>
 
-    <file>resources/sidebar_search_100.png</file>
-    <file>resources/sidebar_search_125.png</file>
-    <file>resources/sidebar_search_150.png</file>
-    <file>resources/sidebar_search_200.png</file>
+    <file>resources/mute_100_active.png</file>
+    <file>resources/mute_125_active.png</file>
+    <file>resources/mute_150_active.png</file>
+    <file>resources/mute_200_active.png</file>
 
-    <file>resources/dialog_block_100.png</file>
-    <file>resources/dialog_block_125.png</file>
-    <file>resources/dialog_block_150.png</file>
-    <file>resources/dialog_block_200.png</file>
-    <file>resources/sidebar_readonly_100.png</file>
-    <file>resources/sidebar_readonly_125.png</file>
-    <file>resources/sidebar_readonly_150.png</file>
-    <file>resources/sidebar_readonly_200.png</file>
-    <file>resources/sidebar_agegate_100.png</file>
-    <file>resources/sidebar_agegate_125.png</file>
-    <file>resources/sidebar_agegate_150.png</file>
-    <file>resources/sidebar_agegate_200.png</file>
-    <file>resources/sidebar_joinbylink_100.png</file>
-    <file>resources/sidebar_joinbylink_125.png</file>
-    <file>resources/sidebar_joinbylink_150.png</file>
-    <file>resources/sidebar_joinbylink_200.png</file>
+    <file>resources/mute_100_hover.png</file>
+    <file>resources/mute_125_hover.png</file>
+    <file>resources/mute_150_hover.png</file>
+    <file>resources/mute_200_hover.png</file>
 
-	<file>resources/contr_options_100.png</file>
-	<file>resources/contr_options_125.png</file>
-	<file>resources/contr_options_150.png</file>
-	<file>resources/contr_options_200.png</file>
+    <file>resources/mute_unread_100.png</file>
+    <file>resources/mute_unread_125.png</file>
+    <file>resources/mute_unread_150.png</file>
+    <file>resources/mute_unread_200.png</file>
 
-	<file>resources/dialog_king_100.png</file>
-	<file>resources/dialog_king_125.png</file>
-	<file>resources/dialog_king_150.png</file>
-	<file>resources/dialog_king_200.png</file>
+    <file>resources/mute_unread_100_hover.png</file>
+    <file>resources/mute_unread_125_hover.png</file>
+    <file>resources/mute_unread_150_hover.png</file>
+    <file>resources/mute_unread_200_hover.png</file>
 
-	<file>resources/dialog_removeking_100.png</file>
-	<file>resources/dialog_removeking_125.png</file>
-	<file>resources/dialog_removeking_150.png</file>
-	<file>resources/dialog_removeking_200.png</file>
+    <file>resources/unknown_100.png</file>
+    <file>resources/unknown_125.png</file>
+    <file>resources/unknown_150.png</file>
+    <file>resources/unknown_200.png</file>
+    
+    <file>resources/livechat_agegate_100.png</file>
+    <file>resources/livechat_agegate_125.png</file>
+    <file>resources/livechat_agegate_150.png</file>
+    <file>resources/livechat_agegate_200.png</file>
+    <file>resources/livechat_approve_100.png</file>
+    <file>resources/livechat_approve_125.png</file>
+    <file>resources/livechat_approve_150.png</file>
+    <file>resources/livechat_approve_200.png</file>
+    <file>resources/livechat_joinbylink_100.png</file>
+    <file>resources/livechat_joinbylink_125.png</file>
+    <file>resources/livechat_joinbylink_150.png</file>
+    <file>resources/livechat_joinbylink_200.png</file>
+    <file>resources/livechat_public_100.png</file>
+    <file>resources/livechat_public_125.png</file>
+    <file>resources/livechat_public_150.png</file>
+    <file>resources/livechat_public_200.png</file>
+    <file>resources/livechat_readonly_100.png</file>
+    <file>resources/livechat_readonly_125.png</file>
+    <file>resources/livechat_readonly_150.png</file>
+    <file>resources/livechat_readonly_200.png</file>
+    
+    <file>resources/profile_rename_100.png</file>
+    <file>resources/profile_rename_125.png</file>
+    <file>resources/profile_rename_150.png</file>
+    <file>resources/profile_rename_200.png</file>
+    <file>resources/profile_oldaccount_100.png</file>
+    <file>resources/profile_oldaccount_125.png</file>
+    <file>resources/profile_oldaccount_150.png</file>
+    <file>resources/profile_oldaccount_200.png</file>
+
+    <file>resources/i_add_100.png</file>
+    <file>resources/i_add_125.png</file>
+    <file>resources/i_add_150.png</file>
+    <file>resources/i_add_200.png</file>
+    <file>resources/i_add_fav_100.png</file>
+    <file>resources/i_add_fav_125.png</file>
+    <file>resources/i_add_fav_150.png</file>
+    <file>resources/i_add_fav_200.png</file>
+    <file>resources/i_del_fav_100.png</file>
+    <file>resources/i_del_fav_125.png</file>
+    <file>resources/i_del_fav_150.png</file>
+    <file>resources/i_del_fav_200.png</file>
+    <file>resources/i_delete_100.png</file>
+    <file>resources/i_delete_125.png</file>
+    <file>resources/i_delete_150.png</file>
+    <file>resources/i_delete_200.png</file>
+    <file>resources/i_files_100.png</file>
+    <file>resources/i_files_125.png</file>
+    <file>resources/i_files_150.png</file>
+    <file>resources/i_files_200.png</file>
+    <file>resources/i_history_100.png</file>
+    <file>resources/i_history_125.png</file>
+    <file>resources/i_history_150.png</file>
+    <file>resources/i_history_200.png</file>
+    <file>resources/i_ignore_100.png</file>
+    <file>resources/i_ignore_125.png</file>
+    <file>resources/i_ignore_150.png</file>
+    <file>resources/i_ignore_200.png</file>
+    <file>resources/i_link_100.png</file>
+    <file>resources/i_link_125.png</file>
+    <file>resources/i_link_150.png</file>
+    <file>resources/i_link_200.png</file>
+    <file>resources/i_notice_100.png</file>
+    <file>resources/i_notice_125.png</file>
+    <file>resources/i_notice_150.png</file>
+    <file>resources/i_notice_200.png</file>
+    <file>resources/i_report_100.png</file>
+    <file>resources/i_report_125.png</file>
+    <file>resources/i_report_150.png</file>
+    <file>resources/i_report_200.png</file>
+    <file>resources/i_search_100.png</file>
+    <file>resources/i_search_125.png</file>
+    <file>resources/i_search_150.png</file>
+    <file>resources/i_search_200.png</file>
+    <file>resources/i_settings_100.png</file>
+    <file>resources/i_settings_125.png</file>
+    <file>resources/i_settings_150.png</file>
+    <file>resources/i_settings_200.png</file>
+    <file>resources/i_share_100.png</file>
+    <file>resources/i_share_125.png</file>
+    <file>resources/i_share_150.png</file>
+    <file>resources/i_share_200.png</file>
+    <file>resources/i_wallpaper_100.png</file>
+    <file>resources/i_wallpaper_125.png</file>
+    <file>resources/i_wallpaper_150.png</file>
+    <file>resources/i_wallpaper_200.png</file>
+    
+    <file>resources/search_big_100.png</file>
+    <file>resources/search_big_125.png</file>
+    <file>resources/search_big_150.png</file>
+    <file>resources/search_big_200.png</file>
+
+    <file>resources/context_menu/block_100.png</file>
+    <file>resources/context_menu/block_125.png</file>
+    <file>resources/context_menu/block_150.png</file>
+    <file>resources/context_menu/block_200.png</file>
+
+    <file>resources/basic_elements/options_100.png</file>
+    <file>resources/basic_elements/options_125.png</file>
+    <file>resources/basic_elements/options_150.png</file>
+    <file>resources/basic_elements/options_200.png</file>
+    <file>resources/basic_elements/options_100_hover.png</file>
+    <file>resources/basic_elements/options_125_hover.png</file>
+    <file>resources/basic_elements/options_150_hover.png</file>
+    <file>resources/basic_elements/options_200_hover.png</file>
+
+
+    <file>resources/context_menu/king_100.png</file>
+    <file>resources/context_menu/king_125.png</file>
+    <file>resources/context_menu/king_150.png</file>
+    <file>resources/context_menu/king_200.png</file>
+
+    <file>resources/context_menu/removeking_100.png</file>
+    <file>resources/context_menu/removeking_125.png</file>
+    <file>resources/context_menu/removeking_150.png</file>
+    <file>resources/context_menu/removeking_200.png</file>
 
     <file>resources/cl_status_mobile_100.png</file>
     <file>resources/cl_status_mobile_125.png</file>
@@ -1354,6 +1319,14 @@
     <file>resources/cl_status_online_125.png</file>
     <file>resources/cl_status_online_150.png</file>
     <file>resources/cl_status_online_200.png</file>
+    <file>resources/cl_status_mobile_100_active.png</file>
+    <file>resources/cl_status_mobile_125_active.png</file>
+    <file>resources/cl_status_mobile_150_active.png</file>
+    <file>resources/cl_status_mobile_200_active.png</file>
+    <file>resources/cl_status_online_100_active.png</file>
+    <file>resources/cl_status_online_125_active.png</file>
+    <file>resources/cl_status_online_150_active.png</file>
+    <file>resources/cl_status_online_200_active.png</file>
 
     <file>resources/cl_status_mobile_mini_100.png</file>
     <file>resources/cl_status_mobile_mini_125.png</file>
@@ -1363,6 +1336,19 @@
     <file>resources/cl_status_online_mini_125.png</file>
     <file>resources/cl_status_online_mini_150.png</file>
     <file>resources/cl_status_online_mini_200.png</file>
+    <file>resources/cl_status_mobile_mini_100_active.png</file>
+    <file>resources/cl_status_mobile_mini_125_active.png</file>
+    <file>resources/cl_status_mobile_mini_150_active.png</file>
+    <file>resources/cl_status_mobile_mini_200_active.png</file>
+    <file>resources/cl_status_online_mini_100_active.png</file>
+    <file>resources/cl_status_online_mini_125_active.png</file>
+    <file>resources/cl_status_online_mini_150_active.png</file>
+    <file>resources/cl_status_online_mini_200_active.png</file>
+
+    <file>resources/gradient_menu_100.png</file>
+    <file>resources/gradient_menu_125.png</file>
+    <file>resources/gradient_menu_150.png</file>
+    <file>resources/gradient_menu_200.png</file>
 
     <file>resources/main_window/mac_tray/icq_osxlogo_dnd_black_100.png</file>
     <file>resources/main_window/mac_tray/icq_osxlogo_dnd_black_unread_100.png</file>
@@ -1393,225 +1379,181 @@
     <file>resources/main_window/mac_tray/icq_osxlogo_online_white_200.png</file>
     <file>resources/main_window/mac_tray/icq_osxlogo_online_white_unread_200.png</file>
 
-	<file>resources/file_sharing/content_upload_cl_100.png</file>
-	<file>resources/file_sharing/content_upload_cl_125.png</file>
-	<file>resources/file_sharing/content_upload_cl_150.png</file>
-	<file>resources/file_sharing/content_upload_cl_200.png</file>
+    <file>resources/main_window/mac_tray/email_100.png</file>
+    <file>resources/main_window/mac_tray/email_200.png</file>
 
-	<file>resources/file_sharing/content_upload_main_100.png</file>
-	<file>resources/file_sharing/content_upload_main_125.png</file>
-	<file>resources/file_sharing/content_upload_main_150.png</file>
-	<file>resources/file_sharing/content_upload_main_200.png</file>
+    <file>resources/file_sharing/content_upload_cl_100.png</file>
+    <file>resources/file_sharing/content_upload_cl_125.png</file>
+    <file>resources/file_sharing/content_upload_cl_150.png</file>
+    <file>resources/file_sharing/content_upload_cl_200.png</file>
 
-	<file>resources/ptt/content_pauseptt_100.png</file>
-	<file>resources/ptt/content_pauseptt_100_active.png</file>
-	<file>resources/ptt/content_pauseptt_100_hover.png</file>
-	<file>resources/ptt/content_pauseptt_125.png</file>
-	<file>resources/ptt/content_pauseptt_125_active.png</file>
-	<file>resources/ptt/content_pauseptt_125_hover.png</file>
-	<file>resources/ptt/content_pauseptt_150.png</file>
-	<file>resources/ptt/content_pauseptt_150_active.png</file>
-	<file>resources/ptt/content_pauseptt_150_hover.png</file>
-	<file>resources/ptt/content_pauseptt_200.png</file>
-	<file>resources/ptt/content_pauseptt_200_active.png</file>
-	<file>resources/ptt/content_pauseptt_200_hover.png</file>
+    <file>resources/file_sharing/content_upload_main_100.png</file>
+    <file>resources/file_sharing/content_upload_main_125.png</file>
+    <file>resources/file_sharing/content_upload_main_150.png</file>
+    <file>resources/file_sharing/content_upload_main_200.png</file>
 
-	<file>resources/ptt/content_pauseptt_100_download.png</file>
-	<file>resources/ptt/content_pauseptt_125_download.png</file>
-	<file>resources/ptt/content_pauseptt_150_download.png</file>
-	<file>resources/ptt/content_pauseptt_200_download.png</file>
+        <file>resources/videoplayer/player_fullscreen_100.png</file>
+    <file>resources/videoplayer/player_fullscreen_100_hover.png</file>
+    <file>resources/videoplayer/player_fullscreen_125.png</file>
+    <file>resources/videoplayer/player_fullscreen_125_hover.png</file>
+    <file>resources/videoplayer/player_fullscreen_150.png</file>
+    <file>resources/videoplayer/player_fullscreen_150_hover.png</file>
+    <file>resources/videoplayer/player_fullscreen_200.png</file>
+    <file>resources/videoplayer/player_fullscreen_200_hover.png</file>
+    <file>resources/videoplayer/player_fullscreen_big_100.png</file>
+    <file>resources/videoplayer/player_fullscreen_big_100_hover.png</file>
+    <file>resources/videoplayer/player_fullscreen_big_125.png</file>
+    <file>resources/videoplayer/player_fullscreen_big_125_hover.png</file>
+    <file>resources/videoplayer/player_fullscreen_big_150.png</file>
+    <file>resources/videoplayer/player_fullscreen_big_150_hover.png</file>
+    <file>resources/videoplayer/player_fullscreen_big_200.png</file>
+    <file>resources/videoplayer/player_fullscreen_big_200_hover.png</file>
 
-	<file>resources/ptt/content_playptt_100.png</file>
-	<file>resources/ptt/content_playptt_125.png</file>
-	<file>resources/ptt/content_playptt_150.png</file>
-	<file>resources/ptt/content_playptt_200.png</file>
-	<file>resources/ptt/content_playptt_100_hover.png</file>
-	<file>resources/ptt/content_playptt_125_hover.png</file>
-	<file>resources/ptt/content_playptt_150_hover.png</file>
-	<file>resources/ptt/content_playptt_200_hover.png</file>
-	<file>resources/ptt/content_playptt_100_active.png</file>
-	<file>resources/ptt/content_playptt_125_active.png</file>
-	<file>resources/ptt/content_playptt_150_active.png</file>
-	<file>resources/ptt/content_playptt_200_active.png</file>
-
-	<file>resources/ptt/content_playptt_done_100.png</file>
-	<file>resources/ptt/content_playptt_done_125.png</file>
-	<file>resources/ptt/content_playptt_done_150.png</file>
-	<file>resources/ptt/content_playptt_done_200.png</file>
-	<file>resources/ptt/content_playptt_done_100_hover.png</file>
-	<file>resources/ptt/content_playptt_done_125_hover.png</file>
-	<file>resources/ptt/content_playptt_done_150_hover.png</file>
-	<file>resources/ptt/content_playptt_done_200_hover.png</file>
-	<file>resources/ptt/content_playptt_done_100_active.png</file>
-	<file>resources/ptt/content_playptt_done_125_active.png</file>
-	<file>resources/ptt/content_playptt_done_150_active.png</file>
-	<file>resources/ptt/content_playptt_done_200_active.png</file>
-
-	<file>resources/ptt/content_textptt_100.png</file>
-	<file>resources/ptt/content_textptt_125.png</file>
-	<file>resources/ptt/content_textptt_150.png</file>
-	<file>resources/ptt/content_textptt_200.png</file>
-	<file>resources/ptt/content_textptt_100_hover.png</file>
-	<file>resources/ptt/content_textptt_125_hover.png</file>
-	<file>resources/ptt/content_textptt_150_hover.png</file>
-	<file>resources/ptt/content_textptt_200_hover.png</file>
-	<file>resources/ptt/content_textptt_100_active.png</file>
-	<file>resources/ptt/content_textptt_125_active.png</file>
-	<file>resources/ptt/content_textptt_150_active.png</file>
-	<file>resources/ptt/content_textptt_200_active.png</file>
-
-	<file>resources/ptt/content_textptt_done_100.png</file>
-	<file>resources/ptt/content_textptt_done_125.png</file>
-	<file>resources/ptt/content_textptt_done_150.png</file>
-	<file>resources/ptt/content_textptt_done_200.png</file>
-	<file>resources/ptt/content_textptt_done_100_hover.png</file>
-	<file>resources/ptt/content_textptt_done_125_hover.png</file>
-	<file>resources/ptt/content_textptt_done_150_hover.png</file>
-	<file>resources/ptt/content_textptt_done_200_hover.png</file>
-	<file>resources/ptt/content_textptt_done_100_active.png</file>
-	<file>resources/ptt/content_textptt_done_125_active.png</file>
-	<file>resources/ptt/content_textptt_done_150_active.png</file>
-	<file>resources/ptt/content_textptt_done_200_active.png</file>
-
-	<file>resources/videoplayer/content_selectbar_100.png</file>
-    <file>resources/videoplayer/content_selectbar_100_active.png</file>
-    <file>resources/videoplayer/content_selectbar_100_hover.png</file>
-    <file>resources/videoplayer/content_selectbar_125.png</file>
-    <file>resources/videoplayer/content_selectbar_125_active.png</file>
-    <file>resources/videoplayer/content_selectbar_125_hover.png</file>
-    <file>resources/videoplayer/content_selectbar_150.png</file>
-    <file>resources/videoplayer/content_selectbar_150_active.png</file>
-    <file>resources/videoplayer/content_selectbar_150_hover.png</file>
-    <file>resources/videoplayer/content_selectbar_200.png</file>
-    <file>resources/videoplayer/content_selectbar_200_active.png</file>
-    <file>resources/videoplayer/content_selectbar_200_hover.png</file>
-    <file>resources/videoplayer/content_timebar_100.png</file>
-    <file>resources/videoplayer/content_timebar_100_active.png</file>
-    <file>resources/videoplayer/content_timebar_125.png</file>
-    <file>resources/videoplayer/content_timebar_125_active.png</file>
-    <file>resources/videoplayer/content_timebar_150.png</file>
-    <file>resources/videoplayer/content_timebar_150_active.png</file>
-    <file>resources/videoplayer/content_timebar_200.png</file>
-    <file>resources/videoplayer/content_timebar_200_active.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_100.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_100_hover.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_100_pressed.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_125.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_125_hover.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_125_pressed.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_150.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_150_hover.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_150_pressed.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_200.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_200_hover.png</file>
-    <file>resources/videoplayer/contr_player_selectbar_200_pressed.png</file>
-    <file>resources/videoplayer/videoctrl_close_100.png</file>
-    <file>resources/videoplayer/videoctrl_close_100_active.png</file>
-    <file>resources/videoplayer/videoctrl_close_100_hover.png</file>
-    <file>resources/videoplayer/videoctrl_close_125.png</file>
-    <file>resources/videoplayer/videoctrl_close_125_active.png</file>
-    <file>resources/videoplayer/videoctrl_close_125_hover.png</file>
-    <file>resources/videoplayer/videoctrl_close_150.png</file>
-    <file>resources/videoplayer/videoctrl_close_150_active.png</file>
-    <file>resources/videoplayer/videoctrl_close_150_hover.png</file>
-    <file>resources/videoplayer/videoctrl_close_200.png</file>
-    <file>resources/videoplayer/videoctrl_close_200_active.png</file>
-    <file>resources/videoplayer/videoctrl_close_200_hover.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_100.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_100_active.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_100_hover.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_125.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_125_active.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_125_hover.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_150.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_150_active.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_150_hover.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_200.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_200_active.png</file>
-    <file>resources/videoplayer/videoctrl_decrease_200_hover.png</file>
-    <file>resources/videoplayer/videoctrl_download_100.png</file>
-    <file>resources/videoplayer/videoctrl_download_100_active.png</file>
-    <file>resources/videoplayer/videoctrl_download_100_hover.png</file>
-    <file>resources/videoplayer/videoctrl_download_125.png</file>
-    <file>resources/videoplayer/videoctrl_download_125_active.png</file>
-    <file>resources/videoplayer/videoctrl_download_125_hover.png</file>
-    <file>resources/videoplayer/videoctrl_download_150.png</file>
-    <file>resources/videoplayer/videoctrl_download_150_active.png</file>
-    <file>resources/videoplayer/videoctrl_download_150_hover.png</file>
-    <file>resources/videoplayer/videoctrl_download_200.png</file>
-    <file>resources/videoplayer/videoctrl_download_200_active.png</file>
-    <file>resources/videoplayer/videoctrl_download_200_hover.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_100.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_100_active.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_100_hover.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_125.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_125_active.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_125_hover.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_150.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_150_active.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_150_hover.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_200.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_200_active.png</file>
-    <file>resources/videoplayer/videoctrl_fullscreen_200_hover.png</file>
-    <file>resources/videoplayer/videoctrl_pause_100.png</file>
-    <file>resources/videoplayer/videoctrl_pause_100_active.png</file>
-    <file>resources/videoplayer/videoctrl_pause_100_hover.png</file>
-    <file>resources/videoplayer/videoctrl_pause_125.png</file>
-    <file>resources/videoplayer/videoctrl_pause_125_active.png</file>
-    <file>resources/videoplayer/videoctrl_pause_125_hover.png</file>
-    <file>resources/videoplayer/videoctrl_pause_150.png</file>
-    <file>resources/videoplayer/videoctrl_pause_150_active.png</file>
-    <file>resources/videoplayer/videoctrl_pause_150_hover.png</file>
-    <file>resources/videoplayer/videoctrl_pause_200.png</file>
-    <file>resources/videoplayer/videoctrl_pause_200_active.png</file>
-    <file>resources/videoplayer/videoctrl_pause_200_hover.png</file>
-    <file>resources/videoplayer/videoctrl_play_100.png</file>
-    <file>resources/videoplayer/videoctrl_play_100_active.png</file>
-    <file>resources/videoplayer/videoctrl_play_100_hover.png</file>
-    <file>resources/videoplayer/videoctrl_play_125.png</file>
-    <file>resources/videoplayer/videoctrl_play_125_active.png</file>
-    <file>resources/videoplayer/videoctrl_play_125_hover.png</file>
-    <file>resources/videoplayer/videoctrl_play_150.png</file>
-    <file>resources/videoplayer/videoctrl_play_150_active.png</file>
-    <file>resources/videoplayer/videoctrl_play_150_hover.png</file>
-    <file>resources/videoplayer/videoctrl_play_200.png</file>
-    <file>resources/videoplayer/videoctrl_play_200_active.png</file>
-    <file>resources/videoplayer/videoctrl_play_200_hover.png</file>
-    <file>resources/videoplayer/videoctrl_volume_100.png</file>
-    <file>resources/videoplayer/videoctrl_volume_100_active.png</file>
-    <file>resources/videoplayer/videoctrl_volume_100_hover.png</file>
-    <file>resources/videoplayer/videoctrl_volume_125.png</file>
-    <file>resources/videoplayer/videoctrl_volume_125_active.png</file>
-    <file>resources/videoplayer/videoctrl_volume_125_hover.png</file>
-    <file>resources/videoplayer/videoctrl_volume_150.png</file>
-    <file>resources/videoplayer/videoctrl_volume_150_active.png</file>
-    <file>resources/videoplayer/videoctrl_volume_150_hover.png</file>
-    <file>resources/videoplayer/videoctrl_volume_200.png</file>
-    <file>resources/videoplayer/videoctrl_volume_200_active.png</file>
-    <file>resources/videoplayer/videoctrl_volume_200_hover.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_100.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_100_active.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_100_hover.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_125.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_125_active.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_125_hover.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_150.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_150_active.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_150_hover.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_200.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_200_active.png</file>
-    <file>resources/videoplayer/videoctrl_volume_off_200_hover.png</file>
-
-    <file>resources/text_back_100.png</file>
-    <file>resources/text_back_125.png</file>
-    <file>resources/text_back_150.png</file>
-    <file>resources/text_back_200.png</file>
+    <file>resources/videoplayer/player_pause_100.png</file>
+    <file>resources/videoplayer/player_pause_100_hover.png</file>
+    <file>resources/videoplayer/player_pause_125.png</file>
+    <file>resources/videoplayer/player_pause_125_hover.png</file>
+    <file>resources/videoplayer/player_pause_150.png</file>
+    <file>resources/videoplayer/player_pause_150_hover.png</file>
+    <file>resources/videoplayer/player_pause_200.png</file>
+    <file>resources/videoplayer/player_pause_200_hover.png</file>
+    <file>resources/videoplayer/player_pause_big_100.png</file>
+    <file>resources/videoplayer/player_pause_big_100_hover.png</file>
+    <file>resources/videoplayer/player_pause_big_125.png</file>
+    <file>resources/videoplayer/player_pause_big_125_hover.png</file>
+    <file>resources/videoplayer/player_pause_big_150.png</file>
+    <file>resources/videoplayer/player_pause_big_150_hover.png</file>
+    <file>resources/videoplayer/player_pause_big_200.png</file>
+    <file>resources/videoplayer/player_pause_big_200_hover.png</file>
     
+    <file>resources/videoplayer/player_play_100.png</file>
+    <file>resources/videoplayer/player_play_100_hover.png</file>
+    <file>resources/videoplayer/player_play_125.png</file>
+    <file>resources/videoplayer/player_play_125_hover.png</file>
+    <file>resources/videoplayer/player_play_150.png</file>
+    <file>resources/videoplayer/player_play_150_hover.png</file>
+    <file>resources/videoplayer/player_play_200.png</file>
+    <file>resources/videoplayer/player_play_200_hover.png</file>
+    <file>resources/videoplayer/player_play_big_100.png</file>
+    <file>resources/videoplayer/player_play_big_100_hover.png</file>
+    <file>resources/videoplayer/player_play_big_125.png</file>
+    <file>resources/videoplayer/player_play_big_125_hover.png</file>
+    <file>resources/videoplayer/player_play_big_150.png</file>
+    <file>resources/videoplayer/player_play_big_150_hover.png</file>
+    <file>resources/videoplayer/player_play_big_200.png</file>
+    <file>resources/videoplayer/player_play_big_200_hover.png</file>
+    
+    <file>resources/videoplayer/player_sound_100.png</file>
+    <file>resources/videoplayer/player_sound_100_hover.png</file>
+    <file>resources/videoplayer/player_sound_125.png</file>
+    <file>resources/videoplayer/player_sound_125_hover.png</file>
+    <file>resources/videoplayer/player_sound_150.png</file>
+    <file>resources/videoplayer/player_sound_150_hover.png</file>
+    <file>resources/videoplayer/player_sound_200.png</file>
+    <file>resources/videoplayer/player_sound_200_hover.png</file>
+    <file>resources/videoplayer/player_sound_big_100.png</file>
+    <file>resources/videoplayer/player_sound_big_100_hover.png</file>
+    <file>resources/videoplayer/player_sound_big_125.png</file>
+    <file>resources/videoplayer/player_sound_big_125_hover.png</file>
+    <file>resources/videoplayer/player_sound_big_150.png</file>
+    <file>resources/videoplayer/player_sound_big_150_hover.png</file>
+    <file>resources/videoplayer/player_sound_big_200.png</file>
+    <file>resources/videoplayer/player_sound_big_200_hover.png</file>
+    
+    <file>resources/videoplayer/player_sound_q_100.png</file>
+    <file>resources/videoplayer/player_sound_q_100_hover.png</file>
+    <file>resources/videoplayer/player_sound_q_125.png</file>
+    <file>resources/videoplayer/player_sound_q_125_hover.png</file>
+    <file>resources/videoplayer/player_sound_q_150.png</file>
+    <file>resources/videoplayer/player_sound_q_150_hover.png</file>
+    <file>resources/videoplayer/player_sound_q_200.png</file>
+    <file>resources/videoplayer/player_sound_q_200_hover.png</file>
+    <file>resources/videoplayer/player_sound_q_big_100.png</file>
+    <file>resources/videoplayer/player_sound_q_big_100_hover.png</file>
+    <file>resources/videoplayer/player_sound_q_big_125.png</file>
+    <file>resources/videoplayer/player_sound_q_big_125_hover.png</file>
+    <file>resources/videoplayer/player_sound_q_big_150.png</file>
+    <file>resources/videoplayer/player_sound_q_big_150_hover.png</file>
+    <file>resources/videoplayer/player_sound_q_big_200.png</file>
+    <file>resources/videoplayer/player_sound_q_big_200_hover.png</file>
+    
+    <file>resources/videoplayer/player_sound_off_100.png</file>
+    <file>resources/videoplayer/player_sound_off_100_hover.png</file>
+    <file>resources/videoplayer/player_sound_off_125.png</file>
+    <file>resources/videoplayer/player_sound_off_125_hover.png</file>
+    <file>resources/videoplayer/player_sound_off_150.png</file>
+    <file>resources/videoplayer/player_sound_off_150_hover.png</file>
+    <file>resources/videoplayer/player_sound_off_200.png</file>
+    <file>resources/videoplayer/player_sound_off_200_hover.png</file>
+    <file>resources/videoplayer/player_sound_off_big_100.png</file>
+    <file>resources/videoplayer/player_sound_off_big_100_hover.png</file>
+    <file>resources/videoplayer/player_sound_off_big_125.png</file>
+    <file>resources/videoplayer/player_sound_off_big_125_hover.png</file>
+    <file>resources/videoplayer/player_sound_off_big_150.png</file>
+    <file>resources/videoplayer/player_sound_off_big_150_hover.png</file>
+    <file>resources/videoplayer/player_sound_off_big_200.png</file>
+    <file>resources/videoplayer/player_sound_off_big_200_hover.png</file>
+
+    <file>resources/videoplayer/reply_snap_button_100.png</file>
+    <file>resources/videoplayer/reply_snap_button_125.png</file>
+    <file>resources/videoplayer/reply_snap_button_150.png</file>
+    <file>resources/videoplayer/reply_snap_button_200.png</file>
+    <file>resources/videoplayer/reply_snap_button_100_hover.png</file>
+    <file>resources/videoplayer/reply_snap_button_125_hover.png</file>
+    <file>resources/videoplayer/reply_snap_button_150_hover.png</file>
+    <file>resources/videoplayer/reply_snap_button_200_hover.png</file>
+
+    <file>resources/videoplayer/player_share_big_100.png</file>
+    <file>resources/videoplayer/player_share_big_125.png</file>
+    <file>resources/videoplayer/player_share_big_150.png</file>
+    <file>resources/videoplayer/player_share_big_200.png</file>
+    <file>resources/videoplayer/player_share_big_100_hover.png</file>
+    <file>resources/videoplayer/player_share_big_125_hover.png</file>
+    <file>resources/videoplayer/player_share_big_150_hover.png</file>
+    <file>resources/videoplayer/player_share_big_200_hover.png</file>
+
+    <file>resources/videoplayer/player_save_big_100.png</file>
+    <file>resources/videoplayer/player_save_big_125.png</file>
+    <file>resources/videoplayer/player_save_big_150.png</file>
+    <file>resources/videoplayer/player_save_big_200.png</file>
+    <file>resources/videoplayer/player_save_big_100_hover.png</file>
+    <file>resources/videoplayer/player_save_big_125_hover.png</file>
+    <file>resources/videoplayer/player_save_big_150_hover.png</file>
+    <file>resources/videoplayer/player_save_big_200_hover.png</file>
+
+    <file>resources/videoplayer/player_delete_big_100.png</file>
+    <file>resources/videoplayer/player_delete_big_125.png</file>
+    <file>resources/videoplayer/player_delete_big_150.png</file>
+    <file>resources/videoplayer/player_delete_big_200.png</file>
+    <file>resources/videoplayer/player_delete_big_100_hover.png</file>
+    <file>resources/videoplayer/player_delete_big_125_hover.png</file>
+    <file>resources/videoplayer/player_delete_big_150_hover.png</file>
+    <file>resources/videoplayer/player_delete_big_200_hover.png</file>
+
+    <file>resources/videoplayer/slider_100.png</file>
+    <file>resources/videoplayer/slider_125.png</file>
+    <file>resources/videoplayer/slider_150.png</file>
+    <file>resources/videoplayer/slider_200.png</file>
+    <file>resources/videoplayer/slider_big_100.png</file>
+    <file>resources/videoplayer/slider_big_125.png</file>
+    <file>resources/videoplayer/slider_big_150.png</file>
+    <file>resources/videoplayer/slider_big_200.png</file>
+    
+    <file>resources/videoplayer/gradient_a_100.png</file>
+    <file>resources/videoplayer/gradient_a_125.png</file>
+    <file>resources/videoplayer/gradient_a_150.png</file>
+    <file>resources/videoplayer/gradient_a_200.png</file>
+    <file>resources/videoplayer/gradient_b_100.png</file>
+    <file>resources/videoplayer/gradient_b_125.png</file>
+    <file>resources/videoplayer/gradient_b_150.png</file>
+    <file>resources/videoplayer/gradient_b_200.png</file>    
   </qresource>
 
   <qresource prefix="/sounds">
     <file alias="incoming">resources/sounds/sound_incoming.wav</file>
+    <file alias="incoming_agent">resources/sounds/sound_incoming_agent.wav</file>
     <file alias="outgoing">resources/sounds/sound_outgoing.wav</file>
+    <file alias="mail">resources/sounds/sound_mail.wav</file>
   </qresource>
 
   <qresource prefix="/emoji">
@@ -1631,40 +1573,6 @@
 
   <!--
   **********************************************************************
-  Contact List
-  -->
-
-  <qresource prefix="/themes/standard/100/cl">
-       <file alias="add_contact.png">resources/cl_addcontact_100.png</file>
-    <file alias="add_contact_active.png">resources/cl_addcontact_100_active.png</file>
-    <file alias="add_contact_hover.png">resources/cl_addcontact_100_hover.png</file>
-    <file alias="mutenotify.png">resources/content_mutenotify_100.png</file>
-    <file alias="mutenotify_new.png">resources/content_mutenotify_new_100.png</file>
-  </qresource>
-  <qresource prefix="/themes/standard/125/cl">
-    <file alias="add_contact.png">resources/cl_addcontact_125.png</file>
-    <file alias="add_contact_active.png">resources/cl_addcontact_125_active.png</file>
-    <file alias="add_contact_hover.png">resources/cl_addcontact_125_hover.png</file>
-    <file alias="mutenotify.png">resources/content_mutenotify_125.png</file>
-    <file alias="mutenotify_new.png">resources/content_mutenotify_new_125.png</file>
-  </qresource>
-  <qresource prefix="/themes/standard/150/cl">
-    <file alias="add_contact.png">resources/cl_addcontact_150.png</file>
-    <file alias="add_contact_active.png">resources/cl_addcontact_150_active.png</file>
-    <file alias="add_contact_hover.png">resources/cl_addcontact_150_hover.png</file>
-    <file alias="mutenotify.png">resources/content_mutenotify_150.png</file>
-    <file alias="mutenotify_new.png">resources/content_mutenotify_new_150.png</file>
-  </qresource>
-  <qresource prefix="/themes/standard/200/cl">
-    <file alias="add_contact.png">resources/cl_addcontact_200.png</file>
-    <file alias="add_contact_active.png">resources/cl_addcontact_200_active.png</file>
-    <file alias="add_contact_hover.png">resources/cl_addcontact_200_hover.png</file>
-    <file alias="mutenotify.png">resources/content_mutenotify_200.png</file>
-    <file alias="mutenotify_new.png">resources/content_mutenotify_new_200.png</file>
-  </qresource>
-
-  <!--
-  **********************************************************************
   File Sharing
   -->
 
@@ -1676,7 +1584,6 @@
     <file alias="media_cancel_hover.png">resources/file_sharing/content_cancelmedia_100_hover.png</file>
 
     <file alias="media_play.png">resources/file_sharing/content_playmedia_100.png</file>
-    <file alias="media_play_active.png">resources/file_sharing/content_playmedia_100_active.png</file>
     <file alias="media_play_hover.png">resources/file_sharing/content_playmedia_100_hover.png</file>
 
     <file alias="gif_play.png">resources/file_sharing/content_playgif_100.png</file>
@@ -1686,14 +1593,12 @@
 
     <file alias="share_content.png">resources/file_sharing/content_share_100.png</file>
     <file alias="share_content_hover.png">resources/file_sharing/content_share_100_hover.png</file>
-    <file alias="share_content_active.png">resources/file_sharing/content_share_100_active.png</file>
 
     <file alias="snap_expired.png">resources/file_sharing/illustration_monkey_100.png</file>
 
     <file alias="pause_ptt.png">resources/ptt/content_pauseptt_100.png</file>
     <file alias="pause_ptt_hover.png">resources/ptt/content_pauseptt_100_hover.png</file>
     <file alias="pause_ptt_active.png">resources/ptt/content_pauseptt_100_active.png</file>
-    <file alias="pause_ptt_download.png">resources/ptt/content_pauseptt_100_download.png</file>
     <file alias="play_ptt.png">resources/ptt/content_playptt_100.png</file>
     <file alias="play_ptt_hover.png">resources/ptt/content_playptt_100_hover.png</file>
     <file alias="play_ptt_active.png">resources/ptt/content_playptt_100_active.png</file>
@@ -1730,7 +1635,6 @@
     <file alias="media_cancel_hover.png">resources/file_sharing/content_cancelmedia_125_hover.png</file>
 
     <file alias="media_play.png">resources/file_sharing/content_playmedia_125.png</file>
-    <file alias="media_play_active.png">resources/file_sharing/content_playmedia_125_active.png</file>
     <file alias="media_play_hover.png">resources/file_sharing/content_playmedia_125_hover.png</file>
 
     <file alias="gif_play.png">resources/file_sharing/content_playgif_125.png</file>
@@ -1740,14 +1644,12 @@
 
     <file alias="share_content.png">resources/file_sharing/content_share_125.png</file>
     <file alias="share_content_hover.png">resources/file_sharing/content_share_125_hover.png</file>
-    <file alias="share_content_active.png">resources/file_sharing/content_share_125_active.png</file>
 
     <file alias="snap_expired.png">resources/file_sharing/illustration_monkey_125.png</file>
 
     <file alias="pause_ptt.png">resources/ptt/content_pauseptt_125.png</file>
     <file alias="pause_ptt_hover.png">resources/ptt/content_pauseptt_125_hover.png</file>
     <file alias="pause_ptt_active.png">resources/ptt/content_pauseptt_125_active.png</file>
-    <file alias="pause_ptt_download.png">resources/ptt/content_pauseptt_125_download.png</file>
     <file alias="play_ptt.png">resources/ptt/content_playptt_125.png</file>
     <file alias="play_ptt_hover.png">resources/ptt/content_playptt_125_hover.png</file>
     <file alias="play_ptt_active.png">resources/ptt/content_playptt_125_active.png</file>
@@ -1784,7 +1686,6 @@
     <file alias="media_cancel_hover.png">resources/file_sharing/content_cancelmedia_150_hover.png</file>
 
     <file alias="media_play.png">resources/file_sharing/content_playmedia_150.png</file>
-    <file alias="media_play_active.png">resources/file_sharing/content_playmedia_150_active.png</file>
     <file alias="media_play_hover.png">resources/file_sharing/content_playmedia_150_hover.png</file>
 
     <file alias="gif_play.png">resources/file_sharing/content_playgif_150.png</file>
@@ -1794,14 +1695,12 @@
 
     <file alias="share_content.png">resources/file_sharing/content_share_150.png</file>
     <file alias="share_content_hover.png">resources/file_sharing/content_share_150_hover.png</file>
-    <file alias="share_content_active.png">resources/file_sharing/content_share_150_active.png</file>
 
     <file alias="snap_expired.png">resources/file_sharing/illustration_monkey_150.png</file>
 
     <file alias="pause_ptt.png">resources/ptt/content_pauseptt_150.png</file>
     <file alias="pause_ptt_hover.png">resources/ptt/content_pauseptt_150_hover.png</file>
     <file alias="pause_ptt_active.png">resources/ptt/content_pauseptt_150_active.png</file>
-    <file alias="pause_ptt_download.png">resources/ptt/content_pauseptt_150_download.png</file>
     <file alias="play_ptt.png">resources/ptt/content_playptt_150.png</file>
     <file alias="play_ptt_hover.png">resources/ptt/content_playptt_150_hover.png</file>
     <file alias="play_ptt_active.png">resources/ptt/content_playptt_150_active.png</file>
@@ -1837,7 +1736,6 @@
     <file alias="media_cancel_hover.png">resources/file_sharing/content_cancelmedia_200_hover.png</file>
 
     <file alias="media_play.png">resources/file_sharing/content_playmedia_200.png</file>
-    <file alias="media_play_active.png">resources/file_sharing/content_playmedia_200_active.png</file>
     <file alias="media_play_hover.png">resources/file_sharing/content_playmedia_200_hover.png</file>
 
     <file alias="gif_play.png">resources/file_sharing/content_playgif_200.png</file>
@@ -1847,14 +1745,12 @@
 
     <file alias="share_content.png">resources/file_sharing/content_share_200.png</file>
     <file alias="share_content_hover.png">resources/file_sharing/content_share_200_hover.png</file>
-    <file alias="share_content_active.png">resources/file_sharing/content_share_200_active.png</file>
 
     <file alias="snap_expired.png">resources/file_sharing/illustration_monkey_200.png</file>
 
     <file alias="pause_ptt.png">resources/ptt/content_pauseptt_200.png</file>
     <file alias="pause_ptt_hover.png">resources/ptt/content_pauseptt_200_hover.png</file>
     <file alias="pause_ptt_active.png">resources/ptt/content_pauseptt_200_active.png</file>
-    <file alias="pause_ptt_download.png">resources/ptt/content_pauseptt_200_download.png</file>
     <file alias="play_ptt.png">resources/ptt/content_playptt_200.png</file>
     <file alias="play_ptt_hover.png">resources/ptt/content_playptt_200_hover.png</file>
     <file alias="play_ptt_active.png">resources/ptt/content_playptt_200_active.png</file>
@@ -1889,22 +1785,18 @@
   -->
   <qresource prefix="/themes/standard/100/previewer">
     <file alias="content_reloadmedia.png">resources/previewer/content_reloadmedia_100.png</file>
-    <file alias="content_reloadmedia_active.png">resources/previewer/content_reloadmedia_100_active.png</file>
     <file alias="content_reloadmedia_hover.png">resources/previewer/content_reloadmedia_100_hover.png</file>
   </qresource>
   <qresource prefix="/themes/standard/125/previewer">
     <file alias="content_reloadmedia.png">resources/previewer/content_reloadmedia_125.png</file>
-    <file alias="content_reloadmedia_active.png">resources/previewer/content_reloadmedia_125_active.png</file>
     <file alias="content_reloadmedia_hover.png">resources/previewer/content_reloadmedia_125_hover.png</file>
   </qresource>
   <qresource prefix="/themes/standard/150/previewer">
     <file alias="content_reloadmedia.png">resources/previewer/content_reloadmedia_150.png</file>
-    <file alias="content_reloadmedia_active.png">resources/previewer/content_reloadmedia_150_active.png</file>
     <file alias="content_reloadmedia_hover.png">resources/previewer/content_reloadmedia_150_hover.png</file>
   </qresource>
   <qresource prefix="/themes/standard/200/previewer">
     <file alias="content_reloadmedia.png">resources/previewer/content_reloadmedia_200.png</file>
-    <file alias="content_reloadmedia_active.png">resources/previewer/content_reloadmedia_200_active.png</file>
     <file alias="content_reloadmedia_hover.png">resources/previewer/content_reloadmedia_200_hover.png</file>
   </qresource>
 
@@ -1913,69 +1805,97 @@
     <file>resources/previewer/qss/frame.qss</file>
     <file>resources/previewer/qss/label.qss</file>
 
-    <file>resources/previewer/viewerctrl_close_100.png</file>
-    <file>resources/previewer/viewerctrl_close_100_hover.png</file>
-    <file>resources/previewer/viewerctrl_close_100_pressed.png</file>
-    <file>resources/previewer/viewerctrl_download_100.png</file>
-    <file>resources/previewer/viewerctrl_download_100_active.png</file>
-    <file>resources/previewer/viewerctrl_download_100_hover.png</file>
-    <file>resources/previewer/viewerctrl_download_100_pressed.png</file>
-    <file>resources/previewer/viewerctrl_next_100.png</file>
-    <file>resources/previewer/viewerctrl_next_100_disable.png</file>
-    <file>resources/previewer/viewerctrl_next_100_hover.png</file>
-    <file>resources/previewer/viewerctrl_next_100_pressed.png</file>
-    <file>resources/previewer/viewerctrl_prev_100.png</file>
-    <file>resources/previewer/viewerctrl_prev_100_disable.png</file>
-    <file>resources/previewer/viewerctrl_prev_100_hover.png</file>
-    <file>resources/previewer/viewerctrl_prev_100_pressed.png</file>
+    <file>resources/previewer/viewer_zoom_100.png</file>
+    <file>resources/previewer/viewer_zoom_100_active.png</file>
+    <file>resources/previewer/viewer_zoom_100_hover.png</file>
+    <file>resources/previewer/viewer_zoom_100_disable.png</file>
+    <file>resources/previewer/viewer_zoom_minus_100.png</file>
+    <file>resources/previewer/viewer_zoom_minus_100_active.png</file>
+    <file>resources/previewer/viewer_zoom_minus_100_hover.png</file>
+    <file>resources/previewer/viewer_zoom_minus_100_disable.png</file>
+    <file>resources/previewer/viewer_close_100.png</file>
+    <file>resources/previewer/viewer_close_100_hover.png</file>
+    <file>resources/previewer/viewer_close_100_active.png</file>
+    <file>resources/previewer/viewer_download_100.png</file>
+    <file>resources/previewer/viewer_download_100_active.png</file>
+    <file>resources/previewer/viewer_download_100_hover.png</file>
+    <file>resources/previewer/viewer_next_100.png</file>
+    <file>resources/previewer/viewer_next_100_disable.png</file>
+    <file>resources/previewer/viewer_next_100_hover.png</file>
+    <file>resources/previewer/viewer_next_100_active.png</file>
+    <file>resources/previewer/viewer_prev_100.png</file>
+    <file>resources/previewer/viewer_prev_100_disable.png</file>
+    <file>resources/previewer/viewer_prev_100_hover.png</file>
+    <file>resources/previewer/viewer_prev_100_active.png</file>
 
-    <file>resources/previewer/viewerctrl_close_125.png</file>
-    <file>resources/previewer/viewerctrl_close_125_hover.png</file>
-    <file>resources/previewer/viewerctrl_close_125_pressed.png</file>
-    <file>resources/previewer/viewerctrl_download_125.png</file>
-    <file>resources/previewer/viewerctrl_download_125_active.png</file>
-    <file>resources/previewer/viewerctrl_download_125_hover.png</file>
-    <file>resources/previewer/viewerctrl_download_125_pressed.png</file>
-    <file>resources/previewer/viewerctrl_next_125.png</file>
-    <file>resources/previewer/viewerctrl_next_125_disable.png</file>
-    <file>resources/previewer/viewerctrl_next_125_hover.png</file>
-    <file>resources/previewer/viewerctrl_next_125_pressed.png</file>
-    <file>resources/previewer/viewerctrl_prev_125.png</file>
-    <file>resources/previewer/viewerctrl_prev_125_disable.png</file>
-    <file>resources/previewer/viewerctrl_prev_125_hover.png</file>
-    <file>resources/previewer/viewerctrl_prev_125_pressed.png</file>
+    <file>resources/previewer/viewer_zoom_125.png</file>
+    <file>resources/previewer/viewer_zoom_125_active.png</file>
+    <file>resources/previewer/viewer_zoom_125_hover.png</file>
+    <file>resources/previewer/viewer_zoom_125_disable.png</file>
+    <file>resources/previewer/viewer_zoom_minus_125.png</file>
+    <file>resources/previewer/viewer_zoom_minus_125_active.png</file>
+    <file>resources/previewer/viewer_zoom_minus_125_hover.png</file>
+    <file>resources/previewer/viewer_zoom_minus_125_disable.png</file>
+    <file>resources/previewer/viewer_close_125.png</file>
+    <file>resources/previewer/viewer_close_125_hover.png</file>
+    <file>resources/previewer/viewer_close_125_active.png</file>
+    <file>resources/previewer/viewer_download_125.png</file>
+    <file>resources/previewer/viewer_download_125_active.png</file>
+    <file>resources/previewer/viewer_download_125_hover.png</file>
+    <file>resources/previewer/viewer_next_125.png</file>
+    <file>resources/previewer/viewer_next_125_disable.png</file>
+    <file>resources/previewer/viewer_next_125_hover.png</file>
+    <file>resources/previewer/viewer_next_125_active.png</file>
+    <file>resources/previewer/viewer_prev_125.png</file>
+    <file>resources/previewer/viewer_prev_125_disable.png</file>
+    <file>resources/previewer/viewer_prev_125_hover.png</file>
+    <file>resources/previewer/viewer_prev_125_active.png</file>
 
-    <file>resources/previewer/viewerctrl_close_150.png</file>
-    <file>resources/previewer/viewerctrl_close_150_hover.png</file>
-    <file>resources/previewer/viewerctrl_close_150_pressed.png</file>
-    <file>resources/previewer/viewerctrl_download_150.png</file>
-    <file>resources/previewer/viewerctrl_download_150_active.png</file>
-    <file>resources/previewer/viewerctrl_download_150_hover.png</file>
-    <file>resources/previewer/viewerctrl_download_150_pressed.png</file>
-    <file>resources/previewer/viewerctrl_next_150.png</file>
-    <file>resources/previewer/viewerctrl_next_150_disable.png</file>
-    <file>resources/previewer/viewerctrl_next_150_hover.png</file>
-    <file>resources/previewer/viewerctrl_next_150_pressed.png</file>
-    <file>resources/previewer/viewerctrl_prev_150.png</file>
-    <file>resources/previewer/viewerctrl_prev_150_disable.png</file>
-    <file>resources/previewer/viewerctrl_prev_150_hover.png</file>
-    <file>resources/previewer/viewerctrl_prev_150_pressed.png</file>
+    <file>resources/previewer/viewer_zoom_150.png</file>
+    <file>resources/previewer/viewer_zoom_150_active.png</file>
+    <file>resources/previewer/viewer_zoom_150_hover.png</file>
+    <file>resources/previewer/viewer_zoom_150_disable.png</file>
+    <file>resources/previewer/viewer_zoom_minus_150.png</file>
+    <file>resources/previewer/viewer_zoom_minus_150_active.png</file>
+    <file>resources/previewer/viewer_zoom_minus_150_hover.png</file>
+    <file>resources/previewer/viewer_zoom_minus_150_disable.png</file>
+    <file>resources/previewer/viewer_close_150.png</file>
+    <file>resources/previewer/viewer_close_150_hover.png</file>
+    <file>resources/previewer/viewer_close_150_active.png</file>
+    <file>resources/previewer/viewer_download_150.png</file>
+    <file>resources/previewer/viewer_download_150_active.png</file>
+    <file>resources/previewer/viewer_download_150_hover.png</file>
+    <file>resources/previewer/viewer_next_150.png</file>
+    <file>resources/previewer/viewer_next_150_disable.png</file>
+    <file>resources/previewer/viewer_next_150_hover.png</file>
+    <file>resources/previewer/viewer_next_150_active.png</file>
+    <file>resources/previewer/viewer_prev_150.png</file>
+    <file>resources/previewer/viewer_prev_150_disable.png</file>
+    <file>resources/previewer/viewer_prev_150_hover.png</file>
+    <file>resources/previewer/viewer_prev_150_active.png</file>
 
-    <file>resources/previewer/viewerctrl_close_200.png</file>
-    <file>resources/previewer/viewerctrl_close_200_hover.png</file>
-    <file>resources/previewer/viewerctrl_close_200_pressed.png</file>
-    <file>resources/previewer/viewerctrl_download_200.png</file>
-    <file>resources/previewer/viewerctrl_download_200_active.png</file>
-    <file>resources/previewer/viewerctrl_download_200_hover.png</file>
-    <file>resources/previewer/viewerctrl_download_200_pressed.png</file>
-    <file>resources/previewer/viewerctrl_next_200.png</file>
-    <file>resources/previewer/viewerctrl_next_200_disable.png</file>
-    <file>resources/previewer/viewerctrl_next_200_hover.png</file>
-    <file>resources/previewer/viewerctrl_next_200_pressed.png</file>
-    <file>resources/previewer/viewerctrl_prev_200.png</file>
-    <file>resources/previewer/viewerctrl_prev_200_disable.png</file>
-    <file>resources/previewer/viewerctrl_prev_200_hover.png</file>
-    <file>resources/previewer/viewerctrl_prev_200_pressed.png</file>
+    <file>resources/previewer/viewer_zoom_200.png</file>
+    <file>resources/previewer/viewer_zoom_200_active.png</file>
+    <file>resources/previewer/viewer_zoom_200_hover.png</file>
+    <file>resources/previewer/viewer_zoom_200_disable.png</file>
+    <file>resources/previewer/viewer_zoom_minus_200.png</file>
+    <file>resources/previewer/viewer_zoom_minus_200_active.png</file>
+    <file>resources/previewer/viewer_zoom_minus_200_hover.png</file>
+    <file>resources/previewer/viewer_zoom_minus_200_disable.png</file>
+    <file>resources/previewer/viewer_close_200.png</file>
+    <file>resources/previewer/viewer_close_200_hover.png</file>
+    <file>resources/previewer/viewer_close_200_active.png</file>
+    <file>resources/previewer/viewer_download_200.png</file>
+    <file>resources/previewer/viewer_download_200_active.png</file>
+    <file>resources/previewer/viewer_download_200_hover.png</file>
+    <file>resources/previewer/viewer_next_200.png</file>
+    <file>resources/previewer/viewer_next_200_disable.png</file>
+    <file>resources/previewer/viewer_next_200_hover.png</file>
+    <file>resources/previewer/viewer_next_200_active.png</file>
+    <file>resources/previewer/viewer_prev_200.png</file>
+    <file>resources/previewer/viewer_prev_200_disable.png</file>
+    <file>resources/previewer/viewer_prev_200_hover.png</file>
+    <file>resources/previewer/viewer_prev_200_active.png</file>
   </qresource>
 
   <!--
@@ -2028,6 +1948,23 @@
   <qresource prefix="/themes/standard/200/stickers">
     <file alias="placeholder_history.png">resources/placeholders/content_placeholder_sticker_bubble_200.png</file>
     <file alias="placeholder_picker.png">resources/placeholders/content_placeholder_sticker_picker_200.png</file>
+  </qresource>
+
+  <qresource prefix="/themes/standard/100/history_down">
+    <file alias="history_down.png">resources/button_back_to_recents_100.png</file>
+    <file alias="history_down_hover.png">resources/button_back_to_recents_100_hover.png</file>
+  </qresource>
+  <qresource prefix="/themes/standard/125/history_down">
+    <file alias="history_down.png">resources/button_back_to_recents_125.png</file>
+    <file alias="history_down_hover.png">resources/button_back_to_recents_125_hover.png</file>
+  </qresource>
+  <qresource prefix="/themes/standard/150/history_down">
+    <file alias="history_down.png">resources/button_back_to_recents_150.png</file>
+    <file alias="history_down_hover.png">resources/button_back_to_recents_150_hover.png</file>
+  </qresource>
+  <qresource prefix="/themes/standard/200/history_down">
+    <file alias="history_down.png">resources/button_back_to_recents_200.png</file>
+    <file alias="history_down_hover.png">resources/button_back_to_recents_200_hover.png</file>
   </qresource>
 
 </RCC>

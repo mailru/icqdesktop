@@ -7,20 +7,15 @@ namespace Themes
 		Invalid,
 		Min,
 
-		ContactListAddContact,
-		ContactListAddContactHovered,
-
 		FileSharingDownload,
 		FileSharingPlainCancel,
         FileSharingMediaCancel,
         FileSharingMediaCancelActive,
         FileSharingMediaCancelHover,
         FileSharingMediaPlay,
-        FileSharingMediaPlayActive,
         FileSharingMediaPlayHover,
         FileSharingGifPlay,
         FileSharingShareContent,
-        FileSharingShareContentActive,
         FileSharingShareContentHover,
         FileSharingBlankButtonIcon48,
         FileSharingBlankButtonIcon24,
@@ -29,7 +24,6 @@ namespace Themes
         FileSharingPttPause,
         FileSharingPttPauseActive,
         FileSharingPttPauseHover,
-        FileSharingPttPauseDownload,
         FileSharingPttPlay,
         FileSharingPttPlayActive,
         FileSharingPttPlayHover,
@@ -58,8 +52,6 @@ namespace Themes
         FileSharingFileTypeIconZip,
 
 		PreviewerClose,
-		ContentMuteNotify,
-		ContentMuteNotifyNew,
 
         VoipEventMissedIcon,
         VoipEventIncomingCallIcon,
@@ -70,7 +62,6 @@ namespace Themes
         StickerPickerPlaceholder,
 
         PreviewerReload,
-        PreviewerReloadActive,
         PreviewerReloadHover,
 
 		Max

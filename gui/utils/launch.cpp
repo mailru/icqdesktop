@@ -7,20 +7,26 @@
 #include "../types/link_metadata.h"
 #include "../types/message.h"
 #include "../types/typing.h"
+#include "../types/snap.h"
+#include "../cache/snaps/SnapStorage.h"
 #include "../main_window/history_control/MessagesModel.h"
 
-#ifdef _WIN32
-Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
-Q_IMPORT_PLUGIN(QICOPlugin);
-Q_IMPORT_PLUGIN(QWindowsAudioPlugin);
-#endif //_WIN32
+#ifdef ICQ_QT_STATIC
+    #ifdef _WIN32
+        Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
+        Q_IMPORT_PLUGIN(QICOPlugin);
+    #endif //_WIN32
 
-#ifndef __linux__
-Q_IMPORT_PLUGIN(QTiffPlugin);
-#endif //__linux__
+    #ifndef __linux__
+        Q_IMPORT_PLUGIN(QTiffPlugin);
+    #else
+		Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
+    #endif //__linux__
 
-#ifdef __APPLE__
-Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+    #ifdef __APPLE__
+        Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+        Q_IMPORT_PLUGIN(QICOPlugin);
+    #endif
 #endif
 
 const QString urlCommand = "-urlcommand";
@@ -74,6 +80,11 @@ const QString& launch::CommandLineParser::getExecutable() const
 
 int launch::main(int _argc, char* _argv[])
 {
+    static bool isLaunched = false;
+    if (isLaunched)
+        return 0;
+    isLaunched = true;
+    
     Utils::Application app(_argc, _argv);
     
     CommandLineParser cmd_parser(_argc, _argv);
@@ -114,6 +125,11 @@ int launch::main(int _argc, char* _argv[])
         qRegisterMetaType<Data::Quote>("Data::Quote");
         qRegisterMetaType<QList<Data::Quote>>("QList<Data::Quote>");
         qRegisterMetaType<QList<Data::DlgState>>("QList<Data::DlgState>");
+        qRegisterMetaType<std::shared_ptr<QList<Data::DlgState>>>("std::shared_ptr<QList<Data::DlgState>>");
+        qRegisterMetaType<Logic::SnapState>("Logic::SnapState");
+        qRegisterMetaType<Logic::UserSnapsInfo>("Logic::UserSnapsInfo");
+        qRegisterMetaType<QList<Logic::UserSnapsInfo>>("QList<Logic::UserSnapsInfo>");
+        qRegisterMetaType<QList<Logic::PreviewItem>>("QList<Logic::PreviewItem>");
     }
     else
     {
@@ -136,5 +152,6 @@ int launch::main(int _argc, char* _argv[])
     qDebug() << "Development build is now running";
 #endif
 
+    Logic::GetSnapStorage();
     return app.exec();
 }

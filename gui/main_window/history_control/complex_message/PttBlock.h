@@ -64,8 +64,10 @@ public:
 
     void setTextButtonGeometry(const QRect &rect);
 
+    virtual void connectToHover(Ui::ComplexMessage::QuoteBlockHover* hover) override;
+
 protected:
-    virtual void drawBlock(QPainter &_p) override;
+    virtual void drawBlock(QPainter &_p, const QRect& _rect, const QColor& quate_color) override;
 
     virtual void initializeFileSharingBlock() override;
 

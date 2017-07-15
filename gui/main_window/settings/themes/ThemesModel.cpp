@@ -2,7 +2,7 @@
 #include "ThemesModel.h"
 
 #include "ThemeWidget.h"
-#include "ThemesWidget.h"
+#include "ThemesPage.h"
 #include "../../../theme_settings.h"
 #include "../../../cache/themes/themes.h"
 #include "../../../utils/gui_coll_helper.h"
@@ -14,9 +14,9 @@
 
 namespace Ui
 {
-    ThemesModel::ThemesModel(ThemesWidget* _themesWidget):
-        QObject(_themesWidget),
-        themesWidget_(_themesWidget),
+    ThemesModel::ThemesModel(ThemesPage* _themesPage):
+        QObject(_themesPage),
+        themesPage_(_themesPage),
         targetContact_("")
     {
         connect(GetDispatcher(), SIGNAL(onThemesMeta()), this, SLOT(onThemesMeta()));
@@ -83,7 +83,7 @@ namespace Ui
         for (auto it = themesVector.begin(); it != themesVector.end(); ++it)
         {
             auto theme = *it;
-            themesWidget_->onThemeGot(theme);
+            themesPage_->onThemeGot(theme);
         }
     }
 

@@ -32,11 +32,11 @@ namespace Logic
 	{
 		connect(Ui::GetDispatcher(), SIGNAL(searchedMessage(Data::DlgState)), this, SLOT(searchedMessage(Data::DlgState)), Qt::QueuedConnection);
         connect(Ui::GetDispatcher(), SIGNAL(searchedContacts(QList<Data::DlgState>, qint64)), this, SLOT(searchedContacts(QList<Data::DlgState>, qint64)), Qt::QueuedConnection);
+        connect(Ui::GetDispatcher(), SIGNAL(emptySearchResults(qint64)), this, SLOT(emptySearchResults(qint64)), Qt::QueuedConnection);
         connect(GetAvatarStorage(), SIGNAL(avatarChanged(QString)), this, SLOT(avatarLoaded(QString)), Qt::QueuedConnection);
         connect(Logic::getContactListModel(), SIGNAL(contact_removed(QString)), this, SLOT(contactRemoved(QString)), Qt::QueuedConnection);
         connect(&Utils::InterConnector::instance(), &Utils::InterConnector::disableSearchInDialog, this, &SearchModelDLG::disableSearchInDialog, Qt::QueuedConnection);
 
-        connect(&Utils::InterConnector::instance(), SIGNAL(showNoSearchResults()), this, SLOT(recvNoSearchResults()), Qt::QueuedConnection);
         connect(&Utils::InterConnector::instance(), SIGNAL(hideNoSearchResults()), this, SLOT(recvHideNoSearchResults()), Qt::QueuedConnection);
         connect(&Utils::InterConnector::instance(), SIGNAL(repeatSearch()), this, SLOT(repeatSearch()), Qt::QueuedConnection);
 
@@ -197,28 +197,36 @@ namespace Logic
             {
                 SearchRequested_ = false;
                 Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
-                core::ifptr<core::iarray> symbolsArray(collection->create_array());
-                symbolsArray->reserve(SearchPatterns_.size());
-                for (auto symbol_iter = SearchPatterns_.begin(); symbol_iter != SearchPatterns_.end(); ++symbol_iter)
+                if (!SearchPatterns_.empty())
                 {
-                    core::coll_helper symbol_coll(collection->create_collection(), true);
-                    core::ifptr<core::iarray> patternForSymbolArray(symbol_coll->create_array());
-                    patternForSymbolArray->reserve(symbol_iter->size());
-
-                    for (auto iter = symbol_iter->begin(); iter != symbol_iter->end(); ++iter)
+                    core::ifptr<core::iarray> symbolsArray(collection->create_array());
+                    symbolsArray->reserve(SearchPatterns_.size());
+                    for (auto symbol_iter = SearchPatterns_.begin(); symbol_iter != SearchPatterns_.end(); ++symbol_iter)
                     {
-                        core::coll_helper coll(symbol_coll->create_collection(), true);
-                        coll.set_value_as_string("symbol_pattern", iter->toUtf8().data(), iter->toUtf8().size());
-                        core::ifptr<core::ivalue> val(collection->create_value());
-                        val->set_as_collection(coll.get());
-                        patternForSymbolArray->push_back(val.get());
+                        core::coll_helper symbol_coll(collection->create_collection(), true);
+                        core::ifptr<core::iarray> patternForSymbolArray(symbol_coll->create_array());
+                        patternForSymbolArray->reserve(symbol_iter->size());
+
+                        for (auto iter = symbol_iter->begin(); iter != symbol_iter->end(); ++iter)
+                        {
+                            core::coll_helper coll(symbol_coll->create_collection(), true);
+                            coll.set_value_as_string("symbol_pattern", iter->toUtf8().data(), iter->toUtf8().size());
+                            core::ifptr<core::ivalue> val(collection->create_value());
+                            val->set_as_collection(coll.get());
+                            patternForSymbolArray->push_back(val.get());
+                        }
+                        symbol_coll.set_value_as_array("symbols_patterns", patternForSymbolArray.get());
+                        core::ifptr<core::ivalue> symbols_val(symbol_coll->create_value());
+                        symbols_val->set_as_collection(symbol_coll.get());
+                        symbolsArray->push_back(symbols_val.get());
                     }
-                    symbol_coll.set_value_as_array("symbols_patterns", patternForSymbolArray.get());
-                    core::ifptr<core::ivalue> symbols_val(symbol_coll->create_value());
-                    symbols_val->set_as_collection(symbol_coll.get());
-                    symbolsArray->push_back(symbols_val.get());
+                    collection.set_value_as_array("symbols_array", symbolsArray.get());
+                    collection.set_value_as_uint("fixed_patterns_count", patternsCount);
                 }
-                collection.set_value_as_array("symbols_array", symbolsArray.get());
+                else
+                {
+                    collection.set_value_as_uint("fixed_patterns_count", 1);
+                }
                 
                 if (isSearchInDialog_)
                 {
@@ -226,7 +234,6 @@ namespace Logic
                     collection.set_value_as_qstring("aimid", aimid_);
                 }
                 
-                collection.set_value_as_uint("fixed_patterns_count", patternsCount);
                 collection.set_value_as_string("init_pattern", lastSearchPattern_.toUtf8().data(), lastSearchPattern_.toUtf8().size());
                 collection.set_value_as_bool("search_in_history", SearchInHistory_);
                 LastRequestId_ = Ui::GetDispatcher()->post_message_to_core("history_search", collection.get());
@@ -296,8 +303,6 @@ namespace Logic
     {
         if (LastRequestId_ != reqId)
             return;
-
-        int i = contacts.size();
 
         if (isSearchInDialog_)
             return;
@@ -416,6 +421,16 @@ namespace Logic
 
 	}
 
+    void SearchModelDLG::emptySearchResults(qint64 _seq)
+    {
+        if (LastRequestId_ == _seq)
+        {
+            EmptySearch_ = true;
+            emit Utils::InterConnector::instance().hideSearchSpinner();
+            emit Utils::InterConnector::instance().showNoSearchResults();
+        }
+    }
+
     void SearchModelDLG::disableSearchInDialog()
     {
         isSearchInDialog_ = false;
@@ -441,11 +456,6 @@ namespace Logic
     bool SearchModelDLG::isSearchInDialog() const
     {
         return isSearchInDialog_;
-    }
-
-    void SearchModelDLG::recvNoSearchResults()
-    {
-        EmptySearch_ = true;
     }
     
     void SearchModelDLG::recvHideNoSearchResults()

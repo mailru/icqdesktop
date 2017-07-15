@@ -31,6 +31,8 @@ namespace core
             template <class T_>
             bool get_value(uint32_t _value_key, /*out*/ T_* _value) const;
 
+            bool value_exists(uint32_t _value_key) const;
+
             void serialize(binary_stream& bstream) const;
             bool unserialize(binary_stream& bstream);
         };
@@ -74,6 +76,7 @@ namespace core
 
             return true;
         }
+
     }
 
 

@@ -39,20 +39,24 @@
         <translation>Оберіть обліковий запис</translation>
     </message>
     <message>
-        <source>Now we support only one ICQ account per session. Please choose prefered one to continue.</source>
-        <translation>Тепер ми підтримуємо тільки один обліковий запис ICQ за сесію. Щоб продовжити, оберіть бажаний обліковий запис.</translation>
+        <source>Now we support only one account per session. Please choose prefered one to continue.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select ICQ account if you want it to be merged with your Agent account.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do not merge</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Now select ICQ account if you want to merge it with previously selected Agent.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>about_us</name>
-    <message>
-        <source>About ICQ</source>
-        <translation>Про ICQ</translation>
-    </message>
-    <message>
-        <source>ICQ</source>
-        <translation>ICQ</translation>
-    </message>
     <message>
         <source>This product includes software developed by the OpenSSL project for use in the OpenSSL Toolkit</source>
         <translation>Цей продукт включає програмне забезпечення, розроблене проектом OpenSSL для використання в OpenSSL Toolkit</translation>
@@ -76,6 +80,10 @@
     <message>
         <source>Presented by Mail.Ru</source>
         <translation>Презентовано від Mail.Ru</translation>
+    </message>
+    <message>
+        <source>© Mail.Ru LLC</source>
+        <translation>© Mail.Ru LLC</translation>
     </message>
 </context>
 <context>
@@ -148,10 +156,6 @@
         <translation>Оберіть файл</translation>
     </message>
     <message>
-        <source>Image should be at least 600x600 px</source>
-        <translation>Зображення має бути не менше 600x600 пікселів</translation>
-    </message>
-    <message>
         <source>Change</source>
         <translation>Змінити</translation>
     </message>
@@ -178,6 +182,10 @@ photo</source>
     <message>
         <source>Edit photo</source>
         <translation>Редагувати фотографію</translation>
+    </message>
+    <message>
+        <source>Image should be at least 200x200 px</source>
+        <translation>Зображення має бути не менше 200x200 пікселів</translation>
     </message>
 </context>
 <context>
@@ -307,22 +315,6 @@ photo</source>
 <context>
     <name>chat_page</name>
     <message>
-        <source>Seen </source>
-        <translation>Був </translation>
-    </message>
-    <message>
-        <source>today</source>
-        <translation>сьогодні</translation>
-    </message>
-    <message>
-        <source>yesterday</source>
-        <translation>вчора</translation>
-    </message>
-    <message>
-        <source> at </source>
-        <translation> в </translation>
-    </message>
-    <message>
         <source>member</source>
         <comment>1</comment>
         <translation>учасник</translation>
@@ -341,26 +333,6 @@ photo</source>
         <source>members</source>
         <comment>21</comment>
         <translation>учасників</translation>
-    </message>
-    <message>
-        <source>new message</source>
-        <comment>1</comment>
-        <translation>нове повідомлення</translation>
-    </message>
-    <message>
-        <source>new messages</source>
-        <comment>2</comment>
-        <translation>нових повідомлення</translation>
-    </message>
-    <message>
-        <source>new messages</source>
-        <comment>5</comment>
-        <translation>нових повідомлень</translation>
-    </message>
-    <message>
-        <source>new messages</source>
-        <comment>21</comment>
-        <translation>нових повідомлень</translation>
     </message>
     <message>
         <source>Today</source>
@@ -389,10 +361,6 @@ photo</source>
     <message>
         <source>Cancel</source>
         <translation>Скасувати</translation>
-    </message>
-    <message>
-        <source>Preview</source>
-        <translation>Перегляд</translation>
     </message>
     <message>
         <source>Set to all</source>
@@ -508,10 +476,6 @@ photo</source>
         <translation>вчора</translation>
     </message>
     <message>
-        <source>Add contact</source>
-        <translation>Додати контакт</translation>
-    </message>
-    <message>
         <source>Hello. Please add me to your contact list</source>
         <translation>Здрастуйте. Будь ласка, додайте мене до свого списку контактів</translation>
     </message>
@@ -534,10 +498,6 @@ photo</source>
     <message>
         <source>Photo</source>
         <translation>Фото</translation>
-    </message>
-    <message>
-        <source>New chat</source>
-        <translation>Новий чат</translation>
     </message>
     <message>
         <source>Voice message</source>
@@ -572,10 +532,6 @@ photo</source>
         <translation>Закрити все</translation>
     </message>
     <message>
-        <source>Search</source>
-        <translation>Пошук</translation>
-    </message>
-    <message>
         <source>CONTACTS</source>
         <translation>КОНТАКТИ</translation>
     </message>
@@ -588,12 +544,8 @@ photo</source>
         <translation>ПОВІДОМЛЕННЯ</translation>
     </message>
     <message>
-        <source>Search in all chats</source>
-        <translation>Шукати у всіх чатах</translation>
-    </message>
-    <message>
-        <source>Create groupchat</source>
-        <translation>Створити групчат</translation>
+        <source>SEARCH IN ALL CHATS</source>
+        <translation>ШУКАТИ У ВСIХ ЧАТАХ</translation>
     </message>
 </context>
 <context>
@@ -653,10 +605,6 @@ photo</source>
     <message>
         <source>Images (*.jpg *.jpeg *.png *.bmp)</source>
         <translation>Зображення (*.jpg *.jpeg *.png *.bmp)</translation>
-    </message>
-    <message>
-        <source>Contact Us</source>
-        <translation>Зв&apos;яжіться з нами</translation>
     </message>
     <message>
         <source>Attach screenshot</source>
@@ -1736,6 +1684,26 @@ photo</source>
         <source>Chat name</source>
         <translation>Ім&apos;я чату</translation>
     </message>
+    <message>
+        <source>Link to chat</source>
+        <translation>Посилання на чат</translation>
+    </message>
+    <message>
+        <source>Ability to join chat by link</source>
+        <translation>Можливість приєднуватись до чату за посиланням</translation>
+    </message>
+    <message>
+        <source>Admin approval required to join</source>
+        <translation>Для приєднання потрібне схвалення адміністратором</translation>
+    </message>
+    <message>
+        <source>Age restriction</source>
+        <translation>Вікові обмеження</translation>
+    </message>
+    <message>
+        <source>Members must be of legal age to join</source>
+        <translation>Учасники повинні досягти повноліття, щоб приєднатися</translation>
+    </message>
 </context>
 <context>
     <name>input_widget</name>
@@ -1813,7 +1781,7 @@ photo</source>
     </message>
     <message>
         <source>You are not a member of this chat. </source>
-        <translation type="unfinished"></translation>
+        <translation>Ви не є учасником цього чату. </translation>
     </message>
 </context>
 <context>
@@ -1851,10 +1819,6 @@ photo</source>
         <translation>Закрити</translation>
     </message>
     <message>
-        <source>Live chats</source>
-        <translation>Лайвчати</translation>
-    </message>
-    <message>
         <source>Join</source>
         <translation>Вступити</translation>
     </message>
@@ -1865,6 +1829,10 @@ photo</source>
     <message>
         <source>Waiting for approval</source>
         <translation>Очікування схвалення</translation>
+    </message>
+    <message>
+        <source>Live chats</source>
+        <translation>Лайвчати</translation>
     </message>
 </context>
 <context>
@@ -1914,20 +1882,6 @@ photo</source>
         <translation>Увійти за допомогою UIN/Email</translation>
     </message>
     <message>
-        <source>Please confirm your country code and enter
-your phone number</source>
-        <translation>Підтвердіть код своєї країни і введіть
-свій номер телефону</translation>
-    </message>
-    <message>
-        <source>Please enter the code you&apos;ve just received in your phone</source>
-        <translation>Введіть код, який ви щойно отримали на ваш телефон</translation>
-    </message>
-    <message>
-        <source>Enter your UIN or Email to get started</source>
-        <translation>Введіть свій номер UIN або Email, щоб почати роботу</translation>
-    </message>
-    <message>
         <source>Resend code in </source>
         <translation>Перестали код через </translation>
     </message>
@@ -1958,6 +1912,38 @@ your phone number</source>
     <message>
         <source>Forgot password?</source>
         <translation>Забули пароль?</translation>
+    </message>
+    <message>
+        <source>Welcome to Mail.Ru Agent</source>
+        <translation>Вітаємо у Mail.Ru Агенті</translation>
+    </message>
+    <message>
+        <source>Email</source>
+        <translation>Email</translation>
+    </message>
+    <message>
+        <source>Login with Email</source>
+        <translation>Увійти за допомогою адреси електронної пошти</translation>
+    </message>
+    <message>
+        <source>Two-factor authentication is on, please create an app password &lt;a href=&quot;https://e.mail.ru/settings/2-step-auth&quot;&gt;here&lt;/a&gt; to login</source>
+        <translation>Двофакторна автентифікація увімкнена.&lt;br&gt;Щоб увійти до системи, створіть пароль &lt;a href=&quot;https://e.mail.ru/settings/2-step-auth&quot;&gt;тут&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>Enter code from SMS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter phone number</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter UIN or Email</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter your Email</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2060,6 +2046,88 @@ your phone number</source>
     </message>
 </context>
 <context>
+    <name>main_menu</name>
+    <message>
+        <source>Create group chat</source>
+        <translation>Створити груповий чат</translation>
+    </message>
+    <message>
+        <source>Add contact</source>
+        <translation>Додати контакт</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation>Контакти</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>Налаштування</translation>
+    </message>
+    <message>
+        <source>Sounds</source>
+        <translation>Звуки</translation>
+    </message>
+    <message>
+        <source>Discover</source>
+        <translation>Огляд</translation>
+    </message>
+    <message>
+        <source>Stories</source>
+        <translation>Історії</translation>
+    </message>
+    <message>
+        <source>Sign out</source>
+        <translation>Вийти</translation>
+    </message>
+    <message>
+        <source>About app</source>
+        <translation>Опис додатка</translation>
+    </message>
+    <message>
+        <source>Contact Us</source>
+        <translation>Зв&apos;яжіться з нами</translation>
+    </message>
+</context>
+<context>
+    <name>main_page</name>
+    <message>
+        <source>My profile</source>
+        <translation>Мій профіль</translation>
+    </message>
+    <message>
+        <source>General settings</source>
+        <translation>Загальні параметри</translation>
+    </message>
+    <message>
+        <source>Voice and video</source>
+        <translation>Голос і відео</translation>
+    </message>
+    <message>
+        <source>Notifications</source>
+        <translation>Сповіщення</translation>
+    </message>
+    <message>
+        <source>Back to chats</source>
+        <translation>Назад до чатів</translation>
+    </message>
+    <message>
+        <source>Contact Us</source>
+        <translation>Зв&apos;яжіться з нами</translation>
+    </message>
+    <message>
+        <source>About app</source>
+        <translation>Опис додатка</translation>
+    </message>
+    <message>
+        <source>Wallpaper</source>
+        <translation>Шпалери</translation>
+    </message>
+    <message>
+        <source>Add contact</source>
+        <translation>Додати контакт</translation>
+    </message>
+</context>
+<context>
     <name>notifications_alert</name>
     <message>
         <source>View all</source>
@@ -2120,6 +2188,14 @@ your phone number</source>
         <source>No messages found</source>
         <translation>Не знайдено жодних повідомлень</translation>
     </message>
+    <message>
+        <source>Install Mail.Ru Agent on mobile</source>
+        <translation>Інсталювати Mail.Ru Агент на мобільний пристрій</translation>
+    </message>
+    <message>
+        <source>by phone number or Email</source>
+        <translation>за допомогою номера телефону або адреси електронної пошти</translation>
+    </message>
 </context>
 <context>
     <name>popup_window</name>
@@ -2158,10 +2234,6 @@ your phone number</source>
     <message>
         <source>Contact name</source>
         <translation>Iм&apos;я контакту</translation>
-    </message>
-    <message>
-        <source>Chat name</source>
-        <translation>Ім&apos;я чату</translation>
     </message>
     <message>
         <source>Sign out</source>
@@ -2245,11 +2317,27 @@ your phone number</source>
     </message>
     <message>
         <source>Are you sure you want to ban user to write in this chat?</source>
-        <translation type="unfinished"></translation>
+        <translation>Дійсно заборонити користувачу надсилати повідомлення у цьому чаті?</translation>
     </message>
     <message>
         <source>Are you sure you want to allow user to write in this chat?</source>
-        <translation type="unfinished"></translation>
+        <translation>Дійсно дозволити користувачу надсилати повідомлення у цьому чаті?</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete all unknown contacts?</source>
+        <translation>Дійсно видалити всі невідомі контакти?</translation>
+    </message>
+    <message>
+        <source>Close all</source>
+        <translation>Закрити все</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete user from this call?</source>
+        <translation>Дійсно видалити користувача з цього дзвінка?</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation>Контакти</translation>
     </message>
 </context>
 <context>
@@ -2344,10 +2432,6 @@ your phone number</source>
         <translation>Пошук</translation>
     </message>
     <message>
-        <source>Add contact</source>
-        <translation>Додати контакт</translation>
-    </message>
-    <message>
         <source>Phone or Name, Email, UIN</source>
         <translation>Телефон або ім&apos;я, Email, UIN</translation>
     </message>
@@ -2387,10 +2471,6 @@ your phone number</source>
 <context>
     <name>settings_pages</name>
     <message>
-        <source>Launch ICQ when system starts</source>
-        <translation>Запускати ICQ на початку роботи системи</translation>
-    </message>
-    <message>
         <source>On</source>
         <translation>Увім</translation>
     </message>
@@ -2411,20 +2491,12 @@ your phone number</source>
         <translation>Надсилати повідомлення за допомогою:</translation>
     </message>
     <message>
-        <source>Preview images and videos</source>
-        <translation>Переглянути зображення і відеозаписи</translation>
-    </message>
-    <message>
         <source>Interface</source>
         <translation>Інтерфейс</translation>
     </message>
     <message>
         <source>Interface scale:</source>
         <translation>Масштаб інтерфейсу:</translation>
-    </message>
-    <message>
-        <source>(ICQ restart required)</source>
-        <translation>(необхідне перезавантаження ICQ)</translation>
     </message>
     <message>
         <source>(Recommended)</source>
@@ -2459,24 +2531,12 @@ your phone number</source>
         <translation>Налаштування</translation>
     </message>
     <message>
-        <source>My profile</source>
-        <translation>Мій профіль</translation>
-    </message>
-    <message>
         <source>General</source>
         <translation>Загальні</translation>
     </message>
     <message>
-        <source>About</source>
-        <translation>Про програму</translation>
-    </message>
-    <message>
         <source>Outgoing messages sound</source>
         <translation>Звук відправлення повідомлення</translation>
-    </message>
-    <message>
-        <source>Change account</source>
-        <translation>Змінити обліковий запис</translation>
     </message>
     <message>
         <source>Sounds</source>
@@ -2527,10 +2587,6 @@ your phone number</source>
         <translation>Шпалери</translation>
     </message>
     <message>
-        <source>Contact Us</source>
-        <translation>Зв&apos;яжіться з нами</translation>
-    </message>
-    <message>
         <source>fr</source>
         <translation>Français</translation>
     </message>
@@ -2557,6 +2613,34 @@ your phone number</source>
     <message>
         <source>Chat list compact mode</source>
         <translation>Компактний режим списку чату</translation>
+    </message>
+    <message>
+        <source>Show mail notifications</source>
+        <translation>Відображати поштові сповіщення</translation>
+    </message>
+    <message>
+        <source>My Profile</source>
+        <translation>Мій Профіль</translation>
+    </message>
+    <message>
+        <source>Launch when system starts</source>
+        <translation>Запускати разом із запуском системи</translation>
+    </message>
+    <message>
+        <source>(Application restart required)</source>
+        <translation>(Необхідне перезавантаження програми)</translation>
+    </message>
+    <message>
+        <source>Auto play videos</source>
+        <translation>Автовідтворення відео</translation>
+    </message>
+    <message>
+        <source>Preview images and links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show snaps</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2614,22 +2698,6 @@ your phone number</source>
         <translation>Видалити</translation>
     </message>
     <message>
-        <source>Seen </source>
-        <translation>Був </translation>
-    </message>
-    <message>
-        <source>today</source>
-        <translation>сьогодні</translation>
-    </message>
-    <message>
-        <source>yesterday</source>
-        <translation>вчора</translation>
-    </message>
-    <message>
-        <source> at </source>
-        <translation> в </translation>
-    </message>
-    <message>
         <source>Save</source>
         <translation>Зберегти</translation>
     </message>
@@ -2666,10 +2734,6 @@ your phone number</source>
         <translation>Очистити історію</translation>
     </message>
     <message>
-        <source>Ignored Contacts</source>
-        <translation>Ігноровані</translation>
-    </message>
-    <message>
         <source>Connect to ICQ account</source>
         <translation>Прив&apos;язати акаунт ICQ</translation>
     </message>
@@ -2678,20 +2742,8 @@ your phone number</source>
         <translation>Профіль</translation>
     </message>
     <message>
-        <source>Edit profile</source>
-        <translation>Змінити профіль</translation>
-    </message>
-    <message>
         <source>Only visible for those, who has it in the phone book</source>
         <translation>видний лише для тих, хто наявний у телефонній книзі</translation>
-    </message>
-    <message>
-        <source>Birthdate</source>
-        <translation>дата народження</translation>
-    </message>
-    <message>
-        <source>Gender</source>
-        <translation>стать</translation>
     </message>
     <message>
         <source>Country</source>
@@ -2702,10 +2754,6 @@ your phone number</source>
         <translation>місто</translation>
     </message>
     <message>
-        <source>About me</source>
-        <translation>про мене</translation>
-    </message>
-    <message>
         <source>Do not disturb</source>
         <translation>Не турбувати</translation>
     </message>
@@ -2714,20 +2762,8 @@ your phone number</source>
         <translation>Невидимий</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>Офлайн</translation>
-    </message>
-    <message>
         <source>for safety and spam protection</source>
         <translation>з метою безпеки та захисту від спаму</translation>
-    </message>
-    <message>
-        <source>Male</source>
-        <translation>Чоловік</translation>
-    </message>
-    <message>
-        <source>Female</source>
-        <translation>Жінка</translation>
     </message>
     <message>
         <source>Leave and delete</source>
@@ -2748,10 +2784,6 @@ your phone number</source>
     <message>
         <source>Attach phone</source>
         <translation>Вказати телефон</translation>
-    </message>
-    <message>
-        <source>Public chat</source>
-        <translation>Загальнодоступний</translation>
     </message>
     <message>
         <source>Revoke admin role</source>
@@ -2804,18 +2836,6 @@ Please edit phone number and try again.</source>
         <translation>посилання скопійовано</translation>
     </message>
     <message>
-        <source>Join with Approval</source>
-        <translation>Приєднатися зі схваленням</translation>
-    </message>
-    <message>
-        <source>Chat will be visible to everyone</source>
-        <translation>Чат буде видно будь-кому</translation>
-    </message>
-    <message>
-        <source>Admin approval required to join</source>
-        <translation>Для приєднання потрібне схвалення адміністратором</translation>
-    </message>
-    <message>
         <source>more</source>
         <translation>ще</translation>
     </message>
@@ -2856,30 +2876,6 @@ Please edit phone number and try again.</source>
         <translation>Шукати повідомлення</translation>
     </message>
     <message>
-        <source>Link to chat</source>
-        <translation>Посилання на чат</translation>
-    </message>
-    <message>
-        <source>Ability to join chat by link</source>
-        <translation>Можливість приєднуватись до чату за посиланням</translation>
-    </message>
-    <message>
-        <source>Read only</source>
-        <translation>Лише для читання</translation>
-    </message>
-    <message>
-        <source>New members can read, approved by admin members can send</source>
-        <translation>Нові учасники можуть читати. Учасники, схвалені адміністратором, можуть надсилати.</translation>
-    </message>
-    <message>
-        <source>Age restriction</source>
-        <translation>Вікові обмеження</translation>
-    </message>
-    <message>
-        <source>Members must be of legal age to join</source>
-        <translation>Учасники повинні досягти повноліття, щоб приєднатися</translation>
-    </message>
-    <message>
         <source>Unfortunatelly, you have been deleted and cannot see the members of this chat or message them.</source>
         <translation>На жаль, вас було видалено, та ви не можете бачити список учасників цього чату або відправляти їм повідомлення.</translation>
     </message>
@@ -2889,11 +2885,69 @@ Please edit phone number and try again.</source>
     </message>
     <message>
         <source>Ban to write</source>
-        <translation type="unfinished"></translation>
+        <translation>Заборонити надсилання повідомлень</translation>
     </message>
     <message>
         <source>Allow to write</source>
+        <translation>Дозволити надсилання повідомлень</translation>
+    </message>
+    <message>
+        <source>Email/UIN</source>
+        <translation>Email/UIN</translation>
+    </message>
+</context>
+<context>
+    <name>snaps_page</name>
+    <message>
+        <source>Cancel</source>
+        <translation>Скасувати</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Так</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete this snap?</source>
+        <translation>Дійсно видалити цей знімок?</translation>
+    </message>
+    <message>
+        <source>Delete snap</source>
+        <translation>Видалити знімок</translation>
+    </message>
+    <message>
+        <source>Unfortunately, this file is not supported on your device.</source>
+        <translation>На жаль, цей файл не підтримується вашим пристроєм.</translation>
+    </message>
+    <message>
+        <source>view</source>
+        <comment>1</comment>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>views</source>
+        <comment>2</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>views</source>
+        <comment>5</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>views</source>
+        <comment>21</comment>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>title</name>
+    <message>
+        <source>ICQ</source>
+        <translation>ICQ</translation>
+    </message>
+    <message>
+        <source>Mail.Ru Agent</source>
+        <translation>Mail.Ru Агент</translation>
     </message>
 </context>
 <context>
@@ -2917,6 +2971,30 @@ Please edit phone number and try again.</source>
     <message>
         <source>Open</source>
         <translation>Відкрити</translation>
+    </message>
+    <message>
+        <source>New email</source>
+        <translation>Нова пошта</translation>
+    </message>
+    <message>
+        <source> new email</source>
+        <comment>1</comment>
+        <translation> нове повідомлення</translation>
+    </message>
+    <message>
+        <source> new emails</source>
+        <comment>2</comment>
+        <translation> нових повідомлення</translation>
+    </message>
+    <message>
+        <source> new emails</source>
+        <comment>5</comment>
+        <translation> нових повідомлень</translation>
+    </message>
+    <message>
+        <source> new emails</source>
+        <comment>21</comment>
+        <translation> нове повідомлення</translation>
     </message>
 </context>
 <context>
@@ -2962,10 +3040,6 @@ Please edit phone number and try again.</source>
         <translation>Ок</translation>
     </message>
     <message>
-        <source>turned off the camera</source>
-        <translation> вимкнув камеру</translation>
-    </message>
-    <message>
         <source>Ringing...</source>
         <translation>Дзвонимо...</translation>
     </message>
@@ -2980,6 +3054,26 @@ Please edit phone number and try again.</source>
     <message>
         <source> enabled data saving</source>
         <translation> увімкнув(-ла) збереження даних</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation>Додати</translation>
+    </message>
+    <message>
+        <source>Add to call</source>
+        <translation>Додати до дзвінка</translation>
+    </message>
+    <message>
+        <source>MEMBERS</source>
+        <translation>УЧАСНИКИ</translation>
+    </message>
+    <message>
+        <source>OTHERS</source>
+        <translation>ІНШІ</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Скасувати</translation>
     </message>
 </context>
 </TS>

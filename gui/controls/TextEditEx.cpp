@@ -11,10 +11,10 @@
 
 namespace Ui
 {
-    TextEditEx::TextEditEx(QWidget* _parent, const Fonts::FontFamily _fontFamily, int _fontSize, const QPalette& _palette, bool _input, bool _isFitToText)
+    TextEditEx::TextEditEx(QWidget* _parent, const QFont& _font, const QPalette& _palette, bool _input, bool _isFitToText)
         :	QTextBrowser(_parent),
         index_(0),
-        font_(Fonts::appFont(_fontSize, _fontFamily)),
+        font_(_font),
         prevPos_(-1),
         input_(_input),
         isFitToText_(_isFitToText),
@@ -22,35 +22,15 @@ namespace Ui
         add_(0),
         limit_(-1)
     {
-        init(_fontSize);
+        init(_font.pixelSize());
         setPalette(_palette);
         initFlashTimer();
     }
 
-    TextEditEx::TextEditEx(QWidget* _parent, const Fonts::FontFamily _fontFamily, int _fontSize, const QColor& _color, bool _input, bool _isFitToText)
-        :	QTextBrowser(_parent),
-        index_(0),
-        font_(Fonts::appFont(_fontSize, _fontFamily)),
-        color_(_color),
-        prevPos_(-1),
-        input_(_input),
-        isFitToText_(_isFitToText),
-        isCatchEnter_(false),
-        add_(0),
-        limit_(-1)
-    {
-        init(_fontSize);
-
-        QPalette palette;
-        palette.setColor(QPalette::Text, color_);
-        setPalette(palette);
-        initFlashTimer();
-    }
-
-    TextEditEx::TextEditEx(QWidget* _parent, const QFont &font, const QColor& _color, bool _input, bool _isFitToText)
+    TextEditEx::TextEditEx(QWidget* _parent, const QFont& _font, const QColor& _color, bool _input, bool _isFitToText)
         : QTextBrowser(_parent)
         , index_(0)
-        , font_(font)
+        , font_(_font)
         , color_(_color)
         , prevPos_(-1)
         , input_(_input)
@@ -262,10 +242,13 @@ namespace Ui
             {
                 if (platform::is_apple())
                 {
+                    Logic::Text4Edit(text, *this, Logic::Text2DocHtmlMode::Pass, false);
+                    /*
                     auto cursor = textCursor();
                     cursor.beginEditBlock();
                     cursor.insertText(text);
                     cursor.endEditBlock();
+                    */
                 }
                 else
                 {
@@ -366,6 +349,19 @@ namespace Ui
                 emit enter();
                 return;
             }
+        }
+
+        if (platform::is_apple() && input_ && _event->key() == Qt::Key_Backspace && _event->modifiers().testFlag(Qt::KeyboardModifier::ControlModifier))
+        {
+            auto cursor = textCursor();
+            cursor.select(QTextCursor::LineUnderCursor);
+            cursor.removeSelectedText();
+            //setTextCursor(cursor);
+
+            QTextBrowser::keyPressEvent(_event);
+            _event->ignore();
+
+            return;
         }
         
         const auto lenght = document()->characterCount();
@@ -579,6 +575,16 @@ namespace Ui
         setFixedHeight(height + add_);
 
         return height;
+    }
+
+    void TextEditEx::mousePress(QMouseEvent* ev)
+    {
+        mousePressEvent(ev);
+    }
+
+    void TextEditEx::mouseRelease(QMouseEvent* ev)
+    {
+        mouseReleaseEvent(ev);
     }
 
     void TextEditEx::contextMenuEvent(QContextMenuEvent *e)

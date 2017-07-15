@@ -51,6 +51,8 @@ Q_SIGNALS:
                 current_task_watcher_->setFuture(future);
             }
 
+            bool select_account_if_need();
+
         public:
 
             void install();

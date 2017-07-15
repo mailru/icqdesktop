@@ -17,6 +17,7 @@ namespace core
             std::string phoneNumber_;
             uint32_t	flags_;
             std::string	largeIconId_;
+            bool hasMail_;
 
         public:
             my_info();

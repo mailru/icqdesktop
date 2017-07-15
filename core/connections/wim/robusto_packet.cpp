@@ -92,7 +92,7 @@ int32_t robusto_packet::parse_response(std::shared_ptr<core::tools::binary_strea
 
 int32_t robusto_packet::on_response_error_code()
 {
-    if (40200 <= status_code_ && status_code_ < 40300)
+    if ((40200 <= status_code_ && status_code_ < 40400) || status_code_ == 40000)
     {
         return wpie_error_robusto_token_invalid;
     }

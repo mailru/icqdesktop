@@ -106,14 +106,24 @@ namespace core
                 on_result = [](const dlg_state&, const dlg_state_changes&){};
             }
         };
-
+        
         struct request_next_hole_handler
         {
-            std::function<void(std::shared_ptr<archive_hole> _hole)>	on_result;
+            std::function<void(std::shared_ptr<archive_hole> _hole)> on_result;
 
             request_next_hole_handler()
             {
                 on_result = [](std::shared_ptr<archive_hole> _hole){};
+            }
+        };
+
+        struct validate_hole_request_handler
+        {
+            std::function<void(int64_t _from)> on_result;
+
+            validate_hole_request_handler()
+            {
+                on_result = [](int64_t _from){};
             }
         };
 
@@ -203,7 +213,7 @@ namespace core
             bool repair_images(const std::string& _contact);
             void get_messages_index(const std::string& _contact, int64_t _from, int64_t _count, /*out*/ headers_list& _headers);
             void get_messages_buddies(const std::string& _contact, std::shared_ptr<archive::msgids_list> _ids, /*out*/ std::shared_ptr<history_block> _messages);
-            bool get_messages(const std::string& _contact, int64_t _from, int64_t _count, /*out*/ std::shared_ptr<history_block> _messages, bool _to_older);
+            bool get_messages(const std::string& _contact, int64_t _from, int64_t _count_early, int64_t _count_later, /*out*/ std::shared_ptr<history_block> _messages);
             bool get_history_file(const std::string& _contact, /*out*/ core::tools::binary_stream& _history_archive
                 , std::shared_ptr<int64_t> _offset, std::shared_ptr<int64_t> _remaining_size, int64_t& _cur_index, std::shared_ptr<int64_t> _mode);
 
@@ -213,7 +223,10 @@ namespace core
 
             void set_dlg_state(const std::string& _contact, const dlg_state& _state, Out dlg_state& _result, Out dlg_state_changes& _changes);
             bool clear_dlg_state(const std::string& _contact);
+
             std::shared_ptr<archive_hole> get_next_hole(const std::string& _contact, int64_t _from, int64_t _depth = -1);
+            int64_t validate_hole_request(const std::string& _contact, const archive_hole& _hole_request, const int32_t _count);
+
             void update_history(
                 const std::string& _contact,
                 history_block_sptr _data,
@@ -266,7 +279,7 @@ namespace core
             std::shared_ptr<async_task_handlers> repair_images(const std::string& _contact);
             std::shared_ptr<request_headers_handler> get_messages_index(const std::string& _contact, int64_t _from, int64_t _count);
             std::shared_ptr<request_buddies_handler> get_messages_buddies(const std::string& _contact, std::shared_ptr<archive::msgids_list> _ids);
-            std::shared_ptr<request_buddies_handler> get_messages(const std::string& _contact, int64_t _from, int64_t _count, bool _to_older);
+            std::shared_ptr<request_buddies_handler> get_messages(const std::string& _contact, int64_t _from, int64_t _count_early, int64_t _count_later);
 
             std::shared_ptr<request_history_file_handler> get_history_block(std::shared_ptr<contact_and_offsets> _contacts
                 , std::shared_ptr<contact_and_msgs> _archive, std::shared_ptr<tools::binary_stream> _data);
@@ -278,6 +291,8 @@ namespace core
             std::shared_ptr<set_dlg_state_handler> set_dlg_state(const std::string& _contact, const dlg_state& _state);
             std::shared_ptr<async_task_handlers> clear_dlg_state(const std::string& _contact);
             std::shared_ptr<request_next_hole_handler> get_next_hole(const std::string& _contact, int64_t _from, int64_t _depth = -1);
+            std::shared_ptr<validate_hole_request_handler> validate_hole_request(const std::string& _contact, const archive_hole& _hole_request, const int32_t _count);
+
             std::shared_ptr<async_task_handlers> sync_with_history();
 
             std::shared_ptr<not_sent_messages_handler> get_pending_message();

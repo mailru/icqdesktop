@@ -17,7 +17,10 @@ namespace core
         public:
 
             // Constructor
-            crash_handler();
+            crash_handler(
+                const std::string& _bundle, 
+                const std::wstring& _product_path, 
+                const bool _is_sending_after_crash);
 
             // Destructor
             virtual ~crash_handler();
@@ -62,6 +65,7 @@ namespace core
 
             static void set_product_bundle(const std::string& _product_bundle);
             static void set_is_sending_after_crash(bool _is_sending_after_crash);
+            static std::wstring get_product_path();
 
         private:
             static bool need_write_dump();
@@ -69,7 +73,7 @@ namespace core
 
             // NOTE : this values must coincide with value in https://rink.hockeyapp.net
             static std::string product_bundle_;
-
+            static std::wstring product_path_;
             static bool is_sending_after_crash_;
         };
     }

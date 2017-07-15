@@ -39,8 +39,9 @@ Q_SIGNALS:
         FlowLayout*								contactsLayout_;
         QVBoxLayout*							rootLayout_;
 
-        int										prevScrollValue_;
-
+        int										prevHScrollValue_;
+        int										prevVScrollValue_;
+        
         std::map<QString, ContactWidget*>		items_;
         std::map<QString, QString>				countries_;
 

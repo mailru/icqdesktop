@@ -21,7 +21,7 @@ namespace Logic
 		void updated();
         void readStateChanged(QString);
         void selectContact(QString);
-        void dlgStateHandled(Data::DlgState);
+        void dlgStatesHandled(std::shared_ptr<QList<Data::DlgState>>);
         void favoriteChanged(QString);
 
     public Q_SLOTS:
@@ -30,7 +30,7 @@ namespace Logic
 	private Q_SLOTS:
 		void activeDialogHide(QString);
 		void contactChanged(QString);
-		void dlgState(Data::DlgState);
+		void dlgStates(std::shared_ptr<QList<Data::DlgState>>);
 		void sortDialogs();
         void contactRemoved(QString);
 
@@ -65,6 +65,8 @@ namespace Logic
 		QModelIndex contactIndex(const QString& aimId);
 
 		int totalUnreads() const;
+        int recentsUnreads() const;
+        int favoritesUnreads() const;
         
         QString firstContact();
         QString nextUnreadAimId();
@@ -74,6 +76,9 @@ namespace Logic
         bool lessRecents(const QString& _aimid1, const QString& _aimid2);
 
         std::vector<QString> getSortedRecentsContacts() const;
+
+        void setSnapsVisible(bool _visible);
+        bool isSnapsVisible() const { return SnapsVisible_; }
 
 	private:
         int correctIndex(int i) const;
@@ -92,6 +97,7 @@ namespace Logic
         quint16 FavoritesCount_;
         bool FavoritesVisible_;
         bool FavoritesHeadVisible_;
+        bool SnapsVisible_;
 	};
 
 	RecentsModel* getRecentsModel();

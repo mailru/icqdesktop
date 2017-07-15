@@ -16,13 +16,14 @@ namespace Ui
 		Q_OBJECT
 
 	Q_SIGNALS:
-		void clicked(QString);
+		void clicked(QString, QString);
 
 	public:
 		MessageAlertWidget(const Data::DlgState& state, Logic::RecentItemDelegate* delegate, QWidget* parent);
 		~MessageAlertWidget();
 
 		QString id() const;
+        QString mailId() const;
 
 	protected:
 		virtual void paintEvent(QPaintEvent*);

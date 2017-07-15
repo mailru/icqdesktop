@@ -8,6 +8,8 @@
 #include "../../core_dispatcher.h"
 #include "../../utils/gui_coll_helper.h"
 #include "../../utils/log/log.h"
+#include "../contact_list/RecentsModel.h"
+#include "../../gui_settings.h"
 
 namespace Ui
 {
@@ -15,28 +17,22 @@ namespace Ui
 		: QWidget(parent)
 		, timer_(new QTimer(this))
 	{
-        QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        sizePolicy.setHeightForWidth(this->sizePolicy().hasHeightForWidth());
-        this->setSizePolicy(sizePolicy);
-        vertical_layout_ = new QVBoxLayout(this);
-        vertical_layout_->setSpacing(0);
-        vertical_layout_->setContentsMargins(0, 0, 0, 0);
+        this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        vertical_layout_ = Utils::emptyVLayout(this);
         stacked_widget_ = new QStackedWidget(this);
-        sizePolicy.setHeightForWidth(stacked_widget_->sizePolicy().hasHeightForWidth());
-        stacked_widget_->setSizePolicy(sizePolicy);
+        stacked_widget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         page_ = new QWidget();
-        sizePolicy.setHeightForWidth(page_->sizePolicy().hasHeightForWidth());
-        page_->setSizePolicy(sizePolicy);
-        vertical_layout_2_ = new QVBoxLayout(page_);
-        vertical_layout_2_->setSpacing(0);
-        vertical_layout_2_->setContentsMargins(0, 0, 0, 0);
+        page_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        vertical_layout_2_ = Utils::emptyVLayout(page_);
         stacked_widget_->addWidget(page_);
         vertical_layout_->addWidget(stacked_widget_);
         QMetaObject::connectSlotsByName(this);
 
-		timer_->setInterval(60000);
+        if (build::is_debug())
+            timer_->setInterval(250);
+        else
+            timer_->setInterval(60000);
+
 		timer_->setSingleShot(false);
 		connect(timer_, SIGNAL(timeout()), this, SLOT(updatePages()), Qt::QueuedConnection);
 		timer_->start();
@@ -115,7 +111,8 @@ namespace Ui
 	{
 		for (QMap<QString, QTime>::iterator iter = times_.begin(); iter != times_.end(); )
 		{
-			if (iter.value().secsTo(QTime::currentTime()) >= 300 && iter.key() != current_)
+            int time = build::is_debug() ? 1 : 300;
+			if (iter.value().secsTo(QTime::currentTime()) >= time && iter.key() != current_)
 			{
 				close_dialog(iter.key());
  				iter = times_.erase(iter);
@@ -127,12 +124,15 @@ namespace Ui
 		}
 	}
 
-    void HistoryControl::contactSelected(QString _aimId, qint64 _messageId)
+    void HistoryControl::contactSelected(QString _aimId, qint64 _messageId ,qint64 _quoteId)
 	{
         assert(!_aimId.isEmpty());
         if (!Logic::getContactListModel()->getContactItem(_aimId))
             return;
         
+		Data::DlgState data = Logic::getRecentsModel()->getDlgState(_aimId);
+		qint64 last_read_msg = data.UnreadCount_ > 0 ? data.YoursLastRead_ : -1;
+
         if (_messageId != -1)
         {
             Logic::GetMessagesModel()->messagesDeletedUpTo(_aimId, -1 /* _id */);
@@ -140,20 +140,30 @@ namespace Ui
         }
         
         HistoryControlPage* oldPage = qobject_cast<HistoryControlPage*>(stacked_widget_->currentWidget());
-		if (oldPage && _messageId == -1)
+		if (oldPage)
 		{
-            if (oldPage->aimId() == _aimId)
-                return;
+			oldPage->setQuoteId(_quoteId);
 
-			oldPage->updateState(true);
+			if (_messageId == -1)
+			{
+				if (oldPage->aimId() == _aimId)
+				{
+					Utils::InterConnector::instance().setFocusOnInput();
+					return;
+				}
+
+				oldPage->updateState(true);
+			}
 		}
 
-        emit Utils::InterConnector::instance().historyControlReady(_aimId, _messageId);
+        emit Utils::InterConnector::instance().historyControlReady(_aimId, _messageId, -1);//last_read_msg);
+
 		auto iter = pages_.find(_aimId);
         const auto createNewPage = (iter == pages_.end());
 		if (createNewPage)
 		{
             auto newPage = new HistoryControlPage(this, _aimId);
+			newPage->setQuoteId(_quoteId);
 
 			iter = pages_.insert(_aimId, newPage);
 			connect((*iter), SIGNAL(quote(QList<Data::Quote>)), this, SIGNAL(quote(QList<Data::Quote>)), Qt::QueuedConnection);
@@ -163,6 +173,10 @@ namespace Ui
 
             Logic::getContactListModel()->setCurrentCallbackHappened(newPage);
 		}
+		//else if (last_read_msg != -1 && _messageId == -1)
+		//{
+		//	contactSelectedToLastMessage(_aimId, last_read_msg);
+		//}
 
         auto contactPage = *iter;
 
@@ -188,6 +202,23 @@ namespace Ui
 		gui_coll_helper collection(GetDispatcher()->create_collection(), true);
 		collection.set_value_as_qstring("contact", _aimId);
 		GetDispatcher()->post_message_to_core("dialogs/add", collection.get());
+
+        if (_quoteId > 0)
+            Logic::GetMessagesModel()->emitQuote(_quoteId);
+	}
+
+	void HistoryControl::contactSelectedToLastMessage(QString _aimId, qint64 _messageId)
+	{
+		//const auto bMoveHistory = Ui::get_gui_settings()->get_value<bool>(settings_auto_scroll_new_messages, false);
+		//if (bMoveHistory && _messageId > 0)
+		//{
+  //          HistoryControlPage* page = qobject_cast<HistoryControlPage*>(stacked_widget_->currentWidget());
+  //          if (page && page->aimId() == _aimId)
+  //          {
+  //              page->showNewMessageForce();
+  //              emit contactSelected(_aimId, _messageId, -1);
+  //          }
+		//}
 	}
 
     void HistoryControl::leave_dialog(const QString& _aimId)

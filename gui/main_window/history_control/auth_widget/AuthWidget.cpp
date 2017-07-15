@@ -34,11 +34,9 @@ namespace
 
     const QString RED_BUTTON_STYLE = QString(
         "QPushButton { background-color: transparent; border: none; color: %1; }"
-        "QPushButton:hover { color: %2; }"
-        "QPushButton:pressed { color: %3; } ")
+        "QPushButton:hover { color: %2; }")
         .arg(Utils::rgbaStringFromColor(Ui::CommonStyle::getRedLinkColor()))
-        .arg(Utils::rgbaStringFromColor(Ui::CommonStyle::getRedLinkColorHovered()))
-        .arg(Utils::rgbaStringFromColor(Ui::CommonStyle::getRedLinkColorPressed()));
+        .arg(Utils::rgbaStringFromColor(Ui::CommonStyle::getRedLinkColorHovered()));
 }
 
 namespace Ui
@@ -48,13 +46,12 @@ namespace Ui
         :	QWidget(_parent),
         aimid_(_aimid),
         ref_(new bool(false)),
-        name_(new TextEmojiWidget(this, Fonts::defaultAppFontFamily(), Fonts::FontWeight::Light, Utils::scale_value(NAME_FONTSIZE), CommonStyle::getTextCommonColor(), Utils::scale_value(38))),
-        info_(new TextEmojiWidget(this, Fonts::defaultAppFontFamily(), Fonts::FontWeight::Light, Utils::scale_value(INFO_FONTSIZE), CommonStyle::getTextCommonColor(), Utils::scale_value(27) - name_->descent()))
+        name_(new TextEmojiWidget(this, Fonts::appFontScaled(NAME_FONTSIZE, Fonts::FontWeight::Light), CommonStyle::getTextCommonColor(), Utils::scale_value(38))),
+        info_(new TextEmojiWidget(this, Fonts::appFontScaled(INFO_FONTSIZE, Fonts::FontWeight::Light), CommonStyle::getTextCommonColor(), Utils::scale_value(27) - name_->descent()))
     {
         setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-        QVBoxLayout* rootLayout = new QVBoxLayout();
-        rootLayout->setSpacing(0);
+        QVBoxLayout* rootLayout = Utils::emptyVLayout();
         rootLayout->setContentsMargins(0, 0, 0, Utils::scale_value(22));
         rootLayout->setAlignment(Qt::AlignTop);
 
@@ -187,9 +184,7 @@ namespace Ui
         rootLayout_->setSpacing(0);
         rootLayout_->setContentsMargins(0, Utils::scale_value(AVATAR_UPPER_SPACE), 0, 0);
 
-        QHBoxLayout* infoLayout = new QHBoxLayout();
-        infoLayout->setSpacing(0);
-        infoLayout->setContentsMargins(0, 0, 0, 0);
+        QHBoxLayout* infoLayout = Utils::emptyHLayout();
         infoLayout->setAlignment(Qt::AlignHCenter);
 
         auto h_spacer_l = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -204,9 +199,8 @@ namespace Ui
         setLayout(rootLayout_);
 
         avatar_->raise();
-       
-        connect(avatar_, SIGNAL(clicked()), this, SLOT(avatarClicked()), Qt::QueuedConnection);
 
+        connect(avatar_, &ContactAvatarWidget::clickedInternal, this, &AuthWidget::avatarClicked, Qt::QueuedConnection);
         connect(infoWidget_, &ContactInfoWidget::addContact, [this](){ emit addContact(aimid_); });
         connect(infoWidget_, &ContactInfoWidget::spamContact, [this](){ emit spamContact(aimid_); });
         connect(infoWidget_, &ContactInfoWidget::deleteContact, [this](){ emit deleteContact(aimid_); });

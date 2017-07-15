@@ -30,9 +30,9 @@ const IItemBlockLayout::IBoxModel& QuoteBlockLayout::getBlockBoxModel() const
 {
     static const QMargins bubbleMargins(
         0,
-        Utils::scale_value(4),
         0,
-        Utils::scale_value(8)
+        0,
+        Utils::scale_value(16)
     );
 
     static const BoxModel boxModel(
@@ -94,30 +94,44 @@ QRect QuoteBlockLayout::setTextControlGeometry(const QRect &contentLtr)
         textCtrl.setFixedWidth(textWidth);
     }
 
-    QRect avatarGeometry(QPoint(contentLtr.topLeft().x() + Style::getQuoteOffsetLeft() + Style::getForwardIconOffset(), contentLtr.topLeft().y() + Style::getQuoteLineTopMargin()),
-        QSize(Utils::unscale_value(20), Utils::unscale_value(20)));
+    QRect avatarGeometry(
+        QPoint(
+            contentLtr.topLeft().x() + Style::Quote::getQuoteOffsetLeft() + Style::Quote::getForwardIconOffset(),
+            contentLtr.topLeft().y() + Style::Quote::getFirstQuoteOffset()
+        ), Style::Quote::getQuoteAvatarSize());
 
     const QSize textSize(textWidth, textCtrl.height());
 
     QRect textCtrlGeometry(
-                                 QPoint(contentLtr.topLeft().x() + Style::getQuoteAvatarOffset() + Style::getQuoteOffsetLeft() + Style::getForwardIconOffset(), contentLtr.topLeft().y() + Style::getQuoteLineTopMargin() + Style::getQuoteAvatarOffsetTop()),
-        textSize);
+        QPoint(
+            contentLtr.topLeft().x() + Style::Quote::getQuoteAvatarOffset() + Style::Quote::getQuoteOffsetLeft() + Style::Quote::getForwardIconOffset(),
+            contentLtr.topLeft().y() + Style::Quote::getQuoteUsernameOffsetTop() + Style::Quote::getFirstQuoteOffset()
+        ), textSize);
 
     if (block.needForwardBlock())
     {
         const QRect forwardIconRect(
-            QPoint(contentLtr.topLeft().x() - Style::getForwardIconOffset(), contentLtr.topLeft().y() + Style::getQuoteLineTopMargin())
-            , block.ForwardIcon_->size());
+            QPoint(
+                contentLtr.topLeft().x(),
+                contentLtr.topLeft().y() + Style::Quote::getFirstQuoteOffset() + Utils::scale_value(4)
+            ), block.ForwardIcon_->size());
         block.ForwardIcon_->setGeometry(forwardIconRect);
 
         const QRect forwardLabelGeometry(
-            QPoint(contentLtr.topLeft().x() + Style::getQuoteOffsetLeft() + Style::getForwardLabelOffset(), contentLtr.topLeft().y() + Style::getQuoteLineTopMargin()),
-            block.ForwardLabel_->size());
+            QPoint(
+                avatarGeometry.x(),
+                contentLtr.topLeft().y() + Style::Quote::getFirstQuoteOffset()
+            ), block.ForwardLabel_->size());
         block.ForwardLabel_->setGeometry(forwardLabelGeometry);
 
-        textCtrlGeometry.moveTop(forwardLabelGeometry.bottomLeft().y() + Style::getForwardLabelBottomMargin() + Style::getQuoteAvatarOffsetTop());
+        textCtrlGeometry.moveTop(
+            forwardLabelGeometry.bottomLeft().y()
+            + Style::Quote::getForwardLabelBottomMargin()
+            + Style::Quote::getQuoteUsernameOffsetTop());
 
-        avatarGeometry.moveTop(forwardLabelGeometry.bottomLeft().y() + Style::getForwardLabelBottomMargin());
+        avatarGeometry.moveTop(
+            forwardLabelGeometry.bottomLeft().y()
+            + Style::Quote::getForwardLabelBottomMargin());
     }
 
     const auto geometryChanged = (textCtrlGeometry != CurrentTextCtrlGeometry_);

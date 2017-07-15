@@ -83,14 +83,14 @@ enum class favicon_size
     max,
 };
 
-Str2StrMap format_get_preview_params(
+str_2_str_map format_get_preview_params(
     const std::string &_uri_to_preview,
     const int32_t_opt _width = int32_t_opt(),
     const int32_t_opt _height = int32_t_opt(),
     const bool _crop = false,
     const favicon_size _favicon_size = favicon_size::small);
 
-Str2StrMap format_get_url_content_params(const std::string &_uri);
+str_2_str_map format_get_url_content_params(const std::string &_uri);
 
 link_meta_uptr parse_json(InOut char *_json, const std::string &_uri);
 

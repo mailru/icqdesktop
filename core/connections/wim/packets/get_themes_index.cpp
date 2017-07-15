@@ -17,16 +17,16 @@ get_themes_index::~get_themes_index()
 {
 }
 
+bool get_themes_index::support_async_execution() const
+{
+    return true;
+}
+
 int32_t get_themes_index::init_request(std::shared_ptr<core::http_request_simple> _request)
 {
     _request->set_etag(etag_.c_str());
     _request->set_url("https://icq.com/wallpaperlist/windows");
     return 0;
-}
-
-int32_t get_themes_index::execute()
-{
-    return wim_packet::execute();
 }
 
 int32_t get_themes_index::parse_response(std::shared_ptr<core::tools::binary_stream> _response)

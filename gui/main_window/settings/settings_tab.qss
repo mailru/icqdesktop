@@ -1,0 +1,50 @@
+QWidget#settings_view
+{
+    background-color: transparent;
+}
+
+QWidget#scroll_area
+{
+    border-style: none;
+	background-color: transparent;
+    padding: 0;
+}
+
+QLabel#settings_topic_label
+{
+    qproperty-alignment: AlignCenter;
+    font-size: 16dip;
+    font-family: "%FONT_FAMILY_MEDIUM%";
+    font-weight: %FONT_WEIGHT_MEDIUM%;
+    min-height: 48dip;
+    max-height: 48dip;
+    color: #999999;
+}
+
+QPushButton
+{
+    border: none;
+    color: #454545;
+    min-height: 48dip;
+    max-height: 48dip;
+    text-align: left;
+    padding-left: 60dip;
+    font-size: 16dip;
+    font-family: "%FONT_FAMILY%";
+    font-weight: %FONT_WEIGHT%;
+}
+
+QPushButton:hover
+{
+    background-color: #ebebeb;
+}
+
+QPushButton:checked
+{
+    background-color: #84b858;
+}
+
+QPushButton:hover:pressed
+{
+    background-color: #84b858;
+}

@@ -2,6 +2,7 @@
 #include "messages_data.h"
 #include "storage.h"
 #include "archive_index.h"
+#include "../tools/system.h"
 #include "../../common.shared/common_defs.h"
 
 using namespace core;
@@ -106,11 +107,7 @@ int32_t kmp_strstr(const char* _str, uint32_t _str_sz, const std::vector<int32_t
 bool messages_data::get_history_archive(const std::wstring& _file_name, core::tools::binary_stream& _buffer
     , std::shared_ptr<int64_t> _offset, std::shared_ptr<int64_t> _remaining_size, int64_t& _cur_index, std::shared_ptr<int64_t> _mode)
 {
-#ifdef _WIN32
-    std::ifstream file(_file_name, std::ios::binary | std::ios::ate);
-#else
-    std::ifstream file(tools::from_utf16(_file_name), std::ios::binary | std::ios::ate);
-#endif
+    auto file = tools::system::open_file_for_read(_file_name, std::ios::binary | std::ios::ate);
 
     auto init_size = static_cast<int64_t>(file.tellg());
     std::streamsize size = std::min<int64_t>(*_remaining_size, init_size - *_offset);

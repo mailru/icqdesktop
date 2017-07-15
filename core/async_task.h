@@ -93,7 +93,7 @@ namespace core
             {
                 auto result = func();
 
-                g_core->excute_core_context([handler, result]
+                g_core->execute_core_context([handler, result]
                 {
                     if (handler->on_result_)
                         handler->on_result_(result);
@@ -102,8 +102,6 @@ namespace core
 
             return handler;
         }
-
-        virtual std::shared_ptr<async_task_handlers> run_priority_async_function(std::function<int32_t()> func);
     };
 
     typedef std::unique_ptr<async_executer> async_executer_uptr;

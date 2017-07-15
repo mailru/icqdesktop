@@ -96,18 +96,26 @@ namespace Ui
         
         setFixedHeight(account_widget_height);
         
-//        connect(Logic::GetAvatarStorage(), SIGNAL(avatarChanged(QString)), this, SLOT(avatar_loaded(QString)), Qt::QueuedConnection);
+        connect(Logic::GetAvatarStorage(), SIGNAL(avatarChanged(QString)), this, SLOT(avatar_loaded(QString)), Qt::QueuedConnection);
+        bool isDefault = false;
+        const auto avatarPix = Logic::GetAvatarStorage()->GetRounded(account_.uin(), account_.name(),
+                                                                     //Utils::scale_bitmap(Utils::scale_value(avatar_h_)),
+                                                                     Utils::scale_bitmap(32),
+                                                                     "", true, isDefault, false, false);
+        avatar_->setPixmap(avatarPix->copy());
     }
 
     void account_widget::avatar_loaded(QString uid)
     {
         if (uid == account_.uin())
         {
-            bool isDefault = true;
+            bool isDefault = false;
             const auto avatarPix = Logic::GetAvatarStorage()->GetRounded(account_.uin(), account_.name(),
-                                                                         Utils::scale_bitmap(Utils::scale_value(avatar_h_)),
+                                                                         //Utils::scale_bitmap(Utils::scale_value(avatar_h_)),
+                                                                         Utils::scale_bitmap(32),
                                                                          "", true, isDefault, false, false);
             avatar_->setPixmap(avatarPix->copy());
+            parentWidget()->update();
         }
     }
     
@@ -126,7 +134,12 @@ namespace Ui
     }
 
     AccountsPage::AccountsPage(QWidget* _parent, MacMigrationManager * manager)
-        : QWidget(_parent)
+        : QWidget(_parent), manager_(manager)
+    {
+        //
+    }
+
+    void AccountsPage::summon()
     {
         setStyleSheet(Utils::LoadStyle(":/main_window/accounts_page.qss"));
         
@@ -172,13 +185,15 @@ namespace Ui
         welcome_label->setObjectName(QStringLiteral("welcome_label"));
         welcome_label->setAlignment(Qt::AlignCenter);
         welcome_label->setProperty("WelcomeTitle", QVariant(true));
-        welcome_label->setText(QT_TRANSLATE_NOOP("login_page","Welcome to ICQ"));
+        welcome_label->setText(build::is_icq() ?
+                               QT_TRANSLATE_NOOP("login_page","Welcome to ICQ") :
+                               QT_TRANSLATE_NOOP("login_page","Welcome to Mail.Ru Agent"));
         
         controls_layout->addWidget(welcome_label);
         
         QLabel* label_choose_comment = new QLabel(main_widget);
         label_choose_comment->setObjectName("choose_account_comment_label");
-        label_choose_comment->setText(QT_TR_NOOP("Now we support only one ICQ account per session. Please choose prefered one to continue."));
+        label_choose_comment->setText(QT_TR_NOOP("Now we support only one account per session. Please choose prefered one to continue."));
         label_choose_comment->setWordWrap(true);
         label_choose_comment->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
         controls_layout->addWidget(label_choose_comment);
@@ -197,30 +212,156 @@ namespace Ui
         accounts_layout->setContentsMargins(0, 0, 0, 0);
         accounts_layout->setAlignment(Qt::AlignTop);
 
-        const auto& accounts = manager->getProfiles();
-        for (auto account : accounts)
-        {
-            account_widget* widget = new account_widget(accounts_area_widget, account);
-            accounts_layout->addWidget(widget);
-            connect(widget, &account_widget::clicked, [this, manager, account]()
-            {
-                manager->migrateProfile(account);
-
-                emit account_selected();
-            });
-        }
-
         accounts_area_widget->setLayout(accounts_layout);
-        
         controls_layout->addWidget(accounts_area);
         
         controls_layout->addSpacing(Utils::scale_value(24));
-        
-        QLabel* label_choose = new QLabel(main_widget);
-        label_choose->setObjectName("choose_account_label");
+
+        class Skipper: public QPushButton
+        {
+        private:
+            const MacProfile *profile_;
+            
+        public:
+            explicit Skipper(QWidget *parent = nullptr): QPushButton(parent) { ; }
+            void setProfile(const MacProfile &profile) { profile_ = &profile; }
+            const MacProfile *const profile() const { return profile_; }
+        }
+        *label_choose = new Skipper(main_widget);
+        label_choose->setObjectName("choose_account_button");
         label_choose->setText(QT_TR_NOOP("Choose your account"));
-        label_choose->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+        label_choose->setFlat(true);
+        label_choose->setEnabled(false);
+        connect(label_choose, &QPushButton::clicked, this, [&]()
+        {
+            if (auto account = label_choose->profile())
+            {
+                manager_->migrateProfile(*account);
+                emit account_selected();
+            }
+        });
         controls_layout->addWidget(label_choose);
+
+        // Accounts work
+        {
+            auto enumerator = [this](const MacProfilesList &accounts,
+                                              const MacProfile::Type &possible,
+                                              QWidget *list,
+                                              QVBoxLayout *layout,
+                                              std::function<void(const MacProfile &)> listener) {
+                //
+                std::vector<account_widget *> widgets;
+                for (const auto &account: accounts)
+                {
+                    if (possible == account.type())
+                    {
+                        account_widget *widget = new account_widget(list, account);
+                        layout->addWidget(widget);
+                        widgets.push_back(widget);
+                        connect(widget, &account_widget::clicked, this, [&account, listener]() {
+                            listener(account);
+                        });
+                    }
+                }
+                return widgets;
+                //
+            };
+
+            const auto &accounts = manager_->getProfiles();
+            std::map<MacProfile::Type, std::vector<int>> types;
+            for (int i = 0, iend = accounts.size(); i < iend; ++i)
+            {
+                types[accounts[i].type()].push_back(i);
+            }
+            //
+            if (build::is_icq() && types.find(MacProfile::Type::ICQ) != types.end())
+            {
+                if (types.size() == 1 || types[MacProfile::Type::ICQ].size() == 1)
+                {
+                    manager_->migrateProfile(accounts[types[MacProfile::Type::ICQ].front()]);
+                    emit account_selected();
+                }
+                else if (types[MacProfile::Type::ICQ].size() > 1)
+                {
+                    label_choose_comment->setText(QT_TR_NOOP("Select ICQ account if you want it to be merged with your Agent account."));
+                    enumerator(accounts, MacProfile::Type::ICQ, accounts_area_widget, accounts_layout, [=](const MacProfile &account) {
+                        //
+                        manager_->migrateProfile(account);
+                        emit account_selected();
+                        //
+                    });
+                }
+            }
+            else if (build::is_agent())
+            {
+                if (types.size() == 1 && types.find(MacProfile::Type::Agent) != types.end())
+                {
+                    manager_->migrateProfile(accounts[types[MacProfile::Type::Agent].front()]);
+                    emit account_selected();
+                }
+                else if (types.size() > 1 && types.find(MacProfile::Type::Agent) != types.end())
+                {
+                    if (types[MacProfile::Type::Agent].size() == 1)
+                    {
+                        if (1) // BUGBUG:
+                        {
+                            manager_->migrateProfile(accounts[types.find(MacProfile::Type::Agent)->second.front()]);
+                            emit account_selected();
+                        }
+                        else
+                        {
+                            label_choose_comment->setText(QT_TR_NOOP("Select ICQ account if you want it to be merged with your Agent account."));
+                            label_choose->setText(QT_TR_NOOP("Do not merge"));
+                            label_choose->setEnabled(true);
+                            label_choose->setCursor(Qt::PointingHandCursor);
+                            label_choose->setProfile(accounts[types.find(MacProfile::Type::Agent)->second.front()]);
+                            enumerator(accounts, MacProfile::Type::ICQ, accounts_area_widget, accounts_layout, [=](const MacProfile &account) {
+                                //
+                                manager_->mergeProfiles(accounts[types.find(MacProfile::Type::Agent)->second.front()], account);
+                                emit account_selected();
+                                //
+                            });
+                        }
+                    }
+                    else if (types[MacProfile::Type::Agent].size() > 1)
+                    {
+                        std::shared_ptr<std::vector<account_widget *>> widgets(new std::vector<account_widget *>());
+                        label_choose_comment->setText(QT_TR_NOOP("Now we support only one account per session. Please choose prefered one to continue."));
+                        *widgets = enumerator(accounts, MacProfile::Type::Agent, accounts_area_widget, accounts_layout, [=](const MacProfile &account1) {
+                            //
+                            if (1) // BUGBUG: (types.find(MacProfile::Type::ICQ) != types.end() && types.find(MacProfile::Type::ICQ)->second.empty())
+                            {
+                                manager_->migrateProfile(account1);
+                                emit account_selected();
+                            }
+                            else
+                            {
+                                for (auto widget: *widgets)
+                                    delete widget;
+                                accounts_area_widget->update();
+                                label_choose_comment->setText(QT_TR_NOOP("Now select ICQ account if you want to merge it with previously selected Agent."));
+                                label_choose->setText(QT_TR_NOOP("Do not merge"));
+                                label_choose->setEnabled(true);
+                                label_choose->setCursor(Qt::PointingHandCursor);
+                                label_choose->setProfile(account1);
+                                enumerator(accounts, MacProfile::Type::ICQ, accounts_area_widget, accounts_layout, [=](const MacProfile &account2) {
+                                    //
+                                    manager_->mergeProfiles(account1, account2);
+                                    emit account_selected();
+                                    //
+                                });
+                            }
+                            //
+                        });
+                    }
+                }
+                else
+                {
+                    // ehh.. finally
+                    emit account_selected();
+                }
+            }
+        }
         
         controls_layout->addSpacing(Utils::scale_value(50));
         

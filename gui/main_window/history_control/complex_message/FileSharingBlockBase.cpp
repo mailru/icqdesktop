@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "../../../../corelib/enumerations.h"
+#include "../../../../common.shared/loader_errors.h"
 
 #include "../../../core_dispatcher.h"
 #include "../../../gui_settings.h"
@@ -37,13 +38,12 @@ FileSharingBlockBase::FileSharingBlockBase(
     , FileSizeBytes_(-1)
     , FileMetaRequestId_(-1)
     , PreviewMetaRequestId_(-1)
-    , CheckLocalCopyRequestId_(-1)
     , MaxPreviewWidth_(0)
+    , ref_(new bool(false))
 {
     assert(!Link_.isEmpty());
 
-    if (Link_.endsWith(QChar::Space) || Link_.endsWith(QChar::LineFeed))
-        Link_.truncate(Link_.length() - 1);
+    Link_ = Utils::normalizeLink(Link_);
 
     assert(Type_ > core::file_sharing_content_type::min);
     assert(Type_ < core::file_sharing_content_type::max);
@@ -120,11 +120,6 @@ QString FileSharingBlockBase::getSelectedText(bool isFullSelect) const
     }
 
     return QString();
-}
-
-bool FileSharingBlockBase::hasRightStatusPadding() const
-{
-    return true;
 }
 
 void FileSharingBlockBase::initialize()
@@ -234,13 +229,25 @@ bool FileSharingBlockBase::isFileDownloading() const
 
 bool FileSharingBlockBase::isGifImage() const
 {
-    return (getType() == core::file_sharing_content_type::gif);
+    return ((getType() == core::file_sharing_content_type::gif) ||
+        (getType() == core::file_sharing_content_type::snap_gif));
 }
 
 bool FileSharingBlockBase::isImage() const
 {
     return ((getType() == core::file_sharing_content_type::image) ||
             (getType() == core::file_sharing_content_type::snap_image));
+}
+
+bool FileSharingBlockBase::isVideo() const
+{
+    return ((getType() == core::file_sharing_content_type::video) ||
+        (getType() == core::file_sharing_content_type::snap_video));
+}
+
+bool FileSharingBlockBase::isSnap() const
+{
+    return is_snap_file_sharing_content_type(getType());
 }
 
 bool FileSharingBlockBase::isPlainFile() const
@@ -250,21 +257,7 @@ bool FileSharingBlockBase::isPlainFile() const
 
 bool FileSharingBlockBase::isPreviewable() const
 {
-    return ((getType() == core::file_sharing_content_type::image) ||
-            (getType() == core::file_sharing_content_type::gif) ||
-            (getType() == core::file_sharing_content_type::video) ||
-            isSnap());
-}
-
-bool FileSharingBlockBase::isSnap() const
-{
-    return is_snap_file_sharing_content_type(getType());
-}
-
-bool FileSharingBlockBase::isVideo() const
-{
-    return ((getType() == core::file_sharing_content_type::video) ||
-            (getType() == core::file_sharing_content_type::snap_video));
+    return (isImage() || isVideo() || isGifImage());
 }
 
 void FileSharingBlockBase::onMenuCopyLink()
@@ -310,47 +303,39 @@ void FileSharingBlockBase::onMenuSaveFileAs()
 
     QUrl urlParser(Filename_);
 
-    QString dir;
-    QString file;
-    if (!Utils::saveAs(urlParser.fileName(), Out file, Out dir))
+    std::weak_ptr<bool> wr_ref = ref_;
+    Utils::saveAs(urlParser.fileName(), [this, wr_ref](const QString& file, const QString& dir_result)
     {
-        return;
-    }
+        auto ref = wr_ref.lock();
+        if (!ref)
+            return;
 
-    assert(!dir.isEmpty());
-    assert(!file.isEmpty());
+        QString dir = dir_result;
 
-    const auto addTrailingSlash = (!dir.endsWith('\\') && !dir.endsWith('/'));
-    if (addTrailingSlash)
-    {
-        dir += "/";
-    }
+        const auto addTrailingSlash = (!dir.endsWith('\\') && !dir.endsWith('/'));
+        if (addTrailingSlash)
+        {
+            dir += "/";
+        }
+        dir += file;
+        QFile::remove(dir);
 
-    dir += file;
+        SaveAs_ = dir;
 
-    SaveAs_ = dir;
+        if (isFileDownloading())
+        {
+            return;
+        }
 
-    if (isFileDownloading())
-    {
-        return;
-    }
-
-    startDownloading(true);
+        startDownloading(true);
+    });
 }
 
 void FileSharingBlockBase::requestMetainfo(const bool isPreview)
 {
-    const auto fsFunction = (
-        isPreview ?
-            core::file_sharing_function::download_preview_metainfo :
-            core::file_sharing_function::download_file_metainfo);
-
-    const auto requestId = GetDispatcher()->downloadSharedFile(
-        getSenderAimid(),
-        getLink(),
-        get_gui_settings()->get_value<QString>(settings_download_directory, Utils::DefaultDownloadsPath()),
-        QString(),
-        fsFunction);
+    const auto requestId = isPreview
+        ? GetDispatcher()->getFileSharingPreviewSize(getLink())
+        : GetDispatcher()->downloadFileSharingMetainfo(getLink());
 
     assert(requestId > 0);
 
@@ -371,11 +356,6 @@ void FileSharingBlockBase::requestMetainfo(const bool isPreview)
 
     assert(FileMetaRequestId_ == -1);
     FileMetaRequestId_ = requestId;
-}
-
-void FileSharingBlockBase::requestDirectUri(const QObject* _object, std::function<void(bool _res, const QString& _uri)> _callback)
-{
-    GetDispatcher()->requestFileDirectUri(getLink(), _object, _callback);
 }
 
 void FileSharingBlockBase::setBlockLayout(IFileSharingBlockLayout *_layout)
@@ -402,7 +382,7 @@ void FileSharingBlockBase::setSelected(const bool isSelected)
     update();
 }
 
-void FileSharingBlockBase::startDownloading(const bool sendStats)
+void FileSharingBlockBase::startDownloading(const bool sendStats, const bool _forceRequestMetainfo, bool _highPriority)
 {
     assert(!isFileDownloading());
 
@@ -413,11 +393,11 @@ void FileSharingBlockBase::startDownloading(const bool sendStats)
 
     assert(DownloadRequestId_ == -1);
     DownloadRequestId_ = GetDispatcher()->downloadSharedFile(
-        getSenderAimid(),
+        getChatAimid(),
         getLink(),
-        Ui::get_gui_settings()->get_value<QString>(settings_download_directory, Utils::DefaultDownloadsPath()),
-        QString(),
-        core::file_sharing_function::download_file);
+        _forceRequestMetainfo,
+        SaveAs_, //QString(), // don't loose user's 'save as' path
+        _highPriority);
 
     onDownloadingStarted();
 }
@@ -426,26 +406,13 @@ void FileSharingBlockBase::stopDownloading()
 {
     assert(isFileDownloading());
 
-    GetDispatcher()->abortSharedFileDownloading(DownloadRequestId_);
+    GetDispatcher()->abortSharedFileDownloading(Link_);
 
     DownloadRequestId_ = -1;
 
     BytesTransferred_ = -1;
 
     onDownloadingStopped();
-}
-
-void FileSharingBlockBase::checkExistingLocalCopy()
-{
-    const auto procId = Ui::GetDispatcher()->downloadSharedFile(
-        getSenderAimid(),
-        getLink(),
-        Ui::get_gui_settings()->get_value<QString>(settings_download_directory, Utils::DefaultDownloadsPath()),
-        QString(),
-        core::file_sharing_function::check_local_copy_exists);
-
-    assert(CheckLocalCopyRequestId_ == -1);
-    CheckLocalCopyRequestId_ = procId;
 }
 
 void FileSharingBlockBase::connectSignals(const bool isConnected)
@@ -486,16 +453,6 @@ void FileSharingBlockBase::connectSignals(const bool isConnected)
             (Qt::ConnectionType)(Qt::QueuedConnection | Qt::UniqueConnection));
         assert(connection);
 
-        if (isPlainFile())
-        {
-            connection = QObject::connect(
-                GetDispatcher(),
-                &core_dispatcher::fileSharingLocalCopyCheckCompleted,
-                this,
-                &FileSharingBlockBase::onLocalCopyChecked,
-                (Qt::ConnectionType)(Qt::QueuedConnection | Qt::UniqueConnection));
-        }
-
         if (isPreviewable())
         {
             connection = QObject::connect(
@@ -533,15 +490,6 @@ void FileSharingBlockBase::connectSignals(const bool isConnected)
         &core_dispatcher::fileSharingFileMetainfoDownloaded,
         this,
         &FileSharingBlockBase::onFileMetainfoDownloaded);
-
-    if (isPlainFile())
-    {
-        QObject::disconnect(
-            GetDispatcher(),
-            &core_dispatcher::fileSharingLocalCopyCheckCompleted,
-            this,
-            &FileSharingBlockBase::onLocalCopyChecked);
-    }
 
     if (isPreviewable())
     {
@@ -623,7 +571,7 @@ void FileSharingBlockBase::onFileMetainfoDownloaded(qint64 seq, QString filename
     onMetainfoDownloaded();
 }
 
-void FileSharingBlockBase::onFileSharingError(qint64 seq, QString /*rawUri*/, qint32 /*errorCode*/)
+void FileSharingBlockBase::onFileSharingError(qint64 seq, QString /*rawUri*/, qint32 errorCode)
 {
     assert(seq > 0);
 
@@ -632,7 +580,6 @@ void FileSharingBlockBase::onFileSharingError(qint64 seq, QString /*rawUri*/, qi
     {
         DownloadRequestId_ = -1;
     }
-
     const auto isFileMetainfoRequestFailed = (FileMetaRequestId_ == seq);
     const auto isPreviewMetainfoRequestFailed = (PreviewMetaRequestId_ == seq);
     if (isFileMetainfoRequestFailed || isPreviewMetainfoRequestFailed)
@@ -642,27 +589,17 @@ void FileSharingBlockBase::onFileSharingError(qint64 seq, QString /*rawUri*/, qi
     }
 
     onDownloadingFailed(seq);
+
+    if (isSnap() && (loader_errors) errorCode == loader_errors::metainfo_not_found && (isFileMetainfoRequestFailed || isPreviewMetainfoRequestFailed))
+        markSnapExpired();
+
+    if ((loader_errors) errorCode == loader_errors::move_file)
+        onDownloaded();//stop animation
 }
 
-void FileSharingBlockBase::onLocalCopyChecked(qint64 seq, bool success, QString localPath)
+void FileSharingBlockBase::markSnapExpired()
 {
-    if (seq != CheckLocalCopyRequestId_)
-    {
-        return;
-    }
 
-    assert(isPlainFile());
-
-    if (!success)
-    {
-        onLocalCopyInfoReady(false);
-
-        return;
-    }
-
-    FileLocalPath_ = localPath;
-
-    onLocalCopyInfoReady(true);
 }
 
 void FileSharingBlockBase::onPreviewMetainfoDownloadedSlot(qint64 seq, QString miniPreviewUri, QString fullPreviewUri)

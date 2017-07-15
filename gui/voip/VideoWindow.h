@@ -54,7 +54,7 @@ namespace Ui
         void wheelEvent(QWheelEvent * event) override;
         void moveEvent(QMoveEvent * event) override;
         
-        // @return true if we resend message to any transporent panel.
+        // @return true if we resend message to any transparent panel
         template <typename E> bool resendMouseEventToPanel(E* event_);
 #endif
 
@@ -66,39 +66,51 @@ namespace Ui
         inline void updateWindowTitle();
         bool isOverlapped() const;
 
-        // @return true, if we was able to load size from settings.
+        // @return true, if we were able to load size from settings
         bool getWindowSizeFromSettings(int& _nWidth, int& _nHeight);
         
-        void offsetWindow(int _bottom);
+        void offsetWindow(int _bottom, int _top);
         void updateUserName();
 
-		// We use this proxy to catch methods call during fullscreen animation.
-		// we will save commands and call it later, after fullscreen animation.
+		// We use this proxy to catch call methods during fullscreen animation
+		// we will save commands and call it later, after fullscreen animation
 		void callMethodProxy(const QString& _method);
 
 		void showPanel(QWidget* widget);
 		void hidePanel(QWidget* widget);
 
-		void fadeInPanels(int kAnimationDefDuration);
+        void fadeInPanels(int kAnimationDefDuration);
 		void fadeOutPanels(int kAnimationDefDuration);
 		void hidePanels();
 
-        // call this method in all cases, when you need to hide panels.
+        // call this method in all cases, when you need to hide panels
         void tryRunPanelsHideTimer();
         void hideSecurityDialog();
+
+        bool hasRemoteVideoInCall(); // @return true for calls (not for conference), if remote camera is turned on.
+        bool hasRemoteVideoForConference(); // @return true for conference, if any remote camera is turned on.
+
+        void removeUnneededRemoteVideo(); // Remove unneeded elements from hasRemoteVideo_
+        void checkCurrentAspectState();
+
+		void updateOutgoingState(const voip_manager::ContactEx& _contactEx);
 
     private Q_SLOTS:
         void checkOverlap();
         void checkPanelsVis();
         void onVoipMouseTapped(quintptr, const std::string& _tapType);
-        void onVoipCallNameChanged(const std::vector<voip_manager::Contact>&);
+        void onVoipCallNameChanged(const voip_manager::ContactsList&);
         void onVoipCallTimeChanged(unsigned _secElapsed, bool _hasCall);
         void onVoipCallDestroyed(const voip_manager::ContactEx& _contactEx);
-        void onVoipMediaRemoteVideo(bool _enabled);
+        void onVoipCallConnected(const voip_manager::ContactEx& _contactEx);
+        void onVoipMediaRemoteVideo(const voip_manager::VideoEnable& videoEnable);
         void onVoipWindowRemoveComplete(quintptr _winId);
         void onVoipWindowAddComplete(quintptr _winId);
         void onVoipCallOutAccepted(const voip_manager::ContactEx& _contactEx);
         void onVoipCallCreated(const voip_manager::ContactEx& _contactEx);
+        void onVoipChangeWindowLayout(intptr_t hwnd, bool bTray, const std::string& layout);
+		void onVoipMainVideoLayoutChanged(const voip_manager::MainVideoLayout& mainLayout);
+
         void onEscPressed();
 
         void onPanelClickedClose();
@@ -114,10 +126,10 @@ namespace Ui
         void onSecureCallWndOpened();
         void onSecureCallWndClosed();
         
-        // This methods used under mac to correct close video window, when it is in full screen.
-        void fullscreenAnimationStart(); // Calls on mac, when we start fullscreen animation.
-        void fullscreenAnimationFinish(); // Calls on mac, when we finish fullscreen animation.
-        void activeSpaceDidChange(); // Calls on mac, when active work sapce changed.
+        // These methods are used under macos to close video window correctly from the fullscreen mode
+        void fullscreenAnimationStart();
+        void fullscreenAnimationFinish();
+        void activeSpaceDidChange();
         
         void showVideoPanel();
         void autoHideToolTip(bool& autoHide);
@@ -132,6 +144,11 @@ namespace Ui
 
         void getCallStatus(bool& isAccepted);
 
+        void onMaskListAnimationFinished(bool out);
+
+        void updateConferenceMode(voip_manager::ConferenceLayout layout);
+        void onAddUserClicked();
+
     public:
         VideoWindow();
         ~VideoWindow();
@@ -143,19 +160,20 @@ namespace Ui
     private:
         FrameControl_t* rootWidget_;
 
-        // List of all panels of video window.
+        // Video window panels list
 		std::vector<BaseVideoPanel*> panels_;
         
 #ifndef _WIN32
-        // Transporent widgets, we resend mouse events to this widgets under mac,
-        // because we did not find better way to catch mouse events for tranporent panels.
-		std::vector<BaseVideoPanel*> transporentPanels_;
+        // Transparent widgets. We resend mouse events to these widgets under macos,
+        // because we did not find any better way to catch mouse events for tranparent panels
+		std::vector<BaseVideoPanel*> transparentPanels_;
 #endif
         
 		std::unique_ptr<VideoPanelHeader>   topPanelSimple_;
 		std::unique_ptr<VoipSysPanelHeader> topPanelOutgoing_;
         std::unique_ptr<VideoPanel>          videoPanel_;
 		std::unique_ptr<MaskPanel>           maskPanel_;
+        std::unique_ptr<TransparentPanel>   transparentPanelOutgoingWidget_;
 
         std::unique_ptr<DetachedVideoWindow> detachedWnd_;
         ResizeEventFilter*     eventFilter_;
@@ -163,10 +181,11 @@ namespace Ui
         QTimer checkOverlappedTimer_;
         QTimer showPanelTimer_;
 
-        bool hasRemoteVideo_;
+        // Remote video by users.
+        QHash <QString, bool> hasRemoteVideo_;
         bool outgoingNotAccepted_;
 
-        // Current call contacts
+        // Current contacts
         std::vector<voip_manager::Contact> currentContacts_;
 
         //UIEffects* video_panel_header_effect_;
@@ -182,20 +201,30 @@ namespace Ui
             unsigned time;
         } callDescription;
         
-		// Shadow of this widnow.
 		ShadowWindowParent shadow_;
+
+        // Last applied offsets.
+        int lastBottomOffset_;
+        int lastTopOffset_;
+
+        // All is connected and talking now.
+        bool startTalking;
         
+        // Load size from settings only one time per call. Actual for Mac.
+        bool isLoadSizeFromSettings_;
+
 #ifdef __APPLE__
-        // We use notification about fullscreen to fix problem on mac.
+        // We use fullscreen notification to fix a problem on macos
         platform_macos::FullScreenNotificaton _fullscreenNotification;
-        // This is list of commands, which we call after fullscreen.
+        // Commands after fullscreen mode
         QList<QString> commandList_;
         bool isFullscreenAnimation_;
         bool changeSpaceAnimation_;
         
         // We have own double click processing,
-        // Because Qt has bug with double click and fullscreen.
+        // Because Qt has bug with double click and fullscreen
         QTime doubleClickTime_;
+        QPoint doubleClickMousePos_;
 #endif
     };
 }

@@ -25,6 +25,8 @@ namespace Utils
 
     InterConnector::InterConnector()
         : dragOverlay_(false)
+        , semiWindowsCount_(0)
+        , semiWindowsTouchSwallowed_(false)
     {
         //
     }
@@ -193,5 +195,35 @@ namespace Utils
     {
         if (MainWindow_)
             MainWindow_->onSendMessage(contact);
+    }
+
+    int InterConnector::getSemiwindowsCount() const
+    {
+        return semiWindowsCount_;
+    }
+
+    void InterConnector::incSemiwindowsCount()
+    {
+        ++semiWindowsCount_;
+    }
+
+    void InterConnector::decSemiwindowsCount()
+    {
+        --semiWindowsCount_;
+        if (semiWindowsCount_ < 0)
+            semiWindowsCount_ = 0;
+
+        if (semiWindowsCount_ == 0)
+            setSemiwindowsTouchSwallowed(false);
+    }
+
+    bool InterConnector::isSemiWindowsTouchSwallowed() const
+    {
+        return semiWindowsTouchSwallowed_;
+    }
+
+    void InterConnector::setSemiwindowsTouchSwallowed(bool _val)
+    {
+        semiWindowsTouchSwallowed_ = _val;
     }
 }

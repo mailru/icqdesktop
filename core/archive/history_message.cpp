@@ -73,7 +73,7 @@ namespace
 
     chat_event_type_class probe_for_modified_event(const rapidjson::Value& _node);
 
-    StrSet read_members(const rapidjson::Value &_parent);
+    str_set read_members(const rapidjson::Value &_parent);
 
     chat_event_type string_2_chat_event(const std::string &_str);
 }
@@ -652,7 +652,7 @@ void core::archive::voip_data::unserialize_duration(const rapidjson::Value &_nod
 
     duration_sec_ = duration_node.GetInt();
 
-    const auto max_duration = 6200; // 2 hours in seconds
+    const auto max_duration = 3600 * 23; // 23 hours in seconds
     const auto is_valid_duration = ((duration_sec_ >= 0) && (duration_sec_ <= max_duration));
     if (!is_valid_duration)
     {
@@ -1036,7 +1036,7 @@ chat_event_data_uptr chat_event_data::make_modified_event(const rapidjson::Value
             new chat_event_data(chat_event_type::chat_rules_modified));
 
         result->chat_.new_rules_ = rules_iter->value.GetString();
-        assert(!result->chat_.new_rules_.empty());
+        //assert(!result->chat_.new_rules_.empty());
 
         assert(result->sender_aimid_.empty());
         result->sender_aimid_ = sender_aimid;
@@ -2346,8 +2346,20 @@ void quote::unserialize(const rapidjson::Value& _node, bool _is_forward)
         sender_ = sn_iter->value.GetString();
 
     const auto msg_id_iter = _node.FindMember(c_msgid);
-    if (msg_id_iter != _node.MemberEnd() && msg_id_iter->value.IsInt64())
-        msg_id_ = msg_id_iter->value.GetInt64();
+    if (msg_id_iter != _node.MemberEnd())
+    {
+        if (msg_id_iter->value.IsInt64())
+        {
+            msg_id_ = msg_id_iter->value.GetInt64();
+        }
+        else if (msg_id_iter->value.IsString())
+        {
+            std::string id = msg_id_iter->value.GetString();
+            std::stringstream ss;
+            ss << id;
+            ss >> msg_id_;
+        }
+    }
 
     const auto time_iter = _node.FindMember(c_time);
     if (time_iter != _node.MemberEnd() && time_iter->value.IsInt())
@@ -2675,11 +2687,11 @@ namespace
         return chat_event_type_class::unknown;
     }
 
-    StrSet read_members(const rapidjson::Value &_parent)
+    str_set read_members(const rapidjson::Value &_parent)
     {
         assert(_parent.IsObject());
 
-        StrSet result;
+        str_set result;
 
         const auto members_iter = _parent.FindMember("members");
         if ((members_iter == _parent.MemberEnd()) || !members_iter->value.IsArray())

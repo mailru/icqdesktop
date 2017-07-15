@@ -32,7 +32,7 @@ namespace core
 
         public:
 
-            virtual int32_t execute() override;
+            bool support_async_execution() const override;
 
             get_stickers_index(const wim_packet_params& _params, const std::string& _md5);
             virtual ~get_stickers_index();

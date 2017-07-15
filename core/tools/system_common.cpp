@@ -96,17 +96,21 @@ namespace core { namespace tools { namespace system {
 #endif
     }
 
-    bool is_exist(const std::wstring& path)
+    bool is_exist(const std::wstring& _path)
     {
-        boost::filesystem::wpath pathW(path);
+#ifndef _WIN32
+        auto p = tools::from_utf16(_path);
+        boost::filesystem::path path(p);
+#else
+        boost::filesystem::wpath path(_path);
+#endif //_WIN32
         boost::system::error_code e;
-        return boost::filesystem::exists(pathW, e);
+        return boost::filesystem::exists(path, e);
     }
 
     bool is_exist(const boost::filesystem::wpath & path)
     {
-        boost::system::error_code e;
-        return boost::filesystem::exists(path, e);
+        return is_exist(path.wstring());
     }
 
     bool create_directory(const std::wstring& path)
@@ -159,7 +163,7 @@ namespace core { namespace tools { namespace system {
 
     bool read_file(const boost::filesystem::wpath& _path, std::string& _result)
     {
-        auto file = std::ifstream(_path.string());
+        auto file = std::ifstream(_path.native());
         if (!file)
             return false;
 
@@ -170,8 +174,16 @@ namespace core { namespace tools { namespace system {
 
     bool unzip(const boost::filesystem::path& _archive, const boost::filesystem::path& _target_dir)
     {
+#ifdef _WIN32
+        unzFile zip = unzOpen(
+            is_windows_vista_or_higher()
+                ? _archive.string().c_str()
+                : get_short_file_name(_archive.native()).c_str());
+#else
         unzFile zip = unzOpen(_archive.string().c_str());
-        if (!zip) 
+#endif
+
+        if (!zip)
             return false;
 
         if (unzGoToFirstFile(zip) != UNZ_OK)
@@ -224,7 +236,7 @@ namespace core { namespace tools { namespace system {
 
             const auto file_path = _target_dir / archive_file_path;
 
-            std::ofstream out(file_path.string(), std::ios::binary);
+            std::ofstream out(file_path.native(), std::ios::binary);
             if (!out)
             {
                 unzCloseCurrentFile(zip);
@@ -257,5 +269,63 @@ namespace core { namespace tools { namespace system {
             boost::filesystem::remove_all(entry);
         }
         return true;
+    }
+
+#ifdef _WIN32
+    std::ifstream open_file_for_read(const std::string& _file_name, std::ios_base::openmode _mode)
+    {
+        return std::ifstream(tools::from_utf8(_file_name), _mode);
+    }
+
+    std::ifstream open_file_for_read(const std::wstring& _file_name, std::ios_base::openmode _mode)
+    {
+        return std::ifstream(_file_name, _mode);
+    }
+
+    std::ofstream open_file_for_write(const std::string& _file_name, std::ios_base::openmode _mode)
+    {
+        return std::ofstream(tools::from_utf8(_file_name), _mode);
+    }
+
+    std::ofstream open_file_for_write(const std::wstring& _file_name, std::ios_base::openmode _mode)
+    {
+        return std::ofstream(_file_name, _mode);
+    }
+#else
+    std::ifstream open_file_for_read(const std::string& _file_name, std::ios_base::openmode _mode)
+    {
+        return std::ifstream(_file_name, _mode);
+    }
+
+    std::ifstream open_file_for_read(const std::wstring& _file_name, std::ios_base::openmode _mode)
+    {
+        return std::ifstream(tools::from_utf16(_file_name), _mode);
+    }
+
+    std::ofstream open_file_for_write(const std::string& _file_name, std::ios_base::openmode _mode)
+    {
+        return std::ofstream(_file_name, _mode);
+    }
+
+    std::ofstream open_file_for_write(const std::wstring& _file_name, std::ios_base::openmode _mode)
+    {
+        return std::ofstream(tools::from_utf16(_file_name), _mode);
+    }
+#endif
+
+    size_t get_file_size(const std::string& _file_name)
+    {
+        auto file = tools::system::open_file_for_read(_file_name, std::ios::binary | std::ios::ate);
+        return file.good()
+            ? static_cast<size_t>(file.tellg())
+            : 0;
+    }
+
+    size_t get_file_size(const std::wstring& _file_name)
+    {
+        auto file = tools::system::open_file_for_read(_file_name, std::ios::binary | std::ios::ate);
+        return file.good()
+            ? static_cast<size_t>(file.tellg())
+            : 0;
     }
 }}}

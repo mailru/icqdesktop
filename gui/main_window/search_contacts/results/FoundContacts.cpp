@@ -17,7 +17,7 @@ namespace Ui
         rootLayout_(new QVBoxLayout()),
         contactsLayout_(new FlowLayout(0, Utils::scale_value(24), Utils::scale_value(24))),
         area_(CreateScrollAreaAndSetTrScrollBar(this)),
-        prevScrollValue_(-1)
+        prevHScrollValue_(-1), prevVScrollValue_(-1)
     {
         rootLayout_->setContentsMargins(0, Utils::scale_value(24), 0, 0);
         rootLayout_->setSpacing(0);
@@ -53,22 +53,33 @@ namespace Ui
 
     void FoundContacts::hookScroll()
     {
-        connect(area_->verticalScrollBar(), &QAbstractSlider::valueChanged, [this](int _value)
+        connect((ScrollAreaWithTrScrollBar *)area_, &ScrollAreaWithTrScrollBar::resized, this, [this]()
         {
-            if (prevScrollValue_ != -1 && prevScrollValue_ < _value)
+            if (!items_.empty() && !area_->verticalScrollBar()->maximum())
+                emit needMore((int)items_.size());
+        });
+        connect(area_->horizontalScrollBar(), &QAbstractSlider::valueChanged, this, [this](int _value)
+        {
+            if (prevHScrollValue_ != -1 && prevHScrollValue_ < _value)
+            {
+                int32_t maxValue = area_->horizontalScrollBar()->maximum();
+                if ((maxValue - _value) < Utils::scale_value(360))
+                    emit needMore((int)items_.size());
+            }
+            prevHScrollValue_ = _value;
+        });
+        connect(area_->verticalScrollBar(), &QAbstractSlider::valueChanged, this,  [this](int _value)
+        {
+            if (prevVScrollValue_ != -1 && prevVScrollValue_ < _value)
             {
                 int32_t maxValue = area_->verticalScrollBar()->maximum();
-
                 if ((maxValue - _value) < Utils::scale_value(360))
-                {
                     emit needMore((int)items_.size());
-                }
             }
-
-            prevScrollValue_ = _value;
+            prevVScrollValue_ = _value;
         });
     }
-
+    
     void FoundContacts::onAvatarLoaded(QString _aimid)
     {
         auto iter_cw = items_.find(_aimid);
@@ -94,6 +105,10 @@ namespace Ui
                 
                 items_[profile->get_aimid()] = cw;
             }
+        }
+        if (!_profiles.empty() && !area_->verticalScrollBar()->maximum())
+        {
+            emit needMore((int)items_.size());
         }
         return (int)(items_.size() - prev);
     }

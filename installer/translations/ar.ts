@@ -2,14 +2,42 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="ar" sourcelanguage="en">
 <context>
-    <name>installer::ui::accounts_page</name>
+    <name>installer::ui::accounts_page_agent</name>
     <message>
-        <source>Choose your account</source>
-        <translation>اختيار حساب</translation>
+        <source>Account settings</source>
+        <translation>إعدادات الحساب</translation>
     </message>
     <message>
-        <source>Now we support only one ICQ account per session. Please choose prefered one to continue.</source>
-        <translation>لا ندعم الآن إلا حساب ICQ واحدًا لكل جلسة. يرجى اختيار حساب مفضّل للمتابعة.</translation>
+        <source>Now Mail.Ru Agent supports only one account. You can merge it with ICQ one.</source>
+        <translation>بات Mail.Ru Agent يدعم حسابًا واحدًا فقط. يمكنك دمجه مع حساب ICQ.</translation>
+    </message>
+    <message>
+        <source>Mail.Ru Agent</source>
+        <translation>Mail.Ru Agent</translation>
+    </message>
+    <message>
+        <source>Choose Mail.Ru Agent account</source>
+        <translation>اختر حساب Mail.Ru Agent</translation>
+    </message>
+    <message>
+        <source>ICQ</source>
+        <translation>ICQ</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>رجوع</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation>التالي</translation>
+    </message>
+    <message>
+        <source>Choose ICQ account</source>
+        <translation>اختر حساب ICQ</translation>
+    </message>
+    <message>
+        <source>Skip step</source>
+        <translation>تخطي الخطوة</translation>
     </message>
 </context>
 <context>
@@ -40,6 +68,10 @@
     <message>
         <source>ICQ Setup</source>
         <translation>إعداد ICQ</translation>
+    </message>
+    <message>
+        <source>Mail.Ru Agent Setup</source>
+        <translation>برنامج إعداد Mail.Ru Agent</translation>
     </message>
 </context>
 <context>
@@ -78,6 +110,14 @@
     <message>
         <source>Install</source>
         <translation>تنصيب</translation>
+    </message>
+    <message>
+        <source>Welcome to Mail.Ru Agent</source>
+        <translation>مرحبًا بك في Mail.Ru Agent</translation>
+    </message>
+    <message>
+        <source>This will install Mail.Ru Agent on your computer</source>
+        <translation>سيعمل ذلك على تثبيت Mail.Ru Agent على جهاز الكمبيوتر</translation>
     </message>
 </context>
 <context>

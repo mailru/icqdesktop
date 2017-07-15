@@ -30,8 +30,6 @@ namespace core
 
         public:
 
-            virtual int32_t execute() override;
-
             get_gateway(const wim_packet_params& _params, const std::string& _file_name, int64_t _file_size);
             virtual ~get_gateway();
 

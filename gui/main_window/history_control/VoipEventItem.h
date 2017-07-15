@@ -15,7 +15,7 @@ namespace Themes
 namespace Ui
 {
 
-    class MessageStatusWidget;
+    class MessageTimeWidget;
 
     class VoipEventItem : public MessageItemBase
     {
@@ -41,6 +41,8 @@ namespace Ui
         void setId(const qint64 _id);
 
         void updateStyle();
+
+		virtual void setQuoteSelection() override;
 
     protected:
         virtual void mouseMoveEvent(QMouseEvent *) override;
@@ -72,9 +74,9 @@ namespace Ui
 
         QString Text_;
 
-        MessageStatusWidget *StatusWidget_;
+        MessageTimeWidget *TimeWidget_;
 
-        QRect StatusWidgetGeometry_;
+        QRect TimeWidgetGeometry_;
 
         bool lastRead_;
 

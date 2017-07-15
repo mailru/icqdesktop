@@ -174,11 +174,11 @@ namespace installer
             installer::error err;
 
 #ifdef _WIN32
-			HANDLE mutex = ::CreateSemaphore(NULL, 0, 1, crossprocess_mutex_name);
+			HANDLE mutex = ::CreateSemaphore(NULL, 0, 1, get_crossprocess_mutex_name());
 			if (ERROR_ALREADY_EXISTS == ::GetLastError())
 			{
-				const QString socket_name = crossprocess_pipe_name;
-				const QString accept_socket_name = QString(crossprocess_pipe_name) + crossprocess_pipe_name_postfix;
+				const QString socket_name = get_crossprocess_pipe_name();
+				const QString accept_socket_name = QString(get_crossprocess_pipe_name()) + crossprocess_pipe_name_postfix;
 
 				if (!connect_to_process_exit_it(socket_name))
 				{

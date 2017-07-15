@@ -4,6 +4,9 @@
 #include "../../../types/link_metadata.h"
 
 #include "FileSharingBlockBase.h"
+#include "../../mplayer/VideoPlayer.h"
+
+#include "../../../utils/LoadMovieFromFileTask.h"
 
 THEMES_NS_BEGIN
 
@@ -38,11 +41,7 @@ public:
 
     virtual ~FileSharingBlock() override;
 
-    QFont getAuthorNickFont() const;
-
     QSize getCtrlButtonSize() const;
-
-    QSize getFailedSnapSizeMax() const;
 
     QSize getOriginalPreviewSize() const;
 
@@ -58,12 +57,18 @@ public:
 
     virtual void onVisibilityChanged(const bool isVisible) override;
 
+    virtual void onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect) override;
+
     void setAuthorNickGeometry(const QRect &rect);
 
     void setCtrlButtonGeometry(const QRect &rect);
 
+    virtual void connectToHover(Ui::ComplexMessage::QuoteBlockHover* hover) override;
+
+    virtual void setQuoteSelection() override;
+
 protected:
-    virtual void drawBlock(QPainter &p) override;
+    virtual void drawBlock(QPainter &p, const QRect& _rect, const QColor& quate_color) override;
 
     virtual void enterEvent(QEvent*) override;
 
@@ -79,6 +84,8 @@ protected:
 
     virtual bool drag() override;
 
+    virtual void resizeEvent(QResizeEvent * _event) override;
+
 private:
     void applyClippingPath(QPainter &p, const QRect &previewRect);
 
@@ -92,9 +99,9 @@ private:
 
     void drawFailedSnap(QPainter &p, const QRect &previewRect);
 
-    void drawPlainFileBlock(QPainter &p, const QRect &frameRect);
+    void drawPlainFileBlock(QPainter &p, const QRect &frameRect, const QColor& quote_color);
 
-    void drawPlainFileBubble(QPainter &p, const QRect &bubbleRect);
+    void drawPlainFileBubble(QPainter &p, const QRect &bubbleRect, const QColor& quote_color);
 
     void drawPlainFileFrame(QPainter &p, const QRect &frameRect);
 
@@ -104,9 +111,9 @@ private:
 
     void drawPlainFileSizeAndProgress(QPainter &p, const QString &text, const QRect &fileSizeRect);
 
-    void drawPreview(QPainter &p, const QRect &previewRect);
+    void drawPreview(QPainter &p, const QRect &previewRect, QPainterPath& _path, const QColor& quote_color);
 
-    void drawPreviewableBlock(QPainter &p, const QRect &previewRect, const QRect &authorAvatarRect, const QRect &authorNickRect);
+    void drawPreviewableBlock(QPainter &p, const QRect &previewRect, const QRect &authorAvatarRect, const QRect &authorNickRect, const QColor& quote_color);
 
     void drawSnapAuthor(QPainter &p, const QRect &authorAvatarRect, const QRect &authorNameRect, const QRect &previewRect);
 
@@ -114,7 +121,7 @@ private:
 
     void initPreview();
 
-    bool isGifPlaying() const;
+    bool isGifOrVideoPlaying() const;
 
     void loadSnapAuthorAvatar(const QString &_uin, const QString &_nick);
 
@@ -130,7 +137,11 @@ private:
 
     virtual void onDownloadingFailed(const int64_t requestId) override;
 
+    virtual void markSnapExpired() override;
+
     void onGifImageVisibilityChanged(const bool isVisible);
+
+    void onChangeLoadState(const bool isVisible);
 
     virtual void onLocalCopyInfoReady(const bool isCopyExists) override;
 
@@ -144,9 +155,9 @@ private:
 
     void parseLink();
 
-    void pauseGif();
+    void pauseMedia(const bool _byUser);
 
-    void playGif(const QString &localPath);
+    void playMedia(const QString &localPath);
 
     void requestPreview(const QString &uri);
 
@@ -164,13 +175,13 @@ private:
 
     void unloadGif();
 
-    QSharedPointer<QMovie> GifImage_;
+    bool isInPreloadRange(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect);
+
+    QSharedPointer<Ui::DialogPlayer> videoplayer_;
 
     QString Id_;
 
     bool IsBodyPressed_;
-
-    bool IsPausedByUser_;
 
     bool IsShowInDirLinkPressed_;
 
@@ -178,9 +189,15 @@ private:
 
     bool OpenPreviewer_;
 
+    bool IsVisible_;
+    
+    bool IsInPreloadDistance_;
+
     QSize OriginalPreviewSize_;
 
     QPainterPath PreviewClippingPath_;
+
+    QPainterPath RelativePreviewClippingPath_;
 
     QPixmap Preview_;
 
@@ -204,9 +221,9 @@ private:
 
     bool IsFailedSnap_;
 
-private Q_SLOTS:
-    void onGifFrameUpdated(int frameNumber);
+    std::unique_ptr<Utils::LoadMovieToFFMpegPlayerFromFileTask> load_task_;
 
+private Q_SLOTS:
     void onImageDownloadError(qint64 seq, QString rawUri);
 
     void onImageDownloaded(int64_t seq, QString uri, QPixmap image, QString localPath);
@@ -218,6 +235,8 @@ private Q_SLOTS:
     void onSnapAuthorAvatarChanged(QString aimId);
 
     void onSnapMetainfoDownloaded(int64_t _seq, bool success, uint64_t _snap_id, int64_t _expire_utc, QString _author_uin, QString _author_name);
+
+    void onPaused();
 
 };
 

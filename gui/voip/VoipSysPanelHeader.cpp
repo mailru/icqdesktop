@@ -24,9 +24,7 @@ Ui::IncomingCallControls::IncomingCallControls(QWidget* _parent)
     setAttribute(Qt::WA_NoSystemBackground, true);
     setAttribute(Qt::WA_TranslucentBackground, true);
 
-    QVBoxLayout* rootLayout = new QVBoxLayout();
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
+    QVBoxLayout* rootLayout = Utils::emptyVLayout();
     rootLayout->setAlignment(Qt::AlignVCenter);
     setLayout(rootLayout);
 
@@ -35,9 +33,7 @@ Ui::IncomingCallControls::IncomingCallControls(QWidget* _parent)
     rootWidget_->setProperty("IncomingCallControls", true);
     layout()->addWidget(rootWidget_);
     
-    QHBoxLayout* layoutTarget = new QHBoxLayout();
-    layoutTarget->setContentsMargins(0, 0, 0, 0);
-    layoutTarget->setSpacing(0);
+    QHBoxLayout* layoutTarget = Utils::emptyHLayout();
     layoutTarget->setAlignment(Qt::AlignVCenter);
     rootWidget_->setLayout(layoutTarget);
 
@@ -52,15 +48,13 @@ Ui::IncomingCallControls::IncomingCallControls(QWidget* _parent)
         QBoxLayout* layoutInWidget;
         if (_vertical)
         {
-            layoutInWidget = new QVBoxLayout();
+            layoutInWidget = Utils::emptyVLayout();
         }
         else
         {
-            layoutInWidget = new QHBoxLayout();
+            layoutInWidget = Utils::emptyHLayout();
         }
 
-        layoutInWidget->setContentsMargins(0, 0, 0, 0);
-        layoutInWidget->setSpacing(0);
         layoutInWidget->setAlignment(Qt::AlignCenter);
 
         QWidget* widget = new voipTools::BoundBox<QWidget>(rootWidget);
@@ -114,30 +108,36 @@ Ui::IncomingCallControls::IncomingCallControls(QWidget* _parent)
         std::string text;
         std::string slot;
         int&        tail;
+
+        ButtonDesc(QWidget*    parent,
+            std::string propertyName,
+            std::string text,
+            std::string slot,
+            int&        tail) : parent(parent), propertyName(propertyName), text(text), slot(slot), tail(tail) {}
     }
     buttonsToCreate [] =
     { 
-        {
+        ButtonDesc(
             widget1,
             "IncomingCall_hangup",
             QT_TRANSLATE_NOOP("voip_pages","End call").toUtf8().data(),
             SLOT(_onDecline()),
             tail1
-        },
-        {
+        ),
+        ButtonDesc(
             widget2,
             "IncomingCall_audio",
             QT_TRANSLATE_NOOP("voip_pages", "Answer").toUtf8().data(),
             SLOT(_onAudio()),
             tail2
-        },
-        {
+        ),
+        ButtonDesc(
             widget3,
             "IncomingCall_video", 
             QT_TRANSLATE_NOOP("voip_pages", "Video").toUtf8().data(),
             SLOT(_onVideo()),
             tail3
-            }
+        )
     };
 
     for (unsigned ix = 0; ix < sizeof buttonsToCreate / sizeof buttonsToCreate[0]; ++ix)
@@ -236,9 +236,7 @@ Ui::VoipSysPanelHeader::VoipSysPanelHeader(QWidget* _parent)
     setAttribute(Qt::WA_NoSystemBackground, true);
     setAttribute(Qt::WA_TranslucentBackground, true);
 
-    QVBoxLayout* rootLayout = new QVBoxLayout();
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
+    QVBoxLayout* rootLayout = Utils::emptyVLayout();
     rootLayout->setAlignment(Qt::AlignVCenter);
     setLayout(rootLayout);
 
@@ -248,13 +246,11 @@ Ui::VoipSysPanelHeader::VoipSysPanelHeader(QWidget* _parent)
 	rootWidget_->setProperty("VoipPanelHeaderText_Has_Video", false);
     layout()->addWidget(rootWidget_);
 
-    QHBoxLayout* layout = new QHBoxLayout();
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
+    QHBoxLayout* layout = Utils::emptyHLayout();
     layout->setAlignment(Qt::AlignVCenter);
     rootWidget_->setLayout(layout);
 
-    avatarContainer_ = new voipTools::BoundBox<AvatarContainerWidget>(rootWidget_, Utils::scale_value(66), Utils::scale_value(12), Utils::scale_value(12), Utils::scale_value(5));
+    avatarContainer_ = new voipTools::BoundBox<AvatarContainerWidget>(rootWidget_, Utils::scale_value(66), Utils::scale_value(12), Utils::scale_value(12));
     avatarContainer_->setOverlap(0.2f);
     rootWidget_->layout()->addWidget(avatarContainer_);
 

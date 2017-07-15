@@ -46,38 +46,29 @@ public:
     void onBlockSizeChanged();
 
 private:
-    int32_t evaluateStatusLineWidth() const;
-
     QRect evaluateAvatarRect(const QRect &senderContentLtr) const;
 
     QRect evaluateBlocksBubbleGeometry(
         const bool isBubbleRequired,
-        const bool isShareButtonEnabled,
         const QRect &blocksContentLtr,
         const QRect &blocksGeometry) const;
 
     QRect evaluateBlocksContainerLtr(
         const bool isBubbleRequired,
-        const bool isShareButtonEnabled,
         const QRect &avatarRect,
         const QRect &senderContentLtr) const;
 
-    QMargins evaluateBlocksContentRectMargins(const bool isShareButtonEnabled) const;
+    QMargins evaluateBlocksContentRectMargins() const;
 
     QRect evaluateBlockLtr(
         const QRect &blocksContentLtr,
         IItemBlock *block,
         const int32_t blockY,
-        const int32_t statusWidth,
         const bool isBubbleRequired);
 
     QRect evaluateSenderContentLtr(const QRect &widgetContentLtr) const;
 
-    int32_t evaluateWidgetContentLeftMargin() const;
-
     QRect evaluateWidgetContentLtr(const int32_t widgetWidth) const;
-
-    int32_t evaluateWidgetContentRightMargin() const;
 
     bool hasSeparator(const IItemBlock *block) const;
 
@@ -93,7 +84,7 @@ private:
         const QRect &avatarRect,
         const QRect &widgetContentLtr);
 
-    void setStatusGeometry(
+    void setTimeGeometry(
         const bool isBubbleRequired,
         const QRect &bubbleGeometry,
         const QRect &blocksGeometry);

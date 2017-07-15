@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../gui.shared/product.h"
 #include "utils/translator.h"
 #include "../gui.shared/constants.h"
 #include "../common.shared/constants.h"
@@ -159,7 +160,8 @@
 #include <QOpenglWindow.h>
 #include <QOpenGLFunctions>
 #include <QOpenGLBuffer>
-
+#include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
 
 #undef max
 #undef MAX
@@ -269,6 +271,8 @@
 #include <QtCore/qurlquery.h>
 #include <QtCore/qendian.h>
 #include <QtGui/qdrag.h>
+#include <QtWidgets/qgraphicsscene.h>
+#include <QtWidgets/qgraphicsitem.h>
 #else
 #include "macconfig.h"
 #import <QtCore/qresource.h>
@@ -375,15 +379,21 @@
 #import <QtGui/qdrag.h>
 #import <QtGui/QOpenGLTexture.h>
 #import <QtGui/QOpenGLShaderProgram.h>
-#import <QtOpenGL/QGLWidget>
+//#import <QtOpenGL/QGLWidget>
 #import <QtWidgets/QOpenglWidget.h>
 #import <QtGui/QOpenglWindow.h>
 #import <QtGui/QOpenGLFunctions.h>
 #import <QtGui/QOpenGLBuffer.h>
+#import <QtWidgets/qgraphicsscene.h>
+#import <QtWidgets/qgraphicsitem.h>
+#import <QtMacExtras/qmacfunctions.h>
+
 
 #endif // _WIN32
 
+#include "../common.shared/typedefs.h"
 #include "../common.shared/common.h"
+
 
 namespace openal
 {

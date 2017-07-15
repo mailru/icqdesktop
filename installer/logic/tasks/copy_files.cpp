@@ -10,6 +10,8 @@ namespace installer
 {
     namespace logic
     {
+        const QString icq_exe_short_filename = "icq.exe";
+
         installer::error copy_self(const QString& _install_path)
         {
             wchar_t buffer[1025];
@@ -43,13 +45,16 @@ namespace installer
 
             zip_pack zip_file;
 
-
             if (!zip_file.open(data, sz))
                 return installer::error(errorcode::open_files_archive, QString("open archive: files.7z"));
 
             for (auto iter = zip_file.get_files().begin(); iter != zip_file.get_files().end(); ++iter)
             {
-                QString file_name = _install_path + "/" + iter->first;
+                QString file_name_short = iter->first;
+                if (file_name_short == icq_exe_short_filename)
+                    file_name_short = get_icq_exe_short();
+
+                QString file_name = _install_path + "/" + file_name_short;
 
                 QString folder_path = QFileInfo(file_name).absoluteDir().absolutePath();
 
@@ -118,19 +123,25 @@ namespace installer
 
         installer::error delete_self_from_8x()
         {
-            wchar_t this_module_name[1024];
-            if (!::GetModuleFileName(0, this_module_name, 1024))
-                return installer::error(errorcode::get_module_name, QString("get this module name"));
+            if (build::is_icq())
+            {
+                wchar_t this_module_name[1024];
+                if (!::GetModuleFileName(0, this_module_name, 1024))
+                    return installer::error(errorcode::get_module_name, QString("get this module name"));
 
-            QDir dir_module(QString::fromUtf16((const ushort*) this_module_name));
+                QDir dir_module(QString::fromUtf16((const ushort*) this_module_name));
 
-            dir_module.cdUp();
+                dir_module.cdUp();
 
-            QString qfolder = dir_module.path();
+                QString qfolder = dir_module.path();
 
-            return delete_folder_as_temp(qfolder);
 
-            return installer::error();
+                return delete_folder_as_temp(qfolder);
+            }
+            else
+            {
+                return installer::error();
+            }
         }
 
         installer::error delete_self_and_product_folder()
@@ -211,7 +222,7 @@ namespace installer
         {
 #ifdef _WIN32
             CRegKey icq_key;
-            if (ERROR_SUCCESS != icq_key.Open(HKEY_CURRENT_USER, STR_CS_ICQ_MRA_KEY, KEY_READ) != ERROR_SUCCESS)
+            if (ERROR_SUCCESS != icq_key.Open(HKEY_CURRENT_USER, legacy::cs_mra_key, KEY_READ) != ERROR_SUCCESS)
                 return installer::error(errorcode::open_registry_key);
 
             wchar_t install_path[1025];

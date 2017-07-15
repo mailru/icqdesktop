@@ -15,13 +15,10 @@ namespace Ui
 
     {
 
-        QVBoxLayout* rootLayout = new QVBoxLayout();
+        QVBoxLayout* rootLayout = Utils::emptyVLayout();
         rootLayout->setContentsMargins(0, Utils::scale_value(16), 0, 0);
-        rootLayout->setSpacing(0);
 
-        QHBoxLayout* keywordLayout = new QHBoxLayout();
-        keywordLayout->setContentsMargins(0, 0, 0, 0);
-        keywordLayout->setSpacing(0);
+        QHBoxLayout* keywordLayout = Utils::emptyHLayout();
 
         keyword_->setPlaceholderText(QT_TRANSLATE_NOOP("search_widget", "Phone or Name, Email, UIN"));
         keyword_->setAttribute(Qt::WA_MacShowFocusRect, false);
@@ -70,6 +67,7 @@ namespace Ui
 
         connect(searchButton_, SIGNAL(clicked()), this, SLOT(onSearchButtonClicked()), Qt::QueuedConnection);
         connect(keyword_, SIGNAL(enter()), this, SLOT(onSearchButtonClicked()), Qt::QueuedConnection);
+        connect(keyword_, SIGNAL(clicked()), this, SIGNAL(clicked()), Qt::QueuedConnection);
     }
 
     SearchFilters::~SearchFilters()

@@ -43,6 +43,7 @@ int32_t set_state::init_request(std::shared_ptr<core::http_request_simple> _requ
 
     _request->set_url(ss_url.str());
     _request->set_keep_alive();
+    _request->set_priority(highest_priority);
 
     return 0;
 }

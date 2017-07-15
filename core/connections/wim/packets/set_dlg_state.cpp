@@ -23,6 +23,7 @@ int32_t set_dlg_state::init_request(std::shared_ptr<core::http_request_simple> _
 {
     _request->set_url(c_robusto_host);
     _request->set_keep_alive();
+    _request->set_priority(highest_priority);
 
     rapidjson::Document doc(rapidjson::Type::kObjectType);
 

@@ -18,14 +18,14 @@
 
 #include "PreviewContentWidget.h"
 
+using namespace Ui::ComplexMessage;
+
 namespace HistoryControl
 {
     namespace
     {
 
         int32_t getBubbleVertPadding();
-
-        int32_t getFullStatusWidth();
 
         const QSizeF& getMaxPreviewSize();
 
@@ -41,33 +41,13 @@ namespace HistoryControl
         , TextControl_(nullptr)
         , IsTextVisible_(false)
         , PreviewsEnabled_(previewsEnabled)
+        , videoPlayer_(nullptr)
     {
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-        setMinimumSize(Ui::MessageStyle::getMinPreviewSize());
+        setMinimumSize(Style::Preview::getMinPreviewSize());
 
         updateGeometry();
-    }
-
-    QPoint PreviewContentWidget::deliveryStatusOffsetHint(const int32_t statusLineWidth) const
-    {
-        if (TextControl_ && TextControl_->isVisible())
-        {
-            const auto textSize = getTextBubbleSize();
-            return QPoint(
-                textSize.width() - statusLineWidth,
-                textSize.height()
-            );
-        }
-
-        if (PreviewsEnabled_ && !isBlockElement())
-        {
-            const auto statusX = (getPreviewScaledRect().right() + 1);
-
-            return QPoint(statusX, 0);
-        }
-
-        return MessageContentWidget::deliveryStatusOffsetHint(statusLineWidth);
     }
 
     const QRect& PreviewContentWidget::getLastPreviewGeometry() const
@@ -101,10 +81,10 @@ namespace HistoryControl
 
     QSize PreviewContentWidget::sizeHint() const
     {
-        return evaluateWidgetSize(true);
+        return evaluateWidgetSize();
     }
 
-    bool PreviewContentWidget::haveContentMenu(QPoint p) const
+    bool PreviewContentWidget::hasContextMenu(QPoint p) const
     {
         if (!TextControl_)
         {
@@ -130,12 +110,11 @@ namespace HistoryControl
         return true;
     }
 
-    void PreviewContentWidget::renderPreview(QPainter &p, const bool isAnimating)
+    void PreviewContentWidget::renderPreview(QPainter &p, const bool isAnimating, QPainterPath& _path, const QColor& quote_color)
     {
         if (Preview_.isNull())
         {
-            renderNoPreview(p);
-
+            renderNoPreview(p, quote_color);
             return;
         }
 
@@ -155,11 +134,33 @@ namespace HistoryControl
             return;
         }
 
-        p.drawPixmap(imageRect, Preview_);
+        if (!videoPlayer_)
+        {
+            p.drawPixmap(imageRect, Preview_);
+
+			if (quote_color.isValid())
+			{
+				p.setBrush(QBrush(quote_color));
+				p.drawRoundedRect(imageRect, Ui::MessageStyle::getBorderRadius(), Ui::MessageStyle::getBorderRadius());
+			}
+
+        }
+        else
+        {
+            if (!videoPlayer_->isFullScreen())
+            {
+                videoPlayer_->setClippingPath(_path);
+
+                if (videoPlayer_->state() == QMovie::MovieState::Paused && videoPlayer_->isGif())
+                {
+                    p.drawPixmap(imageRect, videoPlayer_->getActiveImage());
+                }
+            }
+        }
 
         if (isAnimating)
         {
-            p.fillRect(imageRect, Ui::MessageStyle::getImageShadeBrush());
+            p.fillRect(imageRect, Style::Preview::getImageShadeBrush());
         }
 
         if (isSelected())
@@ -203,7 +204,20 @@ namespace HistoryControl
             isOutgoing());
     }
 
-    void PreviewContentWidget::render(QPainter &p)
+    QPainterPath PreviewContentWidget::evaluateRelativeClippingPath() const
+    {
+        const auto pathRect = getPreviewScaledRect();
+        assert(!pathRect.isEmpty());
+
+         auto relativePreviewRect = QRect(0, 0, pathRect.width(), pathRect.height());
+
+        return Utils::renderMessageBubble(
+            relativePreviewRect,
+            Ui::MessageStyle::getBorderRadius(),
+            isOutgoing());
+    }
+
+    void PreviewContentWidget::render(QPainter &p, const QColor& qoute_color)
     {
         p.save();
 
@@ -212,7 +226,7 @@ namespace HistoryControl
 
         applyClippingPath(p);
 
-        renderPreview(p, false);
+        renderPreview(p, false, RelativePreviewClippingPath_, qoute_color);
 
         p.restore();
 
@@ -342,6 +356,8 @@ namespace HistoryControl
         if (ClippingPath_.isEmpty())
         {
             ClippingPath_ = evaluateClippingPath();
+            RelativePreviewClippingPath_ = evaluateRelativeClippingPath();
+
             assert(!ClippingPath_.isEmpty());
         }
 
@@ -398,8 +414,8 @@ namespace HistoryControl
 
         const auto &previewSize = (
             PreviewGenuineSize_.isEmpty() ?
-                Ui::MessageStyle::getImagePlaceholderSize() :
-                PreviewGenuineSize_
+                Style::Preview::getImagePlaceholderSize() :
+                Utils::scale_value(PreviewGenuineSize_)
         );
 
         QSizeF fixedSize(boundWidth, 0);
@@ -420,7 +436,7 @@ namespace HistoryControl
             fixedSize = fixedSize.scaled(getMaxPreviewSize(), Qt::KeepAspectRatio);
         }
 
-        const auto minPreviewSize = Ui::MessageStyle::getMinPreviewSize();
+        const auto minPreviewSize = Style::Preview::getMinPreviewSize();
 
         const auto shouldScaleUp =
             (fixedSize.width() < minPreviewSize.width()) &&
@@ -453,9 +469,7 @@ namespace HistoryControl
         {
             const auto previewX = (
                 width() -
-                result.width() -
-                getFullStatusWidth() -
-                Ui::MessageStyle::getTimeMargin());
+                result.width());
 
             topLeft.rx() = previewX;
         }
@@ -465,18 +479,13 @@ namespace HistoryControl
         return result;
     }
 
-    QSize PreviewContentWidget::evaluateWidgetSize(const bool withStatus) const
+    QSize PreviewContentWidget::evaluateWidgetSize() const
     {
         if (PreviewGenuineSize_.isEmpty())
         {
-            const auto minPreviewSize = Ui::MessageStyle::getMinPreviewSize();
+            const auto minPreviewSize = Style::Preview::getMinPreviewSize();
 
             auto width = minPreviewSize.width();
-
-            if (withStatus)
-            {
-                width += getFullStatusWidth();
-            }
 
             return QSize(width, minPreviewSize.height());
         }
@@ -487,17 +496,12 @@ namespace HistoryControl
 
         auto width = previewScaledSize.width();
 
-        if (withStatus)
-        {
-            width += getFullStatusWidth();
-        }
-
         const auto height = (
             bubbleSize.height() +
             getTextBottomMargin() +
             previewScaledSize.height());
 
-        const auto minPreviewSize = Ui::MessageStyle::getMinPreviewSizeF();
+        const auto minPreviewSize = Style::Preview::getMinPreviewSizeF();
 
         QSize widgetSize(
             std::max(width, minPreviewSize.width()),
@@ -508,12 +512,7 @@ namespace HistoryControl
 
     QSizeF PreviewContentWidget::getPreviewScaledSizeF() const
     {
-        const auto previewWidthMax = (
-            width() -
-            getFullStatusWidth() -
-            Ui::MessageStyle::getTimeMargin());
-
-        const auto previewScaledSize = evaluatePreviewScaledSize(previewWidthMax);
+        const auto previewScaledSize = evaluatePreviewScaledSize(width());
 
         return previewScaledSize;
     }
@@ -584,7 +583,6 @@ namespace HistoryControl
 
         bubbleSize.rwidth() += Ui::MessageStyle::getBubbleHorPadding();
         bubbleSize.rwidth() += Ui::MessageStyle::getBubbleHorPadding();
-        bubbleSize.rwidth() += Ui::MessageStatusWidget::getMaxWidth();
         bubbleSize.rheight() += getBubbleVertPadding();
 
         return bubbleSize;
@@ -639,13 +637,12 @@ namespace HistoryControl
             return;
         }
 
-        const auto widgetSize = evaluateWidgetSize(false);
+        const auto widgetSize = evaluateWidgetSize();
 
         auto documentWidth = (
             widgetSize.width() -
             Ui::MessageStyle::getBubbleHorPadding() -
-            Ui::MessageStyle::getBubbleHorPadding() -
-            Ui::MessageStatusWidget::getMaxWidth()
+            Ui::MessageStyle::getBubbleHorPadding()
         );
 
         const auto textWidthChanged = (TextControl_->width() != documentWidth);
@@ -661,7 +658,7 @@ namespace HistoryControl
         );
     }
 
-    void PreviewContentWidget::renderNoPreview(QPainter &p)
+    void PreviewContentWidget::renderNoPreview(QPainter &p, const QColor& qoute_color)
     {
         const auto nothingToRender = (!isPlaceholderVisible() && !TextControl_);
         if (nothingToRender)
@@ -673,7 +670,7 @@ namespace HistoryControl
         {
             prepareTextGeometry();
 
-            const auto widgetSize = evaluateWidgetSize(true);
+            const auto widgetSize = evaluateWidgetSize();
 
             const QSize newSize(
                 widgetSize.width(),
@@ -692,12 +689,12 @@ namespace HistoryControl
 
         LastPreviewGeometry_ = updateWidgetSize();
 
-        renderPreloader(p);
+        renderPreloader(p, qoute_color);
     }
 
-    void PreviewContentWidget::renderPreloader(QPainter &p)
+    void PreviewContentWidget::renderPreloader(QPainter &p, const QColor& quote_color)
     {
-        renderPreloaderBubble(p);
+        renderPreloaderBubble(p, quote_color);
 
         if (!isPreloaderVisible())
         {
@@ -705,15 +702,21 @@ namespace HistoryControl
         }
     }
 
-    void PreviewContentWidget::renderPreloaderBubble(QPainter &p)
+    void PreviewContentWidget::renderPreloaderBubble(QPainter &p, const QColor& quote_color)
     {
         p.save();
 
-        auto bodyBrush = Ui::MessageStyle::getImagePlaceholderBrush();
+        auto bodyBrush = Style::Preview::getImagePlaceholderBrush();
 
         p.setBrush(bodyBrush);
 
         p.drawRoundedRect(getPreviewScaledRect(), Ui::MessageStyle::getBorderRadius(), Ui::MessageStyle::getBorderRadius());
+
+		if (quote_color.isValid())
+		{
+			p.setBrush(QBrush(quote_color));
+			p.drawRoundedRect(getPreviewScaledRect(), Ui::MessageStyle::getBorderRadius(), Ui::MessageStyle::getBorderRadius());
+		}
 
         p.restore();
     }
@@ -737,7 +740,7 @@ namespace HistoryControl
             widgetHeight += getTextBottomMargin();
         }
 
-        const auto widgetWidth = evaluateWidgetSize(true).width();
+        const auto widgetWidth = evaluateWidgetSize().width();
 
         const QSize widgetSize(widgetWidth, widgetHeight);
 
@@ -756,11 +759,6 @@ namespace HistoryControl
         return imageRect;
     }
 
-    bool PreviewContentWidget::isTextPresented()
-    {
-        return TextControl_;
-    }
-
     namespace
     {
 
@@ -769,21 +767,11 @@ namespace HistoryControl
             return Utils::scale_value(5);
         }
 
-        int32_t getFullStatusWidth()
-        {
-            using namespace Ui;
-
-            auto width = MessageStatusWidget::getMaxWidth();
-            width += MessageStyle::getTimeMargin();
-
-            return width;
-        }
-
         const QSizeF& getMaxPreviewSize()
         {
             static const QSizeF size(
-                Utils::scale_value(480),
-                Utils::scale_value(320)
+                Style::Preview::getImageWidthMax(),
+                Style::Preview::getImageHeightMax()
             );
 
             return size;

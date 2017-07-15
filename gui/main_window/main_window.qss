@@ -3,13 +3,18 @@ QWidget[Invisible="true"]
 	background-color: transparent;
 }
 
+QWidget#contactsWidgetStyle
+{
+    border-right-style: solid;
+    border-right-color: #d7d7d7;
+    border-right-width: 1dip;
+    background-color: #ffffff;
+}
+
 QWidget#titleWidget
 {
-	background-color: #ebebeb;
-	height: 28dip;
-	border-bottom-style: solid;
-	border-bottom-color: #dadada;
-	border-bottom-width: 1dip;
+	background-color: #eeeded;
+	height: 36dip;
 }
 
 QPushButton#windowIcon
@@ -17,102 +22,19 @@ QPushButton#windowIcon
 	margin-top: 4dip;
 	margin-bottom: 4dip;
 	margin-left: 11dip;
-	border-image: url(:/resources/main_window/appicon.png);
+	border-image: url(:/resources/main_window/appicon_100.png);
 	width: 20dip;
 	height: 20dip;
 }
 
-QPushButton#hideButton
+QPushButton#windowIcon[agent = "true"]
 {
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_minimize_100.png);
-	background-color: transparent;
-	background-repeat: no-repeat;
-	background-position: center;
-	padding-top: 2dip;
-	padding-bottom: 2dip;
-	padding-left: 11dip;
-	padding-right: 11dip;
-	border: none;
-}
-
-QPushButton#hideButton:hover
-{
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_minimize_100_hover.png);
-	background-color: #d3d3d3;
-}
-
-QPushButton#hideButton:hover:pressed
-{
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_minimize_100_active.png);
-	background-color: #c8c8c8;
-}
-
-QPushButton#maximizeButton[Maximize="true"]
-{
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_bigwindow_100.png);
-	background-color: transparent;
-	background-repeat: no-repeat;
-	background-position: center;
-	padding-top: 2dip;
-	padding-bottom: 2dip;
-	padding-left: 11dip;
-	padding-right: 11dip;
-	border: none;
-}
-
-QPushButton#maximizeButton[Maximize="true"]:hover
-{
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_bigwindow_100_hover.png);
-	background-color: #d3d3d3;
-}
-
-QPushButton#maximizeButton[Maximize="true"]:hover:pressed
-{
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_bigwindow_100_active.png);
-	background-color: #c8c8c8;
-}
-
-QPushButton#maximizeButton[Minimize="true"]
-{
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_smallwindow_100.png);
-	background-color: transparent;
-	background-repeat: no-repeat;
-	background-position: center;
-	padding-top: 2dip;
-	padding-bottom: 2dip;
-	padding-left: 11dip;
-	padding-right: 11dip;
-	border: none;
-}
-
-QPushButton#maximizeButton[Minimize="true"]:hover
-{
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_smallwindow_100.png);
-	background-color: #d3d3d3;
-}
-
-QPushButton#maximizeButton[Minimize="true"]:hover:pressed
-{
-	width: 24dip;
-	height: 24dip;
-	background-image: url(:/resources/main_window/contr_smallwindow_100_active.png);
-	background-color: #c8c8c8;
+	margin-top: 4dip;
+	margin-bottom: 4dip;
+	margin-left: 11dip;
+	border-image: url(:/resources/main_window/appicon_agent_100.png);
+	width: 20dip;
+	height: 20dip;
 }
 
 QMenu::item
@@ -128,3 +50,48 @@ QWidget#logoWidget
 {
 	image: url(:/resources/main_window/content_logo_100.png);
 }
+
+QWidget#logoWidgetAgent
+{
+	image: url(:/resources/main_window/content_logo_agent_100.png);
+}
+
+QLabel#unknownsLabel
+{
+    qproperty-alignment: AlignCenter;
+    font-size: 16dip;
+    font-family: "%FONT_FAMILY_MEDIUM%";
+    font-weight: %FONT_WEIGHT_MEDIUM%;
+    min-height: 48dip;
+    max-height: 48dip;
+    color: #999999;
+}
+
+QWidget#header
+{
+	background: white;
+	border-style: none;
+	border-bottom-style: solid;
+	border-bottom-width: 1dip; 
+	border-bottom-color: #d7d7d7;
+}
+
+QPushButton#header_back
+{
+    border: none;
+    color: #979797;
+    text-align: left;
+    font-size: 15dip;
+    padding-left: 18dip;
+    font-family: "%FONT_FAMILY_MEDIUM%";
+    font-weight: %FONT_WEIGHT_MEDIUM%;
+}
+
+QLabel#header_label
+{
+    qproperty-alignment: AlignCenter;
+    font-size: 15dip;
+	font-family: "%FONT_FAMILY_MEDIUM%";
+    font-weight: %FONT_WEIGHT_MEDIUM%;
+    color: #979797;
+} 

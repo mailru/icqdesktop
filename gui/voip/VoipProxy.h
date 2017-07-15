@@ -77,14 +77,15 @@ namespace voip_proxy
         void onVoipShowVideoWindow(bool _show);
         void onVoipVolumeChanged(const std::string& _deviceType, int _vol);
         void onVoipMuteChanged(const std::string& _deviceType, bool _muted);
-        void onVoipCallNameChanged(const std::vector<voip_manager::Contact>& _contacts);
+        void onVoipCallNameChanged(const voip_manager::ContactsList& _contacts);
         void onVoipCallIncoming(const std::string& _account, const std::string& _contact);
         void onVoipCallIncomingAccepted(const voip_manager::ContactEx& _contactEx);
         void onVoipDeviceListUpdated(voip_proxy::EvoipDevTypes deviceType, const std::vector<voip_proxy::device_desc>& _devices);
         void onVoipMediaLocalAudio(bool _enabled);
         void onVoipMediaLocalVideo(bool _enabled);
-        void onVoipMediaRemoteVideo(bool _enabled);
+        void onVoipMediaRemoteVideo(const voip_manager::VideoEnable& videoEnable);
         void onVoipMouseTapped(quintptr _winId, const std::string& _tapType);
+        void onVoipButtonTapped(const voip_manager::ButtonTap& button);
         void onVoipCallOutAccepted(const voip_manager::ContactEx& _contactEx);
         void onVoipCallCreated(const voip_manager::ContactEx& _contactEx);
         void onVoipCallDestroyed(const voip_manager::ContactEx& _contactEx);
@@ -98,6 +99,8 @@ namespace voip_proxy
         void onVoipMinimalBandwidthChanged(bool _enable);
 		void onVoipMaskEngineEnable(bool _enable);
 		void onVoipLoadMaskResult(const std::string& path, bool result);
+        void onVoipChangeWindowLayout(intptr_t hwnd, bool bTray, const std::string& layout);
+		void onVoipMainVideoLayoutChanged(const voip_manager::MainVideoLayout&);
 
         private Q_SLOTS:
         void _updateCallTime();
@@ -105,7 +108,10 @@ namespace voip_proxy
 
 		void updateUserAvatar(const voip_manager::ContactEx& _contactEx);
 		void updateUserAvatar(const std::string& _account, const std::string& _contact);
+        void avatarChanged(QString aimId);
         void updateVoipMaskEngineEnable(bool _enable);
+
+        void onCallCreate(const voip_manager::ContactEx& _contactEx);
 
     private:
         voip_manager::CipherState cipherState_;
@@ -113,16 +119,18 @@ namespace voip_proxy
         QTimer               callTimeTimer_;
         unsigned             callTimeElapsed_;
         VoipEmojiManager     voipEmojiManager_;
-        std::vector<voip_manager::Contact> activePeerList_;
-        // It is currenlty connected contacts.
+        voip_manager::ContactsList activePeerList_;
+        // It is currenlty connected contacts, contacts, which do not accept call, are not contained in this list.
         std::list<voip_manager::Contact> connectedPeerList_;
         bool haveEstablishedConnection_;
         bool                 iTunesWasPaused_;
         std::unique_ptr<voip_masks::MaskManager> maskManager_;
         bool                 maskEngineEnable_;
+		bool				 voipIsKilled_; // Do we kill voip on exiting from programm.
 
         // For each device type.
         std::vector<device_desc> devices_[3];
+
 
         void _loadUserBitmaps(Ui::gui_coll_helper& _collection, const std::string& _contact, int _size);
 
@@ -153,7 +161,7 @@ namespace voip_proxy
         void setWindowAdd(quintptr hwnd, bool _primaryWnd, bool _systemWd, int _panelHeight);
         void setWindowRemove(quintptr _hwnd);
         void setWindowOffsets(quintptr _hwnd, int _lpx, int _tpx, int _rpx, int _bpx);
-        void setAvatars(int _size, const char* _contact);
+        void setAvatars(int _size, const char* _contact, bool forPreview = false);
 
         void setStartA(const char* _contact, bool _attach);
         void setStartV(const char* _contact, bool _attach);
@@ -185,8 +193,16 @@ namespace voip_proxy
 
         bool isMaskEngineEnabled() const;
         void initMaskEngine() const;
+        void resetMaskManager();
+		bool isVoipKilled();
+
+        void setWindowConferenceLayout(quintptr _hwnd, voip_manager::ConferenceLayout& layout);
 
         const std::vector<device_desc>& deviceList(EvoipDevTypes type);
+        const std::vector<voip_manager::Contact>& currentCallContacts();
+
+        // @return true is any of users are accepted call.
+        bool hasEstablishCall();
     };
 }
 

@@ -14,19 +14,15 @@ void GeneralSettingsWidget::Creator::initAttachPhone(QWidget* _parent, std::map<
     Utils::grabTouchWidget(scrollArea->viewport(), true);
 
     auto mainWidget = new QWidget(scrollArea);
-    mainWidget->setGeometry(QRect(0, 0, Utils::scale_value(800), Utils::scale_value(600)));
     Utils::grabTouchWidget(mainWidget);
 
-    auto mainLayout = new QVBoxLayout(mainWidget);
-    mainLayout->setSpacing(0);
+    auto mainLayout = Utils::emptyVLayout(mainWidget);
     mainLayout->setAlignment(Qt::AlignTop);
-    mainLayout->setContentsMargins(Utils::scale_value(16), 0, 0, Utils::scale_value(48));
+    mainLayout->setContentsMargins(Utils::scale_value(36), 0, Utils::scale_value(36), Utils::scale_value(36));
 
     scrollArea->setWidget(mainWidget);
 
-    auto layout = new QHBoxLayout(_parent);
-    layout->setSpacing(0);
-    layout->setContentsMargins(0, 0, 0, 0);
+    auto layout = Utils::emptyHLayout(_parent);
     
     LoginPage* page = new LoginPage(nullptr, false /* is_login */);
     GeneralCreator::addBackButton(scrollArea, layout, [page]()

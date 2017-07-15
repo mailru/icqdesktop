@@ -7,6 +7,7 @@
 #include "theme_settings.h"
 #include "main_window/contact_list/SearchMembersModel.h"
 #include "main_window/contact_list/SearchModelDLG.h"
+#include "main_window/contact_list/RecentsModel.h"
 #include "types/typing.h"
 #include "utils/gui_coll_helper.h"
 #include "utils/InterConnector.h"
@@ -19,7 +20,9 @@
 #include "../common.shared/common_defs.h"
 #include "../corelib/corelib.h"
 #include "../corelib/core_face.h"
-#include "../core/connections/wim/loader/loader_errors.h"
+#include "../common.shared/loader_errors.h"
+
+int build::is_build_icq;
 
 #ifdef _WIN32
     #include "../common.shared/win32/crash_handler.h"
@@ -85,57 +88,36 @@ voip_proxy::VoipController& core_dispatcher::getVoipController()
     return voipController_;
 }
 
-qint64 core_dispatcher::downloadSharedFile(const QString& _contact, const QString& _url, const QString& _downloadDir, const QString& _fileName, const core::file_sharing_function _function)
+qint64 core_dispatcher::getFileSharingPreviewSize(const QString& _url)
 {
-    assert(!_contact.isEmpty());
-    assert(!_url.isEmpty());
-    assert(!_downloadDir.isEmpty());
-    assert(_function > core::file_sharing_function::min);
-    assert(_function < core::file_sharing_function::max);
-
-    QDir().mkpath(_downloadDir); // just in case
-
     core::coll_helper helper(create_collection(), true);
-    helper.set<QString>("contact", _contact);
     helper.set<QString>("url", _url);
-    helper.set<QString>("download_dir", _downloadDir);
-    helper.set<QString>("filename", _fileName);
-    helper.set<core::file_sharing_function>("function", _function);
+    return post_message_to_core("files/download/preview_size", helper.get());
+}
 
+qint64 core_dispatcher::downloadFileSharingMetainfo(const QString& _url)
+{
+    core::coll_helper helper(create_collection(), true);
+    helper.set<QString>("url", _url);
+    return post_message_to_core("files/download/metainfo", helper.get());
+}
+
+qint64 core_dispatcher::downloadSharedFile(const QString& _contactAimid, const QString& _url, bool _forceRequestMetainfo, const QString& _fileName, bool _raise_priority)
+{
+    core::coll_helper helper(create_collection(), true);
+    helper.set<QString>("contact", _contactAimid);
+    helper.set<QString>("url", _url);
+    helper.set<bool>("force_request_metainfo", _forceRequestMetainfo);
+    helper.set<QString>("filename", _fileName);
+    helper.set<QString>("download_dir", Utils::UserDownloadsPath());
+    helper.set<bool>("raise", _raise_priority);
     return post_message_to_core("files/download", helper.get());
 }
 
-qint64 core_dispatcher::requestFileDirectUri(const QString& _url, const QObject* _object, std::function<void(bool _res, const QString& _uri)> _callback)
+qint64 core_dispatcher::abortSharedFileDownloading(const QString& _url)
 {
-    assert(!_url.isEmpty());
-
     core::coll_helper helper(create_collection(), true);
     helper.set<QString>("url", _url);
-
-    return post_message_to_core("files/request_direct_uri", helper.get(), _object, [_callback](core::icollection* _collection)
-    {
-        gui_coll_helper collParams(_collection, false);
-
-        QString uri;
-
-        int32_t res = collParams.get<int32_t>("result");
-
-        if (res == 0)
-        {
-            uri = collParams.get<QString>("url");
-        }
-
-        _callback((res == 0), uri);
-    });
-}
-
-qint64 core_dispatcher::abortSharedFileDownloading(const qint64 _downloadingSeq)
-{
-    assert(_downloadingSeq > 0);
-
-    core::coll_helper helper(create_collection(), true);
-    helper.set_value_as_int64("process_seq", _downloadingSeq);
-
     return post_message_to_core("files/download/abort", helper.get());
 }
 
@@ -205,7 +187,8 @@ int64_t core_dispatcher::downloadImage(
     const QString& _destination,
     const bool _isPreview,
     const int32_t _previewWidth,
-    const int32_t _previewHeight)
+    const int32_t _previewHeight,
+    bool _raisePriority)
 {
     assert(!_contactAimid.isEmpty());
     assert(_uri.isValid());
@@ -219,6 +202,7 @@ int64_t core_dispatcher::downloadImage(
     collection.set<QString>("destination", _destination);
     collection.set<bool>("is_preview", _isPreview);
     collection.set<QString>("contact", _contactAimid);
+    collection.set<bool>("raise", _raisePriority);
 
     if (_isPreview)
     {
@@ -241,13 +225,11 @@ int64_t core_dispatcher::downloadImage(
     return seq;
 }
 
-void core_dispatcher::cancelImageDownloading(const int64_t _downloadSeq)
+void core_dispatcher::cancelImageDownloading(const QString& _url)
 {
-    assert(_downloadSeq > 0);
-
     core::coll_helper collection(create_collection(), true);
 
-    collection.set<int64_t>("download_seq", _downloadSeq);
+    collection.set<QString>("url", _url);
 
     post_message_to_core("image/download/cancel", collection.get());
 }
@@ -272,13 +254,14 @@ int64_t core_dispatcher::downloadLinkMetainfo(
     return post_message_to_core("link_metainfo/download", collection.get());
 }
 
-int64_t core_dispatcher::download_snap_metainfo(const QString& _contact, const QString& _ttlId)
+int64_t core_dispatcher::download_snap_metainfo(const QString& _contact, const QString& _ttlId, bool _raise)
 {
     assert(!_ttlId.isEmpty());
 
     core::coll_helper collection(create_collection(), true);
     collection.set<QString>("ttl_id", _ttlId);
     collection.set<QString>("contact", _contact);
+    collection.set<bool>("raise", _raise);
 
     return post_message_to_core("snap/get_metainfo", collection.get());
 }
@@ -365,20 +348,11 @@ qint64 core_dispatcher::raiseDownloadPriority(const QString &_contactAimid, int6
     return post_message_to_core("download/raise_priority", collection.get());
 }
 
-qint64 core_dispatcher::raiseContactDownloadsPriority(const QString &_contactAimid)
+qint64 core_dispatcher::contactSwitched(const QString &_contactAimid)
 {
-    assert(!_contactAimid.isEmpty());
-
-    __TRACE(
-        "prefetch",
-        "requesting to raise downloads priority\n"
-        "    contact=<" << _contactAimid << ">");
-
     core::coll_helper collection(create_collection(), true);
-
     collection.set<QString>("contact", _contactAimid);
-
-    return post_message_to_core("download/raise_contact_tasks_priority", collection.get());
+    return post_message_to_core("contact/switched", collection.get());
 }
 
 void core_dispatcher::sendMessageToContact(const QString& _contact, const QString& _text)
@@ -398,7 +372,8 @@ void core_dispatcher::sendMessageToContact(const QString& _contact, const QStrin
 void core_dispatcher::read_snap(
     const QString &_contact,
     const uint64_t _snapId,
-    const bool _markPrevSnapsRead)
+    const bool _markPrevSnapsRead,
+    bool _refreshStorage)
 {
     assert(!_contact.isEmpty());
     assert(_snapId > 0);
@@ -408,6 +383,7 @@ void core_dispatcher::read_snap(
     collection.set<QString>("contact_aimid", _contact);
     collection.set<uint64_t>("snap_id", _snapId);
     collection.set<bool>("mark_prev_snaps_read", _markPrevSnapsRead);
+    collection.set<bool>("refresh_storage", _refreshStorage);
 
     post_message_to_core("snap/mark_as_read", collection.get());
 }
@@ -415,7 +391,8 @@ void core_dispatcher::read_snap(
 bool core_dispatcher::init()
 {
 #ifndef ICQ_CORELIB_STATIC_LINKING
-    QLibrary libcore(CORELIBRARY);
+    auto library_path = QApplication::applicationDirPath() + "/" + CORELIBRARY;
+    QLibrary libcore(library_path);
     if (!libcore.load())
     {
         assert(false);
@@ -447,11 +424,14 @@ bool core_dispatcher::init()
         return false;
 
     gui_connector* connector = new gui_connector();
+
     QObject::connect(connector, SIGNAL(received(QString, qint64, core::icollection*)), this, SLOT(received(QString, qint64, core::icollection*)), Qt::QueuedConnection);
 
     guiConnector_ = connector;
 
-    common::core_gui_settings settings(Utils::scale_value(56));
+    common::core_gui_settings settings(
+        build::is_icq(),
+        Utils::scale_value(56));
 
     coreConnector_->link(guiConnector_, settings);
 
@@ -470,8 +450,10 @@ void core_dispatcher::initMessageMap()
     REGISTER_IM_MESSAGE("login_get_sms_code_result", onLoginGetSmsCodeResult);
     REGISTER_IM_MESSAGE("login_result", onLoginResult);
     REGISTER_IM_MESSAGE("avatars/get/result", onAvatarsGetResult);
+    REGISTER_IM_MESSAGE("avatars/presence/updated", onAvatarsPresenceUpdated);
     REGISTER_IM_MESSAGE("contact_presence", onContactPresence);
     REGISTER_IM_MESSAGE("gui_settings", onGuiSettings);
+    REGISTER_IM_MESSAGE("core/logins", onCoreLogins);
     REGISTER_IM_MESSAGE("theme_settings", onThemeSettings);
     REGISTER_IM_MESSAGE("archive/images/get/result", onArchiveImagesGetResult);
     REGISTER_IM_MESSAGE("archive/messages/get/result", onArchiveMessagesGetResult);
@@ -481,12 +463,13 @@ void core_dispatcher::initMessageMap()
     REGISTER_IM_MESSAGE("messages/received/init", onMessagesReceivedInit);
     REGISTER_IM_MESSAGE("messages/received/message_status", onMessagesReceivedMessageStatus);
     REGISTER_IM_MESSAGE("messages/del_up_to", onMessagesDelUpTo);
-    REGISTER_IM_MESSAGE("dlg_state", onDlgState);
+    REGISTER_IM_MESSAGE("dlg_states", onDlgStates);
     
     REGISTER_IM_MESSAGE("history_search_result_msg", onHistorySearchResultMsg);
     REGISTER_IM_MESSAGE("history_search_result_contacts", onHistorySearchResultContacts);
     REGISTER_IM_MESSAGE("empty_search_results", onEmptySearchResults);
     REGISTER_IM_MESSAGE("search_need_update", onSearchNeedUpdate);
+	REGISTER_IM_MESSAGE("history_update", onHistoryUpdate);
 
     REGISTER_IM_MESSAGE("voip_signal", onVoipSignal);
     REGISTER_IM_MESSAGE("active_dialogs_are_empty", onActiveDialogsAreEmpty);
@@ -501,6 +484,11 @@ void core_dispatcher::initMessageMap()
     REGISTER_IM_MESSAGE("chats/pending/result", onChatsPendingResult);
     REGISTER_IM_MESSAGE("chats/info/get/failed", onChatsInfoGetFailed);
 
+    REGISTER_IM_MESSAGE("files/error", fileSharingErrorResult);
+    REGISTER_IM_MESSAGE("files/download/progress", fileSharingDownloadProgress);
+    REGISTER_IM_MESSAGE("files/get_preview_size/result", fileSharingGetPreviewSizeResult);
+    REGISTER_IM_MESSAGE("files/metainfo/result", fileSharingMetainfoResult);
+    REGISTER_IM_MESSAGE("files/check_exists/result", fileSharingCheckExistsResult);
     REGISTER_IM_MESSAGE("files/download/result", fileSharingDownloadResult);
     REGISTER_IM_MESSAGE("image/download/result", imageDownloadResult);
     REGISTER_IM_MESSAGE("image/download/progress", imageDownloadProgress);
@@ -545,6 +533,16 @@ void core_dispatcher::initMessageMap()
     REGISTER_IM_MESSAGE("masks/get/result", onMasksGetResult);
     REGISTER_IM_MESSAGE("masks/progress", onMasksProgress);
     REGISTER_IM_MESSAGE("masks/update/retry", onMasksRetryUpdate);
+
+    REGISTER_IM_MESSAGE("mailboxes/status", onMailStatus);
+    REGISTER_IM_MESSAGE("mailboxes/new", onMailNew);
+
+    REGISTER_IM_MESSAGE("mrim/get_key/result", getMrimKeyResult);
+    REGISTER_IM_MESSAGE("need_show_promo_loaded", onNeedShowPromoLoaded);
+
+    REGISTER_IM_MESSAGE("snaps/user_snaps", onUserSnaps);
+    REGISTER_IM_MESSAGE("snaps/user_snaps_state", onUserSnapsState);
+    REGISTER_IM_MESSAGE("snaps/storage", onUserSnapsStorage);
 }
 
 void core_dispatcher::uninit()
@@ -622,67 +620,54 @@ void core_dispatcher::cleanupCallbacks()
     lastTimeCallbacksCleanedUp_ = now;
 }
 
-void core_dispatcher::fileSharingDownloadResult(const int64_t _seq, core::coll_helper _params)
+void core_dispatcher::fileSharingErrorResult(const int64_t _seq, core::coll_helper _params)
 {
-    const auto function = _params.get_value_as_enum<core::file_sharing_function>("function");
-
-    const auto modeDownloadPreviewMetainfo = (function == core::file_sharing_function::download_preview_metainfo);
-    const auto modeCheckLocalCopyExists = (function == core::file_sharing_function::check_local_copy_exists);
-    const auto modeDownloadFile = (function == core::file_sharing_function::download_file);
-    const auto modeDownloadFileMetainfo = (function == core::file_sharing_function::download_file_metainfo);
-
     const auto rawUri = _params.get<QString>("file_url");
     const auto errorCode = _params.get<int32_t>("error", 0);
 
-    const auto requestFailed = (errorCode != 0);
-    if ((modeDownloadFile || modeDownloadFileMetainfo || modeDownloadPreviewMetainfo) &&
-        requestFailed)
-    {
-        emit fileSharingError(_seq, rawUri, errorCode);
-        return;
-    }
+    emit fileSharingError(_seq, rawUri, errorCode);
+}
 
-    if (modeDownloadPreviewMetainfo)
-    {
-        const auto miniPreviewUri = _params.get<QString>("mini_preview_uri");
-        const auto fullPreviewUri = _params.get<QString>("full_preview_uri");
-
-        emit fileSharingPreviewMetainfoDownloaded(_seq, miniPreviewUri, fullPreviewUri);
-
-        return;
-    }
-
-    const auto filename = _params.get<QString>("file_name");
-    const auto filenameShort = _params.get<QString>("file_name_short");
+void core_dispatcher::fileSharingDownloadProgress(const int64_t _seq, core::coll_helper _params)
+{
+    const auto rawUri = _params.get<QString>("file_url");
     const auto size = _params.get<int64_t>("file_size");
-    const auto downloadUri = _params.get<QString>("file_dlink");
     const auto bytesTransfer = _params.get<int64_t>("bytes_transfer", 0);
 
-    const auto isProgress = !_params.is_value_exist("error");
-    if (isProgress)
-    {
-        assert(bytesTransfer >= 0);
-        assert(modeDownloadFile);
-        emit fileSharingFileDownloading(_seq, rawUri, bytesTransfer, size);
-        return;
-    }
+    emit fileSharingFileDownloading(_seq, rawUri, bytesTransfer, size);
+}
 
-    if (modeDownloadFile)
-    {
-        emit fileSharingFileDownloaded(_seq, rawUri, filename);
-        return;
-    }
+void core_dispatcher::fileSharingGetPreviewSizeResult(const int64_t _seq, core::coll_helper _params)
+{
+    const auto miniPreviewUri = _params.get<QString>("mini_preview_uri");
+    const auto fullPreviewUri = _params.get<QString>("full_preview_uri");
 
-    if (modeDownloadFileMetainfo)
-    {
-        emit fileSharingFileMetainfoDownloaded(_seq, filenameShort, downloadUri, size);
-        return;
-    }
+    emit fileSharingPreviewMetainfoDownloaded(_seq, miniPreviewUri, fullPreviewUri);
+}
 
-    modeCheckLocalCopyExists;
-    assert(modeCheckLocalCopyExists);
+void core_dispatcher::fileSharingMetainfoResult(const int64_t _seq, core::coll_helper _params)
+{
+    const auto filenameShort = _params.get<QString>("file_name_short");
+    const auto downloadUri = _params.get<QString>("file_dlink");
+    const auto size = _params.get<int64_t>("file_size");
 
-    emit fileSharingLocalCopyCheckCompleted(_seq, !requestFailed, filename);
+    emit fileSharingFileMetainfoDownloaded(_seq, filenameShort, downloadUri, size);
+}
+
+void core_dispatcher::fileSharingCheckExistsResult(const int64_t _seq, core::coll_helper _params)
+{
+    const auto filename = _params.get<QString>("file_name");
+    const auto exists = _params.get<bool>("exists");
+
+    emit fileSharingLocalCopyCheckCompleted(_seq, exists, filename);
+}
+
+void core_dispatcher::fileSharingDownloadResult(const int64_t _seq, core::coll_helper _params)
+{
+    const auto rawUri = _params.get<QString>("file_url");
+    const auto filename = _params.get<QString>("file_name");
+
+    emit fileSharingFileDownloaded(_seq, rawUri, filename);
 }
 
 void core_dispatcher::imageDownloadProgress(const int64_t _seq, core::coll_helper _params)
@@ -786,7 +771,7 @@ void core_dispatcher::fileUploadingResult(const int64_t _seq, core::coll_helper 
     const auto error = _params.get<int32_t>("error");
 
     const auto success = (error == 0);
-    const auto isFileTooBig = (error == (int32_t)core::wim::loader_errors::too_large_file);
+    const auto isFileTooBig = (error == (int32_t)loader_errors::too_large_file);
     emit fileSharingUploadingResult(uploadingId, success, localPath, link, contentType, isFileTooBig);
 }
 
@@ -923,6 +908,27 @@ void core_dispatcher::onMasksProgress(const int64_t _seq, core::coll_helper _par
 void core_dispatcher::onMasksRetryUpdate(const int64_t _seq, core::coll_helper _params)
 {
     emit maskRetryUpdate();
+}
+
+void core_dispatcher::onMailStatus(const int64_t _seq, core::coll_helper _params)
+{
+    auto array = _params.get_value_as_array("mailboxes");
+    if (!array->empty()) //only one email
+    {
+        bool init = _params->is_value_exist("init") ? _params.get_value_as_bool("init") : false;
+        core::coll_helper helper(array->get_at(0)->get_as_collection(), false);
+        emit mailStatus(helper.get_value_as_string("email"), helper.get_value_as_uint("unreads"), init);
+    }
+}
+
+void core_dispatcher::onMailNew(const int64_t _seq, core::coll_helper _params)
+{
+    emit newMail(_params.get_value_as_string("email"), _params.get_value_as_string("from") ,_params.get_value_as_string("subj"), _params.get_value_as_string("uidl"));
+}
+
+void core_dispatcher::getMrimKeyResult(const int64_t _seq, core::coll_helper _params)
+{
+    emit mrimKey(_seq, _params.get_value_as_string("key"));
 }
 
 void core_dispatcher::onAppConfig(const int64_t _seq, core::coll_helper _params)
@@ -1190,7 +1196,7 @@ void core_dispatcher::invokeStateAway()
 
 void core_dispatcher::invokePreviousState()
 {
-    if (userStateGoneAway_)
+    if (userStateGoneAway_ || MyInfo()->state().toLower() == "away")
     {
         userStateGoneAway_ = false;
         setUserState(core::profile_state::online);
@@ -1200,8 +1206,15 @@ void core_dispatcher::invokePreviousState()
 void core_dispatcher::onNeedLogin(const int64_t _seq, core::coll_helper _params)
 {
     userStateGoneAway_ = false;
+    
+    bool is_auth_error = false;
+    
+    if (_params.get())
+    {
+        is_auth_error = _params.get_value_as_bool("is_auth_error", false);
+    }
 
-    emit needLogin();
+    emit needLogin(is_auth_error);
 }
 
 void core_dispatcher::onImCreated(const int64_t _seq, core::coll_helper _params)
@@ -1255,6 +1268,11 @@ void core_dispatcher::onAvatarsGetResult(const int64_t _seq, core::coll_helper _
     emit avatarLoaded(contact, avatar.release(), size);
 }
 
+void core_dispatcher::onAvatarsPresenceUpdated(const int64_t _seq, core::coll_helper _params)
+{
+    emit avatarUpdated(QString(_params.get_value_as_string("aimid")));
+}
+
 void core_dispatcher::onContactPresence(const int64_t _seq, core::coll_helper _params)
 {
     emit presense(Data::UnserializePresence(&_params));
@@ -1269,6 +1287,13 @@ void core_dispatcher::onGuiSettings(const int64_t _seq, core::coll_helper _param
     get_gui_settings()->unserialize(_params);
 
     emit guiSettings();
+}
+
+void core_dispatcher::onCoreLogins(const int64_t _seq, core::coll_helper _params)
+{
+    const bool has_valid_login = _params.get_value_as_bool("has_valid_login");
+
+    emit coreLogins(has_valid_login);
 }
 
 void core_dispatcher::onThemeSettings(const int64_t _seq, core::coll_helper _params)
@@ -1359,14 +1384,35 @@ void core_dispatcher::onMessagesDelUpTo(const int64_t _seq, core::coll_helper _p
     emit messagesDeletedUpTo(contact, id);
 }
 
-void core_dispatcher::onDlgState(const int64_t _seq, core::coll_helper _params)
+void core_dispatcher::onDlgStates(const int64_t _seq, core::coll_helper _params)
 {
     const auto myAimid = _params.get<QString>("my_aimid");
 
-    Data::DlgState state;
-    Data::UnserializeDlgState(&_params, myAimid, false /* from_search */, Out state);
-    emit dlgState(state);
+    auto dlgStatesList = std::make_shared<QList<Data::DlgState>>();
+
+    auto arrayDlgStates = _params.get_value_as_array("dlg_states");
+    if (!arrayDlgStates)
+    {
+        assert(false);
+        return;
+    }
+
+    for (int32_t i = 0; i < arrayDlgStates->size(); ++i)
+    {
+        Data::DlgState state;
+
+        auto val = arrayDlgStates->get_at(i);
+
+        core::coll_helper helper(val->get_as_collection(), false);
+
+        Data::UnserializeDlgState(&helper, myAimid, false, Out state);
+
+        dlgStatesList->push_back(state);
+    }
+
+    emit dlgStates(dlgStatesList);
 }
+
 
 void core_dispatcher::onHistorySearchResultMsg(const int64_t _seq, core::coll_helper _params)
 {
@@ -1405,11 +1451,22 @@ void core_dispatcher::onHistorySearchResultContacts(const int64_t _seq, core::co
     auto msgArray = _params.get_value_as_array("results");
     for (int i = 0; i < msgArray->size(); ++i)
     {
-        Data::DlgState state;
         auto val = msgArray->get_at(i);
         core::coll_helper helper(val->get_as_collection(), false);
-        const auto myAimid = helper.get<QString>("my_aimid");
-        Data::UnserializeDlgState(&helper, myAimid, true /* from_search */, Out state);
+        auto aimId = helper.get<QString>("contact");
+        Data::DlgState state = Logic::getRecentsModel()->getDlgState(aimId);
+        if (state.AimId_.isEmpty())
+            state.AimId_ = aimId;
+
+        if (helper.is_value_exist("is_contact"))
+        {
+            state.IsContact_ = helper.get<bool>("is_contact");
+        }
+
+        if (helper.is_value_exist("is_chat"))
+        {
+            state.Chat_ = helper.get<bool>("is_chat");
+        }
 
         if (helper.is_value_exist("from_search"))
         {
@@ -1442,8 +1499,7 @@ void core_dispatcher::onHistorySearchResultContacts(const int64_t _seq, core::co
 
 void core_dispatcher::onEmptySearchResults(const int64_t _seq, core::coll_helper _params)
 {
-    emit Utils::InterConnector::instance().hideSearchSpinner();
-    emit Utils::InterConnector::instance().showNoSearchResults();
+    emit emptySearchResults(_params.get_value_as_int64("req_id"));
 }
 
 void core_dispatcher::onSearchNeedUpdate(const int64_t _seq, core::coll_helper _params)
@@ -1657,6 +1713,12 @@ void core_dispatcher::onSnapGetMetainfoResult(int64_t _seq, const core::coll_hel
     const auto authorName = _params.get<QString>("author_name", "");
 
     emit snapMetainfoDownloaded(_seq, success, snapId, expireUtc, authorUin, authorName);
+
+    const auto preview_uri = _params.get<QString>("iphone_preview_uri", "");
+    const auto ttl_id = _params.get<QString>("ttl_id", "");
+    const auto not_found = _params.get<bool>("not_found", false);
+
+    emit snapPreviewInfoDownloaded(snapId, preview_uri, ttl_id, !not_found);
 }
 
 
@@ -1671,7 +1733,58 @@ void core_dispatcher::onContactRemovedFromIgnore(const int64_t _seq, core::coll_
     emit contactList(cl, type);
 }
 
+void core_dispatcher::onNeedShowPromoLoaded(const int64_t _seq, core::coll_helper _params)
+{
+    const auto need_show = _params.get<bool>("need_promo");
+    get_common_settings()->set_need_show_promo(need_show);
+}
 
+void core_dispatcher::onUserSnaps(const int64_t _seq, core::coll_helper _params)
+{
+    Logic::UserSnapsInfo info;
+    Logic::UnserializeUserSnapsInfo(&_params, info);
+    bool fromRefresh = false;
+    if (_params.is_value_exist("from_refresh"))
+        fromRefresh = _params.get_value_as_bool("from_refresh");
+
+    emit userSnaps(info, fromRefresh);
+}
+
+void core_dispatcher::onUserSnapsState(const int64_t _seq, core::coll_helper _params)
+{
+    Logic::SnapState state;
+    Logic::UnserializeSnapState(&_params, state);
+    emit userSnapsState(state);
+}
+
+void core_dispatcher::onUserSnapsStorage(const int64_t _seq, core::coll_helper _params)
+{
+    QList<Logic::UserSnapsInfo> snaps;
+    auto users = _params.get_value_as_array("users");
+    for (int i = 0; i < users->size(); ++i)
+    {
+        auto user = users->get_at(i)->get_as_collection();
+        core::coll_helper h(user, false);
+        Logic::UserSnapsInfo info;
+        Logic::UnserializeUserSnapsInfo(&h, info);
+        snaps.push_back(info);
+    }
+
+    bool fromCache = false;
+    if (_params.is_value_exist("from_cache"))
+        fromCache = _params.get_value_as_bool("from_cache");
+
+    emit userSnapsStorage(snaps, fromCache);
+}
+
+
+void Ui::core_dispatcher::onHistoryUpdate(const int64_t _seq, core::coll_helper _params)
+{
+	std::string contact = _params.get_value_as_string("contact");
+	qint64 last_read_msg = _params.get_value_as_int64("last_read_msg");
+
+	emit historyUpdate(QString::fromStdString(contact), last_read_msg);
+}
 
 namespace { std::unique_ptr<core_dispatcher> gDispatcher; }
 

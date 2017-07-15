@@ -5,7 +5,7 @@
 
 platform_win32::GraphicsPanelWin32::GraphicsPanelWin32(
     QWidget* _parent,
-    std::vector<Ui::BaseVideoPanel*>&/* panels*/)
+    std::vector<Ui::BaseVideoPanel*>&/* panels*/, bool /*primaryVideo*/)
     : platform_specific::GraphicsPanel(_parent)
 {
 

@@ -54,9 +54,16 @@ namespace Previewer
 
         void onCacheLoaded();
 
+        void onZoomIn();
+        void onZoomOut();
+
+        void onWheelEvent(const int _delta);
+        void onEscapeClick();
+
     private:
         void moveToScreen();
 
+        QFrame* createZoomFrame();
         QFrame* createButtonFrame();
         QFrame* createCloseFrame();
 
@@ -77,6 +84,8 @@ namespace Previewer
 
         void connectLoader();
         void disconnectLoader();
+
+        void connectContainerEvents();
 
         bool hasPrev() const;
         void prev();
@@ -101,8 +110,12 @@ namespace Previewer
         DownloadWidget* download_;
         ImageViewerWidget* imageViewer_;
 
+        Ui::CustomButton* zoomOut_;
+        Ui::CustomButton* zoomIn_;
+
         Ui::CustomButton* prev_;
         Ui::CustomButton* next_;
+        Ui::CustomButton* openInBrowser_;
         Ui::CustomButton* save_;
         QLabel* info_;
 
@@ -113,5 +126,7 @@ namespace Previewer
 
         QTimer* scrollTimer_;
         QTimer* delayTimer_;
+
+        std::shared_ptr<bool> ref_;
     };
 }

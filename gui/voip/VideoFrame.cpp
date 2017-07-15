@@ -14,12 +14,12 @@
 
 platform_specific::GraphicsPanel* platform_specific::GraphicsPanel::create(
     QWidget* _parent,
-    std::vector<Ui::BaseVideoPanel*>& _panels)
+    std::vector<Ui::BaseVideoPanel*>& _panels, bool primaryVideo)
 {
 #ifdef __APPLE__
-    return  platform_macos::GraphicsPanelMacos::create(_parent, _panels);
+    return  platform_macos::GraphicsPanelMacos::create(_parent, _panels, primaryVideo);
 #elif _WIN32
-    return  new platform_win32::GraphicsPanelWin32(_parent, _panels);
+    return  new platform_win32::GraphicsPanelWin32(_parent, _panels, primaryVideo);
 #endif
     return nullptr;
 }

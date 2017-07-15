@@ -28,9 +28,7 @@ Ui::DetachedVideoWindow::DetachedVideoWindow(QWidget* parent)
 	, shadow_ (new Ui::ShadowWindowParent(this))
 {
         this->resize(400, 300);
-        horizontalLayout_ = new QHBoxLayout(this);
-        horizontalLayout_->setContentsMargins(0, 0, 0, 0);
-        horizontalLayout_->setSpacing(0);
+        horizontalLayout_ = Utils::emptyHLayout(this);
         horizontalLayout_->setAlignment(Qt::AlignVCenter);
         QMetaObject::connectSlotsByName(this);
         
@@ -59,7 +57,7 @@ Ui::DetachedVideoWindow::DetachedVideoWindow(QWidget* parent)
         {
             panels.push_back(videoPanelHeader_.get());
         }
-        rootWidget_ = platform_specific::GraphicsPanel::create(this, panels);
+        rootWidget_ = platform_specific::GraphicsPanel::create(this, panels, false);
         rootWidget_->setContentsMargins(0, 0, 0, 0);
         rootWidget_->setAttribute(Qt::WA_UpdatesDisabled);
         rootWidget_->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));

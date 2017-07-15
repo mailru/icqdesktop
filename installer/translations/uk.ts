@@ -2,14 +2,42 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="uk" sourcelanguage="en">
 <context>
-    <name>installer::ui::accounts_page</name>
+    <name>installer::ui::accounts_page_agent</name>
     <message>
-        <source>Choose your account</source>
-        <translation>Оберіть обліковий запис</translation>
+        <source>Account settings</source>
+        <translation>Параметри облікового запису</translation>
     </message>
     <message>
-        <source>Now we support only one ICQ account per session. Please choose prefered one to continue.</source>
-        <translation>Тепер ми підтримуємо тільки один обліковий запис ICQ за сесію. Щоб продовжити, оберіть бажаний обліковий запис.</translation>
+        <source>Now Mail.Ru Agent supports only one account. You can merge it with ICQ one.</source>
+        <translation>Тепер Mail.Ru Агент підтримує тільки один обліковий запис. Ви можете поєднати його із номером ICQ.</translation>
+    </message>
+    <message>
+        <source>Mail.Ru Agent</source>
+        <translation>Mail.Ru Агент</translation>
+    </message>
+    <message>
+        <source>Choose Mail.Ru Agent account</source>
+        <translation>Виберіть обліковий запис у Mail.Ru Агенті</translation>
+    </message>
+    <message>
+        <source>ICQ</source>
+        <translation>ICQ</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Назад</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation>Далі</translation>
+    </message>
+    <message>
+        <source>Choose ICQ account</source>
+        <translation>Виберіть обліковий запис у ICQ</translation>
+    </message>
+    <message>
+        <source>Skip step</source>
+        <translation>Пропустити крок</translation>
     </message>
 </context>
 <context>
@@ -40,6 +68,10 @@
     <message>
         <source>ICQ Setup</source>
         <translation>Інсталяція ICQ</translation>
+    </message>
+    <message>
+        <source>Mail.Ru Agent Setup</source>
+        <translation>Інсталяція Mail.Ru Агента</translation>
     </message>
 </context>
 <context>
@@ -81,6 +113,14 @@
         <source>Install</source>
         <translatorcomment>To intall ICQ app</translatorcomment>
         <translation>Інсталювати</translation>
+    </message>
+    <message>
+        <source>Welcome to Mail.Ru Agent</source>
+        <translation>Вітаємо у Mail.Ru Агенті</translation>
+    </message>
+    <message>
+        <source>This will install Mail.Ru Agent on your computer</source>
+        <translation>Програма інсталює Mail.Ru Агент на ваш комп&apos;ютер</translation>
     </message>
 </context>
 <context>

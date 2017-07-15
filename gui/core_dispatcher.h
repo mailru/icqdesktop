@@ -13,6 +13,7 @@
 #include "types/link_metadata.h"
 #include "types/message.h"
 #include "types/typing.h"
+#include "types/snap.h"
 
 namespace voip_manager
 {
@@ -104,7 +105,7 @@ Q_SIGNALS:
         Q_OBJECT
 
 Q_SIGNALS:
-        void needLogin();
+        void needLogin(const bool _is_auth_error);
         void contactList(std::shared_ptr<Data::ContactList>, QString);
         void im_created();
         void loginComplete();
@@ -115,15 +116,17 @@ Q_SIGNALS:
         void loginResultAttachUin(int64_t, int _code);
         void loginResultAttachPhone(int64_t, int _code);
         void avatarLoaded(const QString&, QPixmap*, int);
-
+        void avatarUpdated(const QString &);
+        
         void presense(Data::Buddy*);
         void searchResult(QStringList);
-        void dlgState(Data::DlgState);
+        void dlgStates(std::shared_ptr<QList<Data::DlgState>>);
         void searchedMessage(Data::DlgState);
         void searchedContacts(QList<Data::DlgState>, qint64);
-        void emptySearchResults();
+        void emptySearchResults(qint64);
         void activeDialogHide(QString);
         void guiSettings();
+        void coreLogins(const bool _has_valid_login);
         void themeSettings();
         void chatInfo(qint64, std::shared_ptr<Data::ChatInfo>);
         void chatBlocked(QList<Data::ChatMemberInfo>);
@@ -193,6 +196,7 @@ Q_SIGNALS:
 
         void phoneInfoResult(qint64, Data::PhoneInfo);
         void snapMetainfoDownloaded(int64_t _seq, bool _success, uint64_t _snapId, int64_t _expireUtc, QString _authorUin, QString _authorName);
+        void snapPreviewInfoDownloaded(qint64 _snapId, QString _mini_preview, QString _ttl_id, bool _found);
 
         // masks
         void maskListLoaded(QList<QString> maskList);
@@ -203,6 +207,15 @@ Q_SIGNALS:
         void maskRetryUpdate();
 
         void appConfig();
+
+        void mailStatus(QString, unsigned, bool);
+        void newMail(QString, QString, QString, QString);
+        void mrimKey(qint64, QString);
+
+        void historyUpdate(QString, qint64);
+        void userSnaps(Logic::UserSnapsInfo, bool);
+        void userSnapsState(Logic::SnapState);
+        void userSnapsStorage(QList<Logic::UserSnapsInfo>, bool);
 
     public Q_SLOTS:
         void received(const QString, const qint64, core::icollection*);
@@ -221,10 +234,11 @@ Q_SIGNALS:
 
         voip_proxy::VoipController& getVoipController();
 
-        qint64 downloadSharedFile(const QString& _contact, const QString& _url, const QString& _downloadDir, const QString& _fileName, const core::file_sharing_function _function);
-        qint64 requestFileDirectUri(const QString& _url, const QObject* _object, std::function<void(bool _res, const QString& _uri)> _callback);
+        qint64 getFileSharingPreviewSize(const QString& _url);
+        qint64 downloadFileSharingMetainfo(const QString& _url);
+        qint64 downloadSharedFile(const QString& _contactAimid, const QString& _url, bool _forceRequestMetainfo, const QString& _fileName = QString(), bool _raise_priority = false);
 
-        qint64 abortSharedFileDownloading(const qint64 _downloadingSeq);
+        qint64 abortSharedFileDownloading(const QString& _url);
 
         qint64 uploadSharedFile(const QString &contact, const QString& _localPath);
         qint64 uploadSharedFile(const QString &contact, const QByteArray& _array, const QString& ext);
@@ -239,9 +253,10 @@ Q_SIGNALS:
             const QString& _destination,
             const bool _isPreview,
             const int32_t _maxPreviewWidth,
-            const int32_t _maxPreviewHeight);
+            const int32_t _maxPreviewHeight,
+            bool _raisePriority = false);
 
-        void cancelImageDownloading(const int64_t _downloadSeq);
+        void cancelImageDownloading(const QString& _url);
 
         int64_t downloadLinkMetainfo(
             const QString& _contactAimid,
@@ -256,13 +271,13 @@ Q_SIGNALS:
 
         qint64 raiseDownloadPriority(const QString &_contactAimid, int64_t _procId);
 
-        qint64 raiseContactDownloadsPriority(const QString &_contactAimid);
+        qint64 contactSwitched(const QString &_contactAimid);
 
         void sendMessageToContact(const QString& _contact, const QString& _text);
 
-        void read_snap(const QString& _contact, const uint64_t _snapId, const bool _markPrevSnapsRead);
+        void read_snap(const QString& _contact, const uint64_t _snapId, const bool _markPrevSnapsRead, bool _refreshStorage = false);
 
-        int64_t download_snap_metainfo(const QString& _contact, const QString& _ttlId);
+        int64_t download_snap_metainfo(const QString& _contact, const QString& _ttlId, bool _raise = false);
 
         int64_t pttToText(const QString& _pttLink, const QString& _locale);
 
@@ -282,8 +297,10 @@ Q_SIGNALS:
         void onLoginGetSmsCodeResult(const int64_t _seq, core::coll_helper _params);
         void onLoginResult(const int64_t _seq, core::coll_helper _params);
         void onAvatarsGetResult(const int64_t _seq, core::coll_helper _params);
+        void onAvatarsPresenceUpdated(const int64_t _seq, core::coll_helper _params);
         void onContactPresence(const int64_t _seq, core::coll_helper _params);
         void onGuiSettings(const int64_t _seq, core::coll_helper _params);
+        void onCoreLogins(const int64_t _seq, core::coll_helper _params);
         void onThemeSettings(const int64_t _seq, core::coll_helper _params);
         void onArchiveImagesGetResult(const int64_t _seq, core::coll_helper _params);
         void onArchiveMessagesGetResult(const int64_t _seq, core::coll_helper _params);
@@ -293,11 +310,12 @@ Q_SIGNALS:
         void onMessagesReceivedInit(const int64_t _seq, core::coll_helper _params);
         void onMessagesReceivedMessageStatus(const int64_t _seq, core::coll_helper _params);
         void onMessagesDelUpTo(const int64_t _seq, core::coll_helper _params);
-        void onDlgState(const int64_t _seq, core::coll_helper _params);
+        void onDlgStates(const int64_t _seq, core::coll_helper _params);
         void onHistorySearchResultMsg(const int64_t _seq, core::coll_helper _params);
         void onHistorySearchResultContacts(const int64_t _seq, core::coll_helper _params);
         void onEmptySearchResults(const int64_t _seq, core::coll_helper _params);
         void onSearchNeedUpdate(const int64_t _seq, core::coll_helper _params);
+        void onHistoryUpdate(const int64_t _seq, core::coll_helper _params);
 
         void onVoipSignal(const int64_t _seq, core::coll_helper _params);
         void onActiveDialogsAreEmpty(const int64_t _seq, core::coll_helper _params);
@@ -311,7 +329,14 @@ Q_SIGNALS:
         void onChatsBlockedResult(const int64_t _seq, core::coll_helper _params);
         void onChatsPendingResult(const int64_t _seq, core::coll_helper _params);
         void onChatsInfoGetFailed(const int64_t _seq, core::coll_helper _params);
+
+        void fileSharingErrorResult(const int64_t _seq, core::coll_helper _params);
+        void fileSharingDownloadProgress(const int64_t _seq, core::coll_helper _params);
+        void fileSharingGetPreviewSizeResult(const int64_t _seq, core::coll_helper _params);
+        void fileSharingMetainfoResult(const int64_t _seq, core::coll_helper _params);
+        void fileSharingCheckExistsResult(const int64_t _seq, core::coll_helper _params);
         void fileSharingDownloadResult(const int64_t _seq, core::coll_helper _params);
+
         void imageDownloadProgress(const int64_t _seq, core::coll_helper _params);
         void imageDownloadResult(const int64_t _seq, core::coll_helper _params);
         void imageDownloadResultMeta(const int64_t _seq, core::coll_helper _params);
@@ -352,6 +377,14 @@ Q_SIGNALS:
         void onMasksGetResult(const int64_t _seq, core::coll_helper _params);
         void onMasksProgress(const int64_t _seq, core::coll_helper _params);
         void onMasksRetryUpdate(const int64_t _seq, core::coll_helper _params);
+        void onMailStatus(const int64_t _seq, core::coll_helper _params);
+        void onMailNew(const int64_t _seq, core::coll_helper _params);
+        void getMrimKeyResult(const int64_t _seq, core::coll_helper _params);
+        void onNeedShowPromoLoaded(const int64_t _seq, core::coll_helper _params);
+
+        void onUserSnaps(const int64_t _seq, core::coll_helper _params);
+        void onUserSnapsState(const int64_t _seq, core::coll_helper _params);
+        void onUserSnapsStorage(const int64_t _seq, core::coll_helper _params);
 
 
     private:

@@ -1,0 +1,63 @@
+QPushButton#send_button
+{
+	border: none;
+	min-width: 32dip;
+	max-width: 32dip;
+	min-height: 32dip;
+	max-height: 32dip;
+	border-image: url(:/resources/input_widget/send_100.png);
+	margin-right: 4dip;
+	padding: 0dip;
+}
+
+QPushButton#send_button:hover
+{
+	border-image: url(:/resources/input_widget/send_100_hover.png);
+}
+
+QPushButton#send_button:hover:pressed
+{
+	border-image: url(:/resources/input_widget/send_100_active.png);
+}
+
+QPushButton#send_button:disabled
+{
+	border-image: url(:/resources/input_widget/send_100_disable.png);
+}
+
+QPushButton#smiles_button
+{
+	border: none;
+	min-width: 0dip;
+	max-width: 0dip;
+	min-height: 0dip;
+	max-height: 0dip;
+}
+
+Ui--InputWidget#input_edit_control
+{
+	background: transparent;
+	border-style: none;
+}
+
+Ui--TextEditEx#input_edit_control
+{
+	background: transparent;
+	border-style: none;
+	margin-left: 16dip;
+	margin-right: 16dip;
+		
+	padding-top: 6dip;
+	padding-bottom: 6dip;
+}
+
+Ui--TextEditEx#input_edit_control_mac
+{
+	background: transparent;
+	border-style: none;
+	margin-left: 16dip;
+	margin-right: 16dip;
+		
+	padding-top: 4dip;
+	padding-bottom: 4dip;
+}

@@ -44,6 +44,6 @@ preview_proxy::link_meta_uptr load_link_meta_from_file(const std::wstring &_path
 
 snaps::snap_metainfo_uptr load_snap_meta_from_file(const std::wstring &_path, const std::string &_ttl_id);
 
-std::string sign_loader_uri(const std::string &_host, const wim_packet_params &_params, const Str2StrMap &_extra = Str2StrMap());
+std::string sign_loader_uri(const std::string &_host, const wim_packet_params &_params, const str_2_str_map &_extra = str_2_str_map());
 
 CORE_WIM_NS_END

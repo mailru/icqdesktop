@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "loader_errors.h"
+#include "../../../common.shared/loader_errors.h"
 #include "loader_handlers.h"
 #include "web_file_info.h"
 #include "../../../tools/md5.h"
@@ -8,7 +8,6 @@
 
 #include "../packets/get_file_meta_info.h"
 #include "../packets/load_file.h"
-#include "tasks_runner_slot.h"
 #include "loader.h"
 
 #include "download_task.h"
@@ -85,7 +84,8 @@ int32_t download_task::copy_if_needed()
     if (!core::tools::system::compare_dirs(core::tools::system::get_file_directory(info_->get_file_name()), files_folder_) || (!filename_.empty() && filename_ != default_filename))
     {
         std::wstring filename = filename_.empty() ? default_filename : filename_;
-        core::tools::system::copy_file(info_->get_file_name(), files_folder_ + L"/" + filename);
+        const auto is_complete = boost::filesystem::path(filename_).is_complete(); // check if filename is complete
+        core::tools::system::copy_file(info_->get_file_name(), is_complete ? filename : files_folder_ + L"/" + filename);
     }
 
     return 0;
@@ -104,6 +104,11 @@ bool download_task::serialize_metainfo()
     }
 
     return true;
+}
+
+void download_task::delete_metainfo_file()
+{
+    tools::system::delete_file(get_info_file_name());
 }
 
 bool download_task::load_metainfo_from_local_cache()
@@ -179,7 +184,7 @@ void download_task::on_progress()
         get_handler()->on_progress(*make_info());
 }
 
-bool download_task::get_file_id(const std::string& _file_url, std::string& _file_id) const
+bool download_task::get_file_id(const std::string& _file_url, std::string& _file_id)
 {
     _file_id = core::tools::trim_right<std::string>(_file_url, "/");
 
@@ -208,8 +213,14 @@ loader_errors download_task::download_metainfo()
     info_->set_file_id(file_id);
 
     get_file_meta_info packet(get_wim_params(), *info_);
-    if (packet.execute() != 0)
+    auto err = packet.execute();
+    if (err != 0)
+    {
+        if (err == wpie_error_metainfo_not_found)
+            return loader_errors::metainfo_not_found;
+
         return loader_errors::get_metainfo;
+    }
 
     *info_ = packet.get_info();
 
@@ -224,24 +235,32 @@ loader_errors download_task::open_temporary_file()
             return loader_errors::create_directory;
     }
 
-    std::wstring file_name = files_folder_ + L"/" + (filename_.empty() ? core::tools::from_utf8(info_->get_file_name_short()) : filename_);
-
-    if (core::tools::system::is_exist(file_name))
+    std::wstring file_name;
+    
+    if (!filename_.empty() && boost::filesystem::path(filename_).is_complete()) // check if filename is complete
     {
-        boost::filesystem::wpath path_for_file(file_name);
-        std::wstring ext = path_for_file.extension().wstring();
-        std::wstring file_name_without_ext = file_name.substr(0, file_name.length() - ext.length());
-
-        for (auto i = 0; i < 1000; i++)
+        file_name = filename_;
+    }
+    else
+    {
+        file_name = files_folder_ + L"/" + (filename_.empty() ? core::tools::from_utf8(info_->get_file_name_short()) : filename_);
+        if (core::tools::system::is_exist(file_name))
         {
-            std::wstringstream ss_file_name;
+            boost::filesystem::wpath path_for_file(file_name);
+            std::wstring ext = path_for_file.extension().wstring();
+            std::wstring file_name_without_ext = file_name.substr(0, file_name.length() - ext.length());
 
-            ss_file_name << file_name_without_ext << L"-" << i << ext;
-
-            if (!core::tools::system::is_exist(ss_file_name.str()))
+            for (auto i = 0; i < 1000; i++)
             {
-                file_name = ss_file_name.str();
-                break;
+                std::wstringstream ss_file_name;
+
+                ss_file_name << file_name_without_ext << L"-" << i << ext;
+
+                if (!core::tools::system::is_exist(ss_file_name.str()))
+                {
+                    file_name = ss_file_name.str();
+                    break;
+                }
             }
         }
     }

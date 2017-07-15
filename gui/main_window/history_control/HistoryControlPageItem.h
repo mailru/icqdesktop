@@ -1,5 +1,7 @@
 #pragma once
 
+#include "QuoteColorAnimation.h"
+
 namespace Ui
 {
 
@@ -31,6 +33,8 @@ namespace Ui
 
         virtual void onVisibilityChanged(const bool isVisible);
 
+        virtual void onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect);
+
         virtual void setHasAvatar(const bool value);
 
         virtual void select();
@@ -47,11 +51,15 @@ namespace Ui
 
         virtual bool setLastRead(const bool _isLastRead);
 
+        virtual void setDeliveredToServer(const bool _delivered);
+
         virtual qint64 getId() const;
 
         void setDeleted(const bool _isDeleted);
 
         bool isDeleted() const;
+
+		virtual void setQuoteSelection() = 0;
 
     protected:
         virtual void drawLastReadAvatar(QPainter& _p, const QString& _aimid, const QString& _friendly, const int _rightPadding, const int _bottomPadding);
@@ -70,6 +78,9 @@ namespace Ui
         bool isDeleted_;
 
         QString aimId_;
+
+	protected:
+		QuoteColorAnimation QuoteAnimation_;
 	};
 
 }

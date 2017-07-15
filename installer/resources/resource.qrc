@@ -6,7 +6,8 @@
     <file>../translations/de.qm</file>
     <file>../translations/pt.qm</file>
     <file>../translations/cs.qm</file>
-    <file>images/appicon.ico</file>
+    <file>images/installer_agent_icon.ico</file>
+    <file>images/installer_icq_icon.ico</file>
     <file>styles/styles.qss</file>
     <file>images/content_illustration_calls_100.jpg</file>
     <file>images/content_illustration_calls_125.jpg</file>
@@ -24,6 +25,10 @@
     <file>images/content_logo_125.png</file>
     <file>images/content_logo_150.png</file>
     <file>images/content_logo_200.png</file>
+    <file>images/content_logo_agent_100.png</file>
+    <file>images/content_logo_agent_125.png</file>
+    <file>images/content_logo_agent_150.png</file>
+    <file>images/content_logo_agent_200.png</file>
     <file>images/content_illustration_facepalm_100.jpg</file>
     <file>images/content_illustration_facepalm_125.jpg</file>
     <file>images/content_illustration_facepalm_150.jpg</file>
@@ -33,5 +38,37 @@
     <file>images/picker_arrow_right_150.png</file>
     <file>images/picker_arrow_right_200.png</file>
     <file>images/content_avatarplaceholder.png</file>
+    <file>images/check_icon_100.png</file>
+    <file>images/check_icon_100_active.png</file>
+    <file>images/check_icon_100_hover.png</file>
+    <file>images/check_icon_125.png</file>
+    <file>images/check_icon_125_active.png</file>
+    <file>images/check_icon_125_hover.png</file>
+    <file>images/check_icon_150.png</file>
+    <file>images/check_icon_150_active.png</file>
+    <file>images/check_icon_150_hover.png</file>
+    <file>images/check_icon_200.png</file>
+    <file>images/check_icon_200_active.png</file>
+    <file>images/check_icon_200_hover.png</file>
+    <file>images/step_1_100_active.png</file>
+    <file>images/step_1_125_active.png</file>
+    <file>images/step_1_150_active.png</file>
+    <file>images/step_1_200_active.png</file>
+    <file>images/step_100.png</file>
+    <file>images/step_125.png</file>
+    <file>images/step_150.png</file>
+    <file>images/step_200.png</file>
+    <file>images/step_2_100.png</file>
+    <file>images/step_2_100_active.png</file>
+    <file>images/step_2_125.png</file>
+    <file>images/step_2_125_active.png</file>
+    <file>images/step_2_150.png</file>
+    <file>images/step_2_150_active.png</file>
+    <file>images/step_2_200.png</file>
+    <file>images/step_2_200_active.png</file>
+    <file>images/step_100_active.png</file>
+    <file>images/step_125_active.png</file>
+    <file>images/step_150_active.png</file>
+    <file>images/step_200_active.png</file>
   </qresource>
 </RCC>

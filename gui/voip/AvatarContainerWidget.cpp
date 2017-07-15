@@ -6,36 +6,14 @@
 #include "../types/contact.h"
 #include "../utils/utils.h"
 
-Ui::AvatarContainerWidget::AvatarContainerWidget(QWidget* _parent, int _avatarSize, int _xOffset, int _yOffset, int _borderW)
+Ui::AvatarContainerWidget::AvatarContainerWidget(QWidget* _parent, int _avatarSize, int _xOffset, int _yOffset)
     : QWidget(_parent)
     , avatarSize_(_avatarSize)
     , xOffset_(_xOffset)
     , yOffset_(_yOffset)
-    , border_(NULL)
     , overlapPer01_(0.0f)
 {
         assert(avatarSize_ > 0);
-
-        if (_borderW < avatarSize_ / 2)
-        {
-            border_ = new QPixmap(avatarSize_, avatarSize_);
-            border_->fill(Qt::transparent);
-
-            QPainter p(border_);
-            QPainterPath path(QPoint(0, 0));
-            path.addEllipse(QRect(0, 0, avatarSize_, avatarSize_));
-
-            QPainterPath innerpath(QPoint(0, 0));
-            innerpath.addEllipse(QRect(_borderW, _borderW, avatarSize_ - 2* _borderW, avatarSize_ - 2* _borderW));
-            path = path.subtracted(innerpath);
-
-            p.setClipPath(path);
-            QBrush brush(QColor(0, 0, 0, 0.1f * 255));
-            p.setPen(Qt::PenStyle::NoPen);
-            p.setBrush(brush);
-            p.setRenderHint(QPainter::HighQualityAntialiasing);
-            p.drawEllipse(QRect(0, 0, avatarSize_, avatarSize_));
-        }
 
         connect(Logic::GetAvatarStorage(), SIGNAL(avatarChanged(QString)), this, SLOT(_avatarChanged(QString)), Qt::QueuedConnection);
 }
@@ -59,7 +37,7 @@ void Ui::AvatarContainerWidget::addAvatarTo(const std::string& _userId, std::map
     }
 
     bool isDefault = false;
-    _avatars[_userId] = Logic::GetAvatarStorage()->GetRounded(_userId.c_str(), QString(), avatarSize_, QString(), true, isDefault, false, false);
+    _avatars[_userId] = Logic::GetAvatarStorage()->GetRounded(_userId.c_str(), QString(), Utils::scale_bitmap(avatarSize_), QString(), true, isDefault, false, false);
 }
 
 void Ui::AvatarContainerWidget::_avatarChanged(QString _userId)
@@ -193,11 +171,9 @@ void Ui::AvatarContainerWidget::paintEvent(QPaintEvent*)
 
         Logic::QPixmapSCptr pixmap = avatar->second;
         painter.setRenderHint(QPainter::HighQualityAntialiasing);
-        painter.drawPixmap(rc, *pixmap);
-
-        if (!!border_)
-        {
-            painter.drawPixmap(rc, *border_);
-        }
+        
+        auto resizedImage = pixmap->scaled(Utils::scale_bitmap(rc.size()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        
+        painter.drawPixmap(rc, resizedImage, resizedImage.rect());
     }
 }

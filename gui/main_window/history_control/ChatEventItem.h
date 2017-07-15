@@ -33,6 +33,8 @@ namespace Ui
 
          virtual qint64 getId() const override;
 
+		 virtual void setQuoteSelection() override;
+
     private:
 
         QRect BubbleRect_;

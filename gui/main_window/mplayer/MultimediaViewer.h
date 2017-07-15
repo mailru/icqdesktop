@@ -4,7 +4,7 @@
 
 namespace Ui
 {
-    class VideoPlayer;
+    //class VideoPlayer;
 
     class MultimediaViewer : public QWidget
     {
@@ -12,7 +12,7 @@ namespace Ui
 
     protected:
 
-        VideoPlayer* videoPlayer_;
+        //VideoPlayer* videoPlayer_;
 
         bool closed_;
 

@@ -16,17 +16,14 @@ namespace Ui
     IntroduceYourself::IntroduceYourself(const QString& _aimid, const QString& _display_name, QWidget* parent)
         : QWidget(parent)
     {
-        QHBoxLayout *horizontal_layout = new QHBoxLayout(this);
-        horizontal_layout->setContentsMargins(0, 0, 0, 0);
+        QHBoxLayout *horizontal_layout = Utils::emptyHLayout(this);
 
         auto main_widget_ = new QWidget(this);
-        main_widget_->setStyleSheet("background-color: white; border: 0;");
+        main_widget_->setStyleSheet("background-color: #ffffff; border: 0;");
         horizontal_layout->addWidget(main_widget_);
 
         {
-            auto global_layout = new QVBoxLayout(main_widget_);
-            global_layout->setContentsMargins(0, 0, 0, 0);
-            global_layout->setSpacing(0);
+            auto global_layout = Utils::emptyVLayout(main_widget_);
 
             auto upper_widget = new QWidget(this);
             upper_widget->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
@@ -40,12 +37,10 @@ namespace Ui
             bottom_widget->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
             global_layout->addWidget(bottom_widget);
 
-            auto middle_layout = new QVBoxLayout(middle_widget);
-            middle_layout->setContentsMargins(0, 0, 0, 0);
+            auto middle_layout = Utils::emptyVLayout(middle_widget);
             middle_layout->setAlignment(Qt::AlignHCenter);
             {
-                auto pl = new QHBoxLayout(middle_widget);
-                pl->setContentsMargins(0, 0, 0, 0);
+                auto pl = Utils::emptyHLayout(middle_widget);
                 pl->setAlignment(Qt::AlignCenter);
                 {
                     auto w = new ContactAvatarWidget(this, _aimid, _display_name, Utils::scale_value(180), true);
@@ -75,8 +70,7 @@ namespace Ui
                 auto horizontalSpacer = new QSpacerItem(0, Utils::scale_value(56), QSizePolicy::Preferred, QSizePolicy::Minimum);
                 middle_layout->addItem(horizontalSpacer);
 
-                auto pl = new QHBoxLayout(middle_widget);
-                pl->setContentsMargins(0, 0, 0, 0);
+                auto pl = Utils::emptyHLayout(middle_widget);
                 pl->setAlignment(Qt::AlignCenter);
 
                 next_button_ = new QPushButton(middle_widget);
@@ -99,25 +93,16 @@ namespace Ui
 
                 QString error_style = "font-size: 15dip;\
                                       background-color: transparent;\
-                                      color: #e20b00;";
+                                      color: #d0021b;";
                 Utils::ApplyStyle(error_label_, error_style);
                 UpdateError(false);
                 middle_layout->addWidget(error_label_);
             }
 
             {
-                auto bottom_layout = new QVBoxLayout(bottom_widget);
-                bottom_layout->setContentsMargins(0, 0, 0, 0);
+                auto bottom_layout = Utils::emptyVLayout(bottom_widget);
                 bottom_layout->setAlignment(Qt::AlignHCenter);
 
-                /*auto skip = new Ui::TextEmojiWidget(bottom_widget, Utils::FontsFamily::SEGOE_UI, Utils::scale_value(16), CommonStyle::getLinkColor(), Utils::scale_value(46));
-                skip->setSizePolicy(QSizePolicy::Policy::Preferred, skip->sizePolicy().verticalPolicy());
-                skip->setText(QT_TRANSLATE_NOOP("placeholders", "Skip"));
-                skip->setCursor(Qt::PointingHandCursor);
-                bottom_layout->addWidget(skip);
-                bottom_layout->setAlignment(skip, Qt::AlignHCenter | Qt::AlignBottom);
-                connect(skip, &TextEmojiWidget::clicked, this, &IntroduceYourself::Skipped);
-                */
                 auto horizontalSpacer = new QSpacerItem(0, Utils::scale_value(32), QSizePolicy::Preferred, QSizePolicy::Minimum);
                 bottom_layout->addItem(horizontalSpacer);
             }
@@ -176,13 +161,6 @@ namespace Ui
     {
         next_button_->setEnabled(_is_active);
         Utils::ApplyStyle(next_button_, _is_active ? Ui::CommonStyle::getGreenButtonStyle() : Ui::CommonStyle::getDisabledButtonStyle());
-    }
-
-    void IntroduceYourself::Skipped()
-    {
-        get_gui_settings()->set_value(get_account_setting_name(settings_skip_intro_yourself).c_str(), true);
-        emit Utils::InterConnector::instance().showPlaceholder(Utils::PlaceholdersType::PlaceholdersType_SetExistanseOffIntroduceYourself);
-        Ui::GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::introduce_skip);
     }
 
     void IntroduceYourself::UpdateProfile()

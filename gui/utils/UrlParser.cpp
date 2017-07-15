@@ -25,11 +25,19 @@ Utils::UrlParser::UrlParser()
 
 void Utils::UrlParser::process(const QStringRef& _text)
 {
+    auto utf8text = _text.toUtf8();
+    int size = 0;
+
     int utf8counter = 0;
-    for (auto c : _text.toUtf8())
+
+    for (auto& c : utf8text)
     {
+        ++size;
+
         if (utf8counter == 0)
+        {
             utf8counter = utf8_char_size(c);
+        }
 
         parser_.process(c);
 
@@ -37,17 +45,26 @@ void Utils::UrlParser::process(const QStringRef& _text)
 
         if (utf8counter == 0)
         {
-            ++charsProcessed_;
-
             if (parser_.skipping_chars())
-                return;
+                goto finish;
 
             if (parser_.has_url())
-                return;
+                goto finish;
         }
     }
 
     parser_.finish();
+
+finish:
+    if (hasUrl())
+    {
+        const auto& url = parser_.get_url();
+        charsProcessed_ = QString::fromUtf8(url.original_.c_str(), url.original_.size()).length();
+    }
+    else
+    {
+        charsProcessed_ = QString::fromUtf8(utf8text, size).length();
+    }
 }
 
 bool Utils::UrlParser::hasUrl() const

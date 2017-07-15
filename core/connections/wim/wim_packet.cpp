@@ -27,6 +27,10 @@ wim_packet::~wim_packet()
 
 }
 
+bool wim_packet::support_async_execution() const
+{
+    return false;
+}
 
 int32_t wim_packet::execute()
 {
@@ -44,11 +48,46 @@ int32_t wim_packet::execute()
     if (err != 0)
         return err;
 
-    err = parse_response(request->get_response());
-    if (err != 0)
-        return err;
+    auto response = std::static_pointer_cast<tools::binary_stream>(request->get_response());
+    assert(response);
+    err = parse_response(response);
+    return err;
+}
 
-    return 0;
+void wim_packet::execute_async(handler_t _handler)
+{
+    assert(support_async_execution());
+
+    auto request = std::make_shared<core::http_request_simple>(params_.proxy_, utils::get_user_agent(), params_.stop_handler_);
+
+    int32_t err = init_request(request);
+    if (err != 0)
+    {
+        _handler(err);
+        return;
+    }
+
+    request->replace_host(params_.hosts_);
+
+    std::weak_ptr<wim_packet> wr_this(shared_from_this());
+
+    execute_request_async(request, [wr_this, request, _handler](int32_t _err)
+    {
+        auto ptr_this = wr_this.lock();
+        if (!ptr_this)
+            return;
+
+        if (_err != 0)
+        {
+            _handler(_err);
+            return;
+        }
+
+        auto response = std::static_pointer_cast<tools::binary_stream>(request->get_response());
+        assert(response);
+        const auto err = ptr_this->parse_response(response);
+        _handler(err);
+    });
 }
 
 bool wim_packet::is_stopped() const
@@ -91,6 +130,57 @@ int32_t wim_packet::execute_request(std::shared_ptr<core::http_request_simple> r
     }
 
     return 0;
+}
+
+void wim_packet::execute_request_async(std::shared_ptr<core::http_request_simple> _request, handler_t _handler)
+{
+    std::weak_ptr<wim_packet> wr_this(shared_from_this());
+
+    _request->get_async([_request, _handler, wr_this](bool _success)
+    {
+        auto ptr_this = wr_this.lock();
+        if (!ptr_this)
+            return;
+
+        if (!_success)
+        {
+            if (_handler)
+                _handler(wpie_network_error);
+            return;
+        }
+
+        ptr_this->http_code_ = (uint32_t) _request->get_response_code();
+
+        if (_request->get_header()->available())
+        {
+            auto header = _request->get_header();
+            uint32_t size = header->available();
+            auto buf = (const char *)header->read(size);
+
+            if (buf && size)
+            {
+                ptr_this->header_str_.assign(buf, size);
+            }
+
+            header->reset_out();
+        }
+
+        if (!_handler)
+            return;
+
+        if (ptr_this->http_code_ == 200)
+        {
+            _handler(0);
+        }
+        else if (ptr_this->http_code_ > 400 && ptr_this->http_code_ < 500)
+        {
+            _handler(ptr_this->on_http_client_error());
+        }
+        else
+        {
+            _handler(wpie_http_error);
+        }
+    });
 }
 
 void wim_packet::load_response_str(const char* buf, unsigned size)
@@ -283,7 +373,7 @@ std::string wim_packet::escape_symbols_data(const char* _data, uint32_t _len)
     return ss_out.str();
 }
 
-std::string wim_packet::create_query_from_map(const Str2StrMap& _params)
+std::string wim_packet::create_query_from_map(const str_2_str_map& _params)
 {
     std::stringstream ss_query;
 
@@ -318,7 +408,7 @@ std::string wim_packet::detect_digest(const std::string& hashed_data, const std:
 }
 
 
-std::string wim_packet::get_url_sign(const std::string& _host, const Str2StrMap& _params, const wim_packet_params& _wim_params,  bool _post_method, bool make_escape_symbols/* = true*/)
+std::string wim_packet::get_url_sign(const std::string& _host, const str_2_str_map& _params, const wim_packet_params& _wim_params,  bool _post_method, bool make_escape_symbols/* = true*/)
 {
     std::string http_method = _post_method ? "POST" : "GET";
     std::string query_string = create_query_from_map(_params);

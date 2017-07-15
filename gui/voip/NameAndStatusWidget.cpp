@@ -6,14 +6,17 @@
 #include "../utils/utils.h"
 
 template<typename __Base>
-Ui::ShadowedWidget<__Base>::ShadowedWidget(QWidget* _parent, int _tailLen, int _alphaFrom, int _alphaTo)
+Ui::ShadowedWidget<__Base>::ShadowedWidget(QWidget* _parent, int _tailLen, double _alphaFrom, double _alphaTo)
     : __Base(_parent)
     , tailLenPx_(_tailLen)
 {
 
     QGradientStops stops;
-    stops.append(qMakePair(0.0f, QColor(0, 0, 0, _alphaFrom)));
-    stops.append(qMakePair(1.0f, QColor(0, 0, 0, _alphaTo)));
+    QColor voipShadowColor("#000000");
+    voipShadowColor.setAlphaF(_alphaFrom);
+    stops.append(qMakePair(0.0f, voipShadowColor));
+    voipShadowColor.setAlphaF(_alphaTo);
+    stops.append(qMakePair(1.0f, voipShadowColor));
 
     linearGradient_.setStops(stops);
 }
@@ -71,9 +74,7 @@ Ui::NameAndStatusWidget::NameAndStatusWidget(QWidget* _parent, int _nameBaseline
 {
     setContentsMargins(0, 0, 0, 0);
 
-    QVBoxLayout* rootLayout = new QVBoxLayout();
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
+    QVBoxLayout* rootLayout = Utils::emptyVLayout();
     rootLayout->setAlignment(Qt::AlignLeft);
     setLayout(rootLayout);
 
@@ -142,9 +143,7 @@ Ui::NameWidget::NameWidget(QWidget* _parent, int _nameBaseline)
 {
     setContentsMargins(0, 0, 0, 0);
     
-    QVBoxLayout* rootLayout = new QVBoxLayout();
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
+    QVBoxLayout* rootLayout = Utils::emptyVLayout();
     rootLayout->setAlignment(Qt::AlignLeft);
     setLayout(rootLayout);
     

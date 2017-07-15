@@ -30,6 +30,12 @@ namespace Ui
 
         void messagesDeselected();
 
+        void updateHistoryPosition(int32_t position, int32_t offset);
+
+        void buttonDownClicked();
+
+        void recreateAvatarRect();
+
     public:
         typedef std::function<bool(Ui::MessageItem*, const bool)> MessageItemVisitor;
 
@@ -133,6 +139,12 @@ namespace Ui
 
         void onWheelEventResetTimer();
 
+		/// resend from MessagesScrollLayout to HistoryControlPage
+		void onUpdateHistoryPosition(int32_t position, int32_t offset);
+
+    public Q_SLOTS:
+        void onWheelEvent(QWheelEvent* e);
+
     private:
         enum class ScrollingMode;
 
@@ -187,6 +199,8 @@ namespace Ui
         void stopScrollAnimation();
 
         void resetUserActivityTimer();
+
+        void eraseContact(QWidget* widget);
 
         std::set<QString> contacts_;
 

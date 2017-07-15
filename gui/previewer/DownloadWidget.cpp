@@ -13,7 +13,7 @@ namespace
 
     static const Ui::ActionButtonWidget::ResourceSet DownloadButtonResources(
         Themes::PixmapResourceId::PreviewerReload,
-        Themes::PixmapResourceId::PreviewerReloadActive,
+        Themes::PixmapResourceId::PreviewerReloadHover,
         Themes::PixmapResourceId::PreviewerReloadHover,
         Themes::PixmapResourceId::FileSharingMediaCancel,
         Themes::PixmapResourceId::FileSharingMediaCancel,
@@ -27,10 +27,9 @@ Previewer::DownloadWidget::DownloadWidget(QWidget* _parent)
     const auto style = Utils::LoadStyle(":/resources/previewer/qss/download.qss");
 
     holder_ = new QFrame();
-    holder_->setProperty("DownloadWidget", QVariant(true));
+    holder_->setProperty("DownloadWidget", true);
     holder_->setStyleSheet(style);
-    holder_->setFixedWidth(Utils::scale_value(DownloadWidgetWidth));
-    holder_->setFixedHeight(Utils::scale_value(DownloadWidgetHeight));
+    holder_->setFixedSize(Utils::scale_value(DownloadWidgetWidth), Utils::scale_value(DownloadWidgetHeight));
 
     topSpacer_ = new QSpacerItem(0, 0);
 
@@ -49,10 +48,9 @@ Previewer::DownloadWidget::DownloadWidget(QWidget* _parent)
             emit cancelDownloading();
         });
 
-    auto buttonLayout = new QHBoxLayout();
+    auto buttonLayout = Utils::emptyHLayout();
     buttonLayout->setAlignment(Qt::AlignCenter);
     buttonLayout->addWidget(button_);
-    buttonLayout->setContentsMargins(0, 0, 0, 0);
 
     auto buttonHolder = new QFrame();
     buttonHolder->setLayout(buttonLayout);
@@ -61,24 +59,22 @@ Previewer::DownloadWidget::DownloadWidget(QWidget* _parent)
 
     errorMessage_ = new QLabel(QT_TRANSLATE_NOOP("previewer", "Unable to download the image"));
     errorMessage_->setStyleSheet(style);
-    errorMessage_->setProperty("ErrorMessage", QVariant(true));
+    errorMessage_->setProperty("ErrorMessage", true);
     errorMessage_->setAlignment(Qt::AlignHCenter);
     errorMessage_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-    QVBoxLayout* layout = new QVBoxLayout();
+    QVBoxLayout* layout = Utils::emptyVLayout();
     layout->addSpacerItem(topSpacer_);
     layout->addWidget(buttonHolder);
     layout->addSpacerItem(textSpacer_);
     layout->addWidget(errorMessage_);
     layout->addStretch();
-    layout->setContentsMargins(0, 0, 0, 0);
 
     holder_->setLayout(layout);
 
-    QVBoxLayout* mainLayout = new QVBoxLayout();
+    QVBoxLayout* mainLayout = Utils::emptyVLayout();
     mainLayout->addWidget(holder_);
     mainLayout->setAlignment(Qt::AlignCenter);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
 
     setLayout(mainLayout);
 

@@ -21,16 +21,16 @@
 #   include "../../utils/SChar.h"
 #endif
 
-const int widget_min_height = 73;
 const int widget_max_height = 230;
 const int document_min_height = 32;
 const int quote_line_width = 2;
 const int max_quote_height = 66;
-const int preview_max_height = 56;
+const int preview_max_height = 48;
 const int preview_offset = 16;
-const int preview_max_width = 140;
+const int preview_max_width = 132;
 const int preview_offset_hor = 18;
 const int preview_text_offset = 16;
+const int icon_size = 32;
 
 namespace Ui
 {
@@ -44,6 +44,14 @@ namespace Ui
     bool input_edit::catchEnter(int _modifiers)
     {
         int key1_to_send = get_gui_settings()->get_value<int>(settings_key1_to_send_message, 0);
+
+         // spike for fix invalid setting
+        if (key1_to_send == 1)
+        {
+            key1_to_send = 0;
+        }
+
+
         if (key1_to_send != 0)
         {
             bool b1 = ((_modifiers & Qt::ControlModifier) == Qt::ControlModifier) && (key1_to_send == Qt::Key_Control);
@@ -60,49 +68,48 @@ namespace Ui
         return true;
     }
     
-    InputWidget::InputWidget(QWidget* parent)
+    InputWidget::InputWidget(QWidget* parent, int height, const QString& styleSheet, bool messageOnly)
         : QWidget(parent)
         , text_edit_(new input_edit(this))
         , smiles_button_(new QPushButton(this))
         , send_button_(new QPushButton(this))
         , file_button_(new QPushButton(this))
-        , active_height_(Utils::scale_value(widget_min_height))
-        , need_height_(active_height_)
         , anim_height_(0)
         , is_initializing_(false)
+        , message_only_(messageOnly)
     {
+        default_height_ = height == -1 ? Ui::CommonStyle::getBottomPanelHeight() : height;
+        active_height_ = default_height_;
+        need_height_ = active_height_;
+
         setVisible(false);
-        setStyleSheet(Utils::LoadStyle(":/main_window/input_widget/input_widget.qss"));
+        setStyleSheet(Utils::LoadStyle(styleSheet.isEmpty() ? ":/main_window/input_widget/input_widget.qss" : styleSheet));
 
         setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
-        auto vLayout = new QVBoxLayout();
-        vLayout->setContentsMargins(0, 0, 0, 0);
-        vLayout->setSpacing(0);
+        auto vLayout = Utils::emptyVLayout();
+        
         quote_block_ = new QWidget(this);
         quote_block_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
-        auto quoteLayout = new QHBoxLayout(quote_block_);
-        quoteLayout->setContentsMargins(0, 0, 0, 0);
-        quoteLayout->setSpacing(0);
-        quoteLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(52), 0, QSizePolicy::Fixed));
+        auto quoteLayout = Utils::emptyHLayout(quote_block_);
+        quoteLayout->setAlignment(Qt::AlignVCenter);
+        quoteLayout->setContentsMargins(Utils::scale_value(52), Utils::scale_value(12), Utils::scale_value(16), 0);
 
         quote_line_ = new QWidget(quote_block_);
         quote_line_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-        quote_line_->setStyleSheet(Utils::ScaleStyle("border-top-style: solid; border-top-width: 12dip; border-top-color: #ebebeb;\
-                                                     border-bottom-style: solid; border-bottom-color: #ebebeb; border-bottom-width: 3dip;\
-                                                     background: #579e1c;", Utils::getScaleCoefficient()));
+        quote_line_->setStyleSheet(Utils::ScaleStyle("background: #579e1c;", Utils::getScaleCoefficient()));
         quote_line_->setFixedWidth(Utils::scale_value(quote_line_width));
         quoteLayout->addWidget(quote_line_);
         quote_text_widget_ = new QWidget(quote_block_);
-        auto quote_text_layout = new QVBoxLayout(quote_text_widget_);
-        quote_text_layout->setContentsMargins(Utils::scale_value(10), Utils::scale_value(14), Utils::scale_value(10), Utils::scale_value(5));
-        quote_text_layout->setSpacing(0);
+        auto quote_text_layout = Utils::emptyVLayout(quote_text_widget_);
+        quote_text_layout->setContentsMargins(Utils::scale_value(10), Utils::scale_value(4), 0, 0);
 
         quote_text_ = new TextEditEx(quote_block_, Fonts::appFontScaled(12), QColor(), false, false);
         quote_text_->setSize(QSizePolicy::Preferred, QSizePolicy::Preferred);
         quote_text_->setTextInteractionFlags(Qt::LinksAccessibleByMouse);
-        quote_text_->setStyleSheet(Utils::ScaleStyle("background: #ebebeb;", Utils::getScaleCoefficient()));
+        quote_text_->setStyleSheet(Utils::ScaleStyle("background: %1;", Utils::getScaleCoefficient())
+            .arg(Utils::rgbaStringFromColor(CommonStyle::getBottomPanelColor())));
         quote_text_->setFrameStyle(QFrame::NoFrame);
         quote_text_->document()->setDocumentMargin(0);
         quote_text_->setOpenLinks(true);
@@ -111,7 +118,7 @@ namespace Ui
         quote_text_->setContextMenuPolicy(Qt::NoContextMenu);
 
         QPalette p = quote_text_->palette();
-        p.setColor(QPalette::Text, QColor("#696969"));
+        p.setColor(QPalette::Text, QColor("#767676"));
         p.setColor(QPalette::Link, QColor("#579e1c"));
         p.setColor(QPalette::LinkVisited, QColor("#579e1c"));
         quote_text_->setPalette(p);
@@ -121,23 +128,26 @@ namespace Ui
         cancel_quote_->setObjectName("cancel_quote");
         cancel_quote_->setCursor(QCursor(Qt::PointingHandCursor));
         quoteLayout->addWidget(cancel_quote_);
-        quoteLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(16), 0, QSizePolicy::Fixed));
         vLayout->addWidget(quote_block_);
         quote_block_->hide();
 
-        auto hLayout = new QHBoxLayout();
-        hLayout->setContentsMargins(0, 0, 0, 0);
-        hLayout->setSpacing(0);
+        auto hLayout = Utils::emptyHLayout();
+
+        auto smiles_layout = Utils::emptyVLayout();
+        smiles_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding));
 
         smiles_button_->setObjectName("smiles_button");
         smiles_button_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         smiles_button_->setCursor(QCursor(Qt::PointingHandCursor));
         smiles_button_->setFocusPolicy(Qt::NoFocus);
 
+        smiles_layout->addWidget(smiles_button_);
+        smiles_layout->addSpacerItem(new QSpacerItem(0, default_height_ / 2 - Utils::scale_value(icon_size) / 2, QSizePolicy::Preferred, QSizePolicy::Fixed));
+
         cancel_files_ = new QPushButton(this);
         cancel_files_->setObjectName("cancel_files");
         cancel_files_->setCursor(QCursor(Qt::PointingHandCursor));
-        hLayout->addWidget(smiles_button_);
+        hLayout->addLayout(smiles_layout);
         hLayout->addWidget(cancel_files_);
 
         connect(cancel_files_, SIGNAL(clicked()), this, SLOT(onFilesCancel()), Qt::QueuedConnection);
@@ -145,7 +155,10 @@ namespace Ui
         cancel_files_->hide();
 
         setObjectName("input_edit_control");
-        text_edit_->setObjectName("input_edit_control");
+        if (message_only_)
+            text_edit_->setObjectName(platform::is_apple() ? "input_edit_control_mac" : "input_edit_control");
+        else
+            text_edit_->setObjectName("input_edit_control");
 
         text_edit_->setPlaceholderText(QT_TRANSLATE_NOOP("input_widget","Message"));
         text_edit_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -156,20 +169,18 @@ namespace Ui
 
         files_block_ = new QWidget(this);
         files_block_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        auto filesLayout = new QHBoxLayout(files_block_);
-        filesLayout->setSpacing(0);
-        filesLayout->setContentsMargins(0, 0, 0, 0);
-        filesLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(preview_offset_hor), 0, QSizePolicy::Fixed));
+        auto filesLayout = Utils::emptyHLayout(files_block_);
+        filesLayout->setContentsMargins(Utils::scale_value(preview_offset), 0, 0, 0);
         file_preview_ = new PictureWidget(files_block_);
         file_preview_->setObjectName("files_preview");
         file_preview_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         filesLayout->addWidget(file_preview_);
-        filesLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(preview_text_offset), 0, QSizePolicy::Fixed));
+        filesLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(preview_offset), 0, QSizePolicy::Fixed));
         files_label_ = new QLabel(this);
         files_label_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         QPalette pal;
         files_label_->setFont(Fonts::appFontScaled(16));
-        pal.setColor(QPalette::Foreground, QColor("#959595"));
+        pal.setColor(QPalette::Foreground, QColor("#999999"));
         files_label_->setPalette(pal);
         filesLayout->addWidget(files_label_);
         hLayout->addWidget(files_block_);
@@ -177,13 +188,11 @@ namespace Ui
 
         input_disabled_block_ = new QWidget(this);
         input_disabled_block_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        auto disabled_layout = new QHBoxLayout(input_disabled_block_);
-        disabled_layout->setSpacing(0);
-        disabled_layout->setContentsMargins(0, 0, 0, 0);
+        auto disabled_layout = Utils::emptyHLayout(input_disabled_block_);
         disabled_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding));
         disable_label_ = new QLabel(this);
         disable_label_->setFont(Fonts::appFontScaled(16));
-        pal.setColor(QPalette::Foreground, QColor("#959595"));
+        pal.setColor(QPalette::Foreground, QColor("#999999"));
         disable_label_->setPalette(pal);
         disable_label_->setAlignment(Qt::AlignCenter);
         disable_label_->setTextInteractionFlags(Qt::LinksAccessibleByMouse);
@@ -199,11 +208,17 @@ namespace Ui
             emit editFocusOut();
         });
 
+        auto send_layout = Utils::emptyVLayout();
+        send_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding));
+
         send_button_->setObjectName("send_button");
         send_button_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         send_button_->setCursor(QCursor(Qt::PointingHandCursor));
         Testing::setAccessibleName(send_button_, "SendMessageButton");
-        hLayout->addWidget(send_button_);
+
+        send_layout->addWidget(send_button_);
+        send_layout->addSpacerItem(new QSpacerItem(0, default_height_ / 2 - Utils::scale_value(icon_size) / 2, QSizePolicy::Preferred, QSizePolicy::Fixed));
+        hLayout->addLayout(send_layout);
 
         vLayout->addLayout(hLayout);
         setLayout(vLayout);
@@ -214,6 +229,7 @@ namespace Ui
         file_button_->setCursor(QCursor(Qt::PointingHandCursor));
         file_button_->raise();
         Testing::setAccessibleName(file_button_, "SendFileButton");
+        file_button_->setVisible(!messageOnly);
 
         set_current_height(active_height_);
 
@@ -229,11 +245,14 @@ namespace Ui
 
         connect(Logic::getContactListModel(), SIGNAL(youRoleChanged(QString)), this, SLOT(chatRoleChanged(QString)), Qt::QueuedConnection);
 
-        connect(smiles_button_, &QPushButton::clicked, [this]()
+        if (!message_only_)
         {
-            text_edit_->setFocus();
-            emit smilesMenuSignal();
-        });
+            connect(smiles_button_, &QPushButton::clicked, [this]()
+            {
+                text_edit_->setFocus();
+                emit smilesMenuSignal();
+            });
+        }
 
         connect(text_edit_, SIGNAL(textChanged()), this, SLOT(typed()));
 
@@ -253,8 +272,6 @@ namespace Ui
         opt.init(this);
         QPainter p(this);
         style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
-
-        return QWidget::paintEvent(_e);
     }
 
     void InputWidget::resizeEvent(QResizeEvent * _e)
@@ -302,7 +319,7 @@ namespace Ui
                 }
             }
         }
-        if (_e->matches(QKeySequence::Paste))
+        if (_e->matches(QKeySequence::Paste) && !message_only_)
         {
             auto mimedata = QApplication::clipboard()->mimeData();
             if (mimedata && !Utils::haveText(mimedata))
@@ -412,11 +429,11 @@ namespace Ui
     void InputWidget::edit_content_changed()
     {
         QString input_text = text_edit_->getPlainText();
-
+        const int widget_min_height = default_height_;
         Logic::getContactListModel()->setInputText(contact_, input_text);
 
         send_button_->setEnabled(!input_text.trimmed().isEmpty() || !quotes_[contact_].isEmpty() || !files_to_send_[contact_].isEmpty() || !image_buffer_[contact_].isNull());
-        file_button_->setVisible(input_text.isEmpty() && files_to_send_[contact_].isEmpty() && image_buffer_[contact_].isNull() && !disabled_.contains(contact_));
+        file_button_->setVisible(input_text.isEmpty() && files_to_send_[contact_].isEmpty() && image_buffer_[contact_].isNull() && !disabled_.contains(contact_) && !message_only_);
 
         int doc_height = text_edit_->document()->size().height();
 
@@ -428,9 +445,9 @@ namespace Ui
 
         int new_height = need_height_;
 
-        if (need_height_ <= Utils::scale_value(widget_min_height) || doc_height <= Utils::scale_value(document_min_height))
+        if (need_height_ <= widget_min_height || doc_height <= Utils::scale_value(document_min_height))
         {
-            new_height = Utils::scale_value(widget_min_height);
+            new_height = widget_min_height;
             text_edit_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         }
         else if (need_height_ > Utils::scale_value(widget_max_height))
@@ -510,7 +527,7 @@ namespace Ui
 
     void InputWidget::send()
     {
-        auto text = text_edit_->getPlainText().trimmed();
+        QString text = text_edit_->getPlainText().trimmed();
 
         text = text.trimmed();
 
@@ -518,6 +535,9 @@ namespace Ui
         {
             return;
         }
+
+        if (!predefined_.isEmpty())
+            text = predefined_ + " " + text;
 
         if (!image_buffer_[contact_].isNull())
         {
@@ -719,7 +739,7 @@ namespace Ui
         file_button_->hide();
         send_button_->hide();
         input_disabled_block_->setVisible(true);
-        input_disabled_block_->setFixedHeight(Utils::scale_value(widget_min_height));
+        input_disabled_block_->setFixedHeight(default_height_);
     }
 
     void InputWidget::enable()
@@ -738,11 +758,19 @@ namespace Ui
         emit needUpdateSizes();
     }
 
+    void InputWidget::predefined(const QString& _contact, const QString& _text)
+    {
+        contact_ = _contact;
+        predefined_ = _text;
+    }
+
     void InputWidget::set_current_height(int _val)
     {
         text_edit_->setFixedHeight(_val);
 
         active_height_ = _val;
+
+        emit sizeChanged();
     }
 
     int InputWidget::get_current_height() const
@@ -753,6 +781,13 @@ namespace Ui
     void InputWidget::setFocusOnInput()
     {
         text_edit_->setFocus();
+    }
+
+    void InputWidget::setFontColor(const QColor& _color)
+    {
+        QPalette p = text_edit_->palette();
+        p.setColor(QPalette::Text, _color);
+        text_edit_->setPalette(p);
     }
 
     QPixmap InputWidget::getFilePreview(const QString& contact)
@@ -932,7 +967,7 @@ namespace Ui
         edit_content_changed();
 
         QRect edit_rect = text_edit_->geometry();
-        file_button_->setGeometry(edit_rect.right() - Utils::scale_value(24) - Utils::scale_value(16) - Utils::scale_value(16)/*margin*/,
+        file_button_->setGeometry(edit_rect.right() - Utils::scale_value(24) - Utils::scale_value(24)/*margin*/,
             edit_rect.top() + ((edit_rect.height() - Utils::scale_value(24))/2),
             Utils::scale_value(24),
             Utils::scale_value(24));
@@ -1013,7 +1048,7 @@ namespace Ui
             auto contactDialog = Utils::InterConnector::instance().getContactDialog();
             if (contactDialog)
                 contactDialog->hideSmilesMenu();
-            files_block_->setFixedHeight(Utils::scale_value(widget_min_height));
+            files_block_->setFixedHeight(default_height_);
         }
     }
 

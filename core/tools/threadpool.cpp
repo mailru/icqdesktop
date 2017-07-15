@@ -1,8 +1,11 @@
 #include "stdafx.h"
 #include "threadpool.h"
 
+#include "../utils.h"
+
 #ifdef _WIN32
     #include "../common.shared/win32/crash_handler.h"
+    #include "../common.shared/common.h"
 #endif
 
 using namespace core;
@@ -42,11 +45,12 @@ bool threadpool::run_task_impl()
     task nextTask;
 
     {
-        std::unique_lock<std::mutex> lock(queue_mutex_);
-        condition_.wait(lock, [this]
+        boost::unique_lock<boost::mutex> lock(queue_mutex_);
+
+        while (!(stop_ || !tasks_.empty()))
         {
-            return (stop_ || !tasks_.empty());
-        });
+           condition_.wait(lock);
+        }
 
         if (stop_ && tasks_.empty())
         {
@@ -65,6 +69,11 @@ bool threadpool::run_task()
 {
     if (build::is_debug())
         return run_task_impl();
+
+#ifdef _WIN32
+    if (!core::dump::is_crash_handle_enabled())
+        return run_task_impl();
+#endif // _WIN32
 
 #ifdef _WIN32
      __try
@@ -102,7 +111,7 @@ threadpool::~threadpool()
 bool threadpool::push_back(const task _task)
 {
     {
-        std::unique_lock<std::mutex> lock(queue_mutex_);
+        boost::unique_lock<boost::mutex> lock(queue_mutex_);
         if (stop_)
         {
             return false;
@@ -118,8 +127,7 @@ bool threadpool::push_back(const task _task)
 #ifdef _WIN32
         tasks_.emplace_back([_task]
         {
-            core::dump::crash_handler handler;
-            handler.set_product_bundle("icq.desktop");
+            core::dump::crash_handler handler("icq.desktop", utils::get_product_data_path().c_str(), false);
             handler.set_thread_exception_handlers();
             _task();
         });
@@ -136,7 +144,7 @@ bool threadpool::push_back(const task _task)
 bool threadpool::push_front(const task _task)
 {
     {
-        std::unique_lock<std::mutex> lock(queue_mutex_);
+        boost::unique_lock<boost::mutex> lock(queue_mutex_);
         if (stop_)
         {
             return false;
@@ -152,7 +160,7 @@ bool threadpool::push_front(const task _task)
 #ifdef _WIN32
         tasks_.emplace_front([_task]
         {
-            core::dump::crash_handler handler;
+            core::dump::crash_handler handler("icq.desktop", utils::get_product_data_path().c_str(), false);
             handler.set_thread_exception_handlers();
             _task();
         });

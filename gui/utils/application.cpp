@@ -5,7 +5,6 @@
 #include "launch.h"
 #include "utils.h"
 #include "log/log.h"
-#include "../constants.h"
 #include "../core_dispatcher.h"
 #include "../gui_settings.h"
 #include "../cache/emoji/Emoji.h"
@@ -15,6 +14,10 @@
 #include "../main_window/contact_list/RecentsModel.h"
 #include "../main_window/contact_list/UnknownsModel.h"
 #include "../../common.shared/version_info.h"
+
+#include "../main_window/mplayer/FFMpegPlayer.h"
+#include "../main_window/sounds/SoundsManager.h"
+
 
 namespace
 {
@@ -28,7 +31,7 @@ namespace Utils
         : Mutex_(0)
         , Exist_(false)
     {
-        Mutex_ = ::CreateSemaphore(NULL, 0, 1, crossprocess_mutex_name);
+        Mutex_ = ::CreateSemaphore(NULL, 0, 1, Utils::get_crossprocess_mutex_name());
         Exist_ = GetLastError() == ERROR_ALREADY_EXISTS;
     }
 
@@ -42,34 +45,74 @@ namespace Utils
     {
         return !Exist_;
     }
+
+	/**
+	 * To fix crash in voip on shutting down PC,
+	 * We process WM_QUERYENDSESSION/WM_ENDSESSION and Windows will wait our deinitialization.
+	 */
+	class WindowsEventFilter : public QAbstractNativeEventFilter
+	{
+	public:
+		WindowsEventFilter() {}
+
+		virtual bool nativeEventFilter(const QByteArray& eventType, void* message, long* result) override
+		{
+			MSG* msg = reinterpret_cast<MSG*>(message);
+			if (msg->message == WM_QUERYENDSESSION || msg->message == WM_ENDSESSION)
+			{
+				if (!Ui::GetDispatcher()->getVoipController().isVoipKilled())
+				{
+					Ui::GetDispatcher()->getVoipController().voipReset();
+
+                    // Under XP we can stop shutting down PC, if we return true.
+                    if (QSysInfo().windowsVersion() != QSysInfo::WV_XP)
+                    {
+                        // Do not shutting down us immediately, we need time to terminate
+                        *result = 0;
+                        return true;
+                    }
+				}
+			}
+
+			return false;
+		}
+	};
 #endif //_WIN32
 
     Application::Application(int& _argc, char* _argv[])
         : QObject(0)
     {
 #ifndef _WIN32
-#ifdef __APPLE__
-        QDir dir(_argv[0]);
-        assert(dir.cdUp());
-        assert(dir.cdUp());
-        assert(dir.cd("plugins"));
-        QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
-#else
+    #ifdef __APPLE__
+        #ifndef ICQ_QT_STATIC
+            QDir dir(_argv[0]);
+            dir.cdUp();
+            dir.cdUp();
+            dir.cd("PlugIns");
+            QCoreApplication::setLibraryPaths(QStringList(dir.absolutePath()));
+        #endif
+    #else // linux
         std::string appDir(_argv[0]);
         appDir = appDir.substr(0, appDir.rfind("/") + 1);
         appDir += "plugins";
         QCoreApplication::setLibraryPaths(QStringList(QString::fromStdString(appDir)));
-#endif //__APPLE__
+    #endif //__APPLE__
 #endif //_WIN32
 
         app_.reset(new QApplication(_argc, _argv));
-        
+
 #ifdef __APPLE__
         // Fix float separator: force use . (dot).
         // http://doc.qt.io/qt-5/qcoreapplication.html#locale-settings
         setlocale(LC_NUMERIC, "C");
 #endif
-        
+        makeBuild();
+
+#ifdef _WIN32
+        guard_.reset(new AppGuard());
+#endif //_WIN32
+
+
         peer_.reset(new LocalPeer(0, !isMainInstance()));
         if (isMainInstance())
         {
@@ -86,15 +129,43 @@ namespace Utils
 #ifndef INTERNAL_RESOURCES
         QResource::unregisterResource(QApplication::applicationDirPath() + "/qresource");
 #endif
+        Ui::ResetMediaContainer();
+
         mainWindow_.reset();
+
         Logic::ResetRecentsModel();
         Logic::ResetUnknownsModel();
         Logic::ResetContactListModel();
+
+        Ui::ResetSoundsManager();
+    }
+
+    void Application::makeBuild()
+    {
+        build::is_build_icq = true;
+        auto path = QFileInfo(QCoreApplication::applicationFilePath()).fileName();
+        if (path.contains("agent", Qt::CaseInsensitive))
+            build::is_build_icq = false;
+
+        auto params = QCoreApplication::arguments();
+        for (const auto& _param : params)
+        {
+            if (_param == "/agent")
+                build::is_build_icq = false;
+        }
     }
 
     int Application::exec()
     {
+#ifdef _WIN32
+		WindowsEventFilter eventFilter;
+		qApp->installNativeEventFilter(&eventFilter);
+#endif
+
         int res = app_->exec();
+#ifdef _WIN32
+		qApp->removeNativeEventFilter(&eventFilter);
+#endif
 
         Ui::destroyDispatcher();
 
@@ -114,7 +185,8 @@ namespace Utils
 
         QPixmapCache::setCacheLimit(0);
 
-        QObject::connect(Ui::GetDispatcher(), SIGNAL(guiSettings()), this, SLOT(initMainWindow()), Qt::DirectConnection);
+        QObject::connect(Ui::GetDispatcher(), &Ui::core_dispatcher::coreLogins, this, &Application::coreLogins, Qt::DirectConnection);
+        QObject::connect(Ui::GetDispatcher(), &Ui::core_dispatcher::guiSettings, this, &Application::guiSettings, Qt::DirectConnection);
 
         return true;
     }
@@ -127,9 +199,10 @@ namespace Utils
     bool Application::isMainInstance()
     {
 #ifdef _WIN32
-        return guard_.succeeded();
-#endif //_WIN32
+        return guard_->succeeded();
+#else
         return true;
+#endif //_WIN32
     }
 
     void Application::switchInstance(launch::CommandLineParser& _cmdParser)
@@ -150,7 +223,19 @@ namespace Utils
 #endif //_WIN32
     }
 
-    void Application::initMainWindow()
+    void Application::coreLogins(const bool _has_valid_login)
+    {
+        initMainWindow(_has_valid_login);
+    }
+
+    void Application::guiSettings()
+    {
+        auto dir = Ui::get_gui_settings()->get_value(settings_download_directory, QString());
+        if (!dir.length())
+            Ui::get_gui_settings()->set_value(settings_download_directory, Utils::DefaultDownloadsPath()); // workaround for core
+    }
+
+    void Application::initMainWindow(const bool _has_valid_login)
     {
         double dpi = app_->primaryScreen()->logicalDotsPerInchX();
 #ifdef __APPLE__
@@ -215,6 +300,7 @@ namespace Utils
         
         Utils::setScaleCoefficient(Ui::get_gui_settings()->get_value<double>(settings_scale_coefficient, Utils::getBasicScaleCoefficient()));
         app_->setStyleSheet(Utils::LoadStyle(":/utils/common_style.qss"));
+        app_->setFont(Fonts::appFontFamilyNameQss(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Normal));
 
         Themes::SetCurrentThemeId(Themes::ThemeId::Default);
         Emoji::InitializeSubsystem();
@@ -222,7 +308,7 @@ namespace Utils
         Ui::get_gui_settings()->set_shadow_width(Utils::scale_value(SHADOW_WIDTH));
 
         Utils::GetTranslator()->init();
-        mainWindow_.reset(new Ui::MainWindow(app_.get()));
+        mainWindow_.reset(new Ui::MainWindow(app_.get(), _has_valid_login));
 
         bool needToShow = true;
 #ifdef _WIN32
@@ -238,6 +324,7 @@ namespace Utils
 #endif //_WIN32
         if (needToShow)
             mainWindow_->show();
+
         mainWindow_->activateWindow();
 #ifdef _WIN32
         peer_->set_main_window(mainWindow_.get());
@@ -319,6 +406,8 @@ namespace Utils
     {
 #ifdef _WIN32
 
+        const auto updater_singlton_mutex_name = (build::is_icq() ? updater_singlton_mutex_name_icq : updater_singlton_mutex_name_agent);
+
         CHandle mutex(::CreateSemaphore(NULL, 0, 1, updater_singlton_mutex_name.c_str()));
         if (ERROR_ALREADY_EXISTS == ::GetLastError())
             return true;
@@ -329,7 +418,8 @@ namespace Utils
             return false;
 
         CRegKey key_product;
-        if (ERROR_SUCCESS != key_product.Create(keySoftware, (const wchar_t*) product_name.utf16()))
+        auto productName = getProductName();
+        if (ERROR_SUCCESS != key_product.Create(keySoftware, (const wchar_t*) productName.utf16()))
             return false;
 
         wchar_t versionBuffer[1025];
@@ -357,7 +447,7 @@ namespace Utils
             QDir updateDir(updateFolder);
             if (updateDir.exists())
             {
-                QString setupName = updateFolder + "/" + installer_exe_name;
+                QString setupName = updateFolder + "/" + Utils::getInstallerName();
                 QFileInfo setupInfo(setupName);
                 if (!setupInfo.exists())
                     return false;
@@ -370,8 +460,8 @@ namespace Utils
                 return true;
             }
         }
-
 #endif //_WIN32
+
         return false;
     }
 

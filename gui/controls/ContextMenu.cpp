@@ -13,14 +13,14 @@
 namespace
 {
     const QString MENU_STYLE =
-        "QMenu { background-color: #f2f2f2; border: 1px solid #cccccc; }"
-        "QMenu::item { background-color: transparent; color: #282828;"
+        "QMenu { background-color: #ffffff; border: 1px solid #d7d7d7; }"
+        "QMenu::item { background-color: transparent;"
         "height: %2; padding-left: %1; padding-right: 12dip; }"
-        "QMenu::item:selected { background-color: #e2e2e2;"
+        "QMenu::item:selected { background-color: #ebebeb;"
         "height: %2; padding-left: %1; padding-right: 12dip; }"
-        "QMenu::item:disabled { background-color: transparent; color: gray;"
+        "QMenu::item:disabled { background-color: transparent; color: #999999;"
         "height: %2; padding-left: %1; padding-right: 12dip; }"
-        "QMenu::item:disabled:selected { background-color: transparent; color: gray;"
+        "QMenu::item:disabled:selected { background-color: transparent; color: #999999;"
         "height: %2; padding-left: %1; padding-right: 12dip; }"
         "QMenu::icon { padding-left: 22dip; }";
 }
@@ -167,4 +167,15 @@ namespace Ui
 			move(p);
 		}
     }
+
+    void ContextMenu::focusOutEvent(QFocusEvent *_e)
+    {
+        if (parentWidget() && !parentWidget()->isActiveWindow())
+        {
+            close();
+            return;
+        }
+        QMenu::focusOutEvent(_e);
+    }
+    
 }

@@ -6,13 +6,16 @@
 #include <Shlobj.h>
 #endif //_WIN32
 
+#include "../../../gui/constants.h"
+
 namespace installer
 {
     namespace logic
     {
-        const QString product_display_name = "ICQ";
-        const QString product_exe_name = "icq.exe";
-        const QString company_name = "ICQ";
+        const QString product_display_name = (build::is_icq() ? "ICQ" : "Mail.Ru Agent");
+        const QString product_menu_folder = (build::is_icq() ? "ICQ" : "Mail.Ru");
+        const QString product_exe_name = (build::is_icq() ? "icq.exe" : "magent.exe");
+        const QString company_name = (build::is_icq() ? "ICQ" : "Mail.Ru");
 
         QString install_folder;
         QString product_folder;
@@ -38,7 +41,7 @@ namespace installer
         {
             if (product_folder.isEmpty())
             {
-                product_folder = get_appdata_folder() + "/ICQ";
+                product_folder = get_appdata_folder() + "/" + (build::is_icq() ? product_path_icq_a : product_path_agent_a);
             }
 
             return product_folder;
@@ -76,7 +79,7 @@ namespace installer
 
         QString get_installer_exe_short()
         {
-            return installer_exe_name;
+            return (build::is_icq() ? installer_exe_name_icq : installer_exe_name_agent);
         }
 
         QString get_installer_exe()
@@ -96,12 +99,17 @@ namespace installer
 
         QString get_product_name()
         {
-            return product_name;
+            return (build::is_icq() ? product_name_icq : product_name_agent);
         }
 
         QString get_product_display_name()
         {
             return product_display_name;
+        }
+
+        QString get_product_menu_folder()
+        {
+            return product_menu_folder;
         }
 
         QString get_company_name()
@@ -116,7 +124,7 @@ namespace installer
 #ifdef _WIN32
 
             CRegKey key;
-            if (key.Open(HKEY_CURRENT_USER, (LPCTSTR)(QString("Software\\") + product_name).utf16(), KEY_READ) == ERROR_SUCCESS)
+            if (key.Open(HKEY_CURRENT_USER, (LPCTSTR)(QString("Software\\") + get_product_name()).utf16(), KEY_READ) == ERROR_SUCCESS)
             {
                 wchar_t registry_path[1025];
                 DWORD needed = 1024;
@@ -145,6 +153,16 @@ namespace installer
             static translate::translator_base translator;
 
             return &translator;
+        }
+
+        const wchar_t* get_crossprocess_mutex_name()
+        {
+            return (build::is_icq() ? crossprocess_mutex_name_icq : crossprocess_mutex_name_agent);
+        }
+
+        const char* get_crossprocess_pipe_name()
+        {
+            return (build::is_icq() ? crossprocess_pipe_name_icq : crossprocess_pipe_name_agent);
         }
     }
 }

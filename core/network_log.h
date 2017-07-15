@@ -41,8 +41,12 @@ namespace core
         virtual ~network_log();
 
         void write_data(const tools::binary_stream& _data);
-        
+        void write_string(const std::string& _text);
+
         std::stack<std::wstring> file_names_history_copy() const { return file_names_history_; }
+
+    private:
+        int max_size_;
     };
     
 }

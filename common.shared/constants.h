@@ -2,7 +2,10 @@
 
 #define auth_file_name "value.au"
 #define auth_export_file_name "exported.json"
+#define auth_export_file_name_merge "exportedmerge.json"
+#define muted_chats_export_file_name "mutedchats.json"
 #define settings_export_file_name "exported_ui.json"
+#define core_settings_export_file_name "exported_core.json"
 #define fetch_url_file_name "fetch"
 #define gui_settings_file_name "ui2.stg"
 #define hosts_config_file_name "hosts.stg"
@@ -28,8 +31,11 @@
 #define settings_key2_to_send_message "key2_to_send_message"
 #define settings_show_last_message "settings_show_last_message"
 #define settings_show_video_and_images "show_video_and_images"
+#define settings_autoplay_video "autoplay_video"
+#define settings_auto_scroll_new_messages "auto_scroll_new_messages"
 #define settings_scale_coefficient "scale_coefficient"
 #define settings_sidebar_hide "hide_sidebar"
+#define settings_show_snaps "settings_show_snaps"
 
 #define settings_microphone "microphone"
 #define settings_microphone_gain "microphone_gain"
@@ -37,6 +43,7 @@
 #define settings_webcam "webcam"
 
 #define settings_notify_new_messages "notify_new_messages"
+#define settings_notify_new_mail_messages "notify_new_mail_messages"
 #define settings_notify_birthdays "notify_birthdays"
 #define settings_notify_contact_appearance "notify_contact_appearance"
 
@@ -46,7 +53,6 @@
 
 #define settings_mac_accounts_migrated "mac_accounts_migrated"
 #define settings_need_show_promo "need_show_promo"
-#define settings_skip_intro_yourself "skip_intro_yourself"
 
 #define settings_proxy_type "proxy_settings_type"
 #define settings_proxy_address "proxy_settings_address"
@@ -60,3 +66,13 @@
 
 #define setting_mplayer_volume "mplayer_volume"
 #define setting_mplayer_mute "mplayer_mute"
+
+#define product_path_icq_w L"ICQ"
+#define product_path_icq_a "ICQ"
+#define product_path_agent_w L"Mail.Ru/Agent"
+#define product_path_agent_a "Mail.Ru/Agent"
+#define product_path_agent_mac_w L"Mail.Ru Agent"
+#define product_path_agent_mac_a "Mail.Ru Agent"
+#define product_name_icq_mac_a "ICQ"
+#define product_name_agent_mac_a "Mail.Ru Agent"
+

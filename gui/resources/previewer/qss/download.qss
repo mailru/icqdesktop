@@ -1,11 +1,11 @@
 QFrame[DownloadWidget="true"]
 {
-    background-color: rgba(0, 0, 0, 102);
+    background-color: rgba(0, 0, 0, 40%);
     border-radius: 12dip;
 }
 
 QLabel[ErrorMessage="true"]
 {
-    color: white;
+    color: #ffffff;
     font-size: 13dip;
 }

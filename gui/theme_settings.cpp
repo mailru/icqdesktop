@@ -374,29 +374,32 @@ namespace Ui
             // consider peculiar case when themeSelected gets called without ThemePanelChoice-callback from previous call
             if (settingInProcess_)
             {
-                this->restoreThemesMapping();
+                restoreThemesMapping();
             }
             settingInProcess_ = true;
             
             page->update(_targetContact);
-            this->saveThemesMapping();
-            this->setThemeIdForContact(theme->get_id(), contactToOpen, false);
+            saveThemesMapping();
+            setThemeIdForContact(theme->get_id(), contactToOpen, false);
             page->updateWidgetsTheme();
-            page->showThemesTopPanel(showSetThemeToCurrent, [this, theme, _targetContact, page, contactToOpen](ThemePanelChoice res) {
+            page->showThemesTopPanel(showSetThemeToCurrent, [this, theme, _targetContact, page, contactToOpen](ThemePanelChoice res) 
+            {
                 if (res == ThemePanelCancel || res == ThemePanelBackToSettings)
                 {
-                    this->restoreThemesMapping();
-                    this->setThemeIdForContact(this->themeIdForContact(contactToOpen), contactToOpen);
+                    restoreThemesMapping();
+                    setThemeIdForContact(themeIdForContact(contactToOpen), contactToOpen);
                     page->updateWidgetsTheme();
-                    this->unloadUnusedThemesImages();
+                    unloadUnusedThemesImages();
+                    if (_targetContact.isEmpty())
+                        emit Utils::InterConnector::instance().themesSettingsOpen();
                 }
                 else if (res == ThemePanelSet)
                 {
-                    this->setThemeIdForContact(theme->get_id(), contactToOpen);
+                    setThemeIdForContact(theme->get_id(), contactToOpen);
                 }
                 else if (res == ThemePanelSetToAll)
                 {
-                    this->setDefaultTheme(theme);
+                    setDefaultTheme(theme);
                 }
                 settingInProcess_ = false;
             });

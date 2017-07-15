@@ -21,6 +21,7 @@ namespace Ui
         data_.phoneNumber_ = _collection->get_value_as_string("attachedPhoneNumber");
         data_.flags_ = _collection->get_value_as_uint("globalFlags");
         data_.largeIconId_ = _collection->get_value_as_string("largeIconId");
+        data_.hasMail_ = _collection->get_value_as_bool("hasMail");
 
         get_gui_settings()->set_value(login_page_last_entered_phone, data_.phoneNumber_);
         get_gui_settings()->set_value(login_page_last_entered_uin, data_.aimId_);

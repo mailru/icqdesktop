@@ -27,7 +27,7 @@ namespace Previewer
     private:
         friend class ImageIterator;
 
-        const QString& aimId_;
+        QString         aimId_;
         Data::ImageList images_;
 
         mutable std::mutex mutex_;

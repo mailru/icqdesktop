@@ -61,8 +61,7 @@ namespace Ui
 
     public:
 
-        TextEditEx(QWidget* _parent, const Fonts::FontFamily _fontFamily, int _fontSize, const QPalette& _palette, bool _input, bool _isFitToText);
-        TextEditEx(QWidget* _parent, const Fonts::FontFamily _fontFamily, int _fontSize, const QColor& _color, bool _input, bool _isFitToText);
+        TextEditEx(QWidget* _parent, const QFont& _font, const QPalette& _palette, bool _input, bool _isFitToText);
         TextEditEx(QWidget* _parent, const QFont& _font, const QColor& _color, bool _input, bool _isFitToText);
         
         void limitCharacters(int count);
@@ -95,6 +94,9 @@ namespace Ui
         int adjustHeight(int _width);
 
         void addSpace(int _space) { add_ = _space; }
+
+        void mousePress(QMouseEvent* ev);
+        void mouseRelease(QMouseEvent* ev);
 
     protected:
         virtual void focusInEvent(QFocusEvent*) override;

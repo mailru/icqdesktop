@@ -23,6 +23,7 @@ namespace Logic
 		bool is_online() const;
 		bool is_phone() const;
 		bool recently() const;
+        bool recently(const QDateTime& _current) const;
 		bool is_chat() const;
 		bool is_muted() const;
         bool is_live_chat() const;

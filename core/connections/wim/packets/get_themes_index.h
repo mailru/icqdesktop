@@ -32,7 +32,7 @@ namespace core
             virtual int32_t parse_response(std::shared_ptr<core::tools::binary_stream> _response) override;
             
         public:
-            virtual int32_t execute() override;
+            bool support_async_execution() const override;
 
             get_themes_index(const wim_packet_params& _params, const std::string &etag);
             virtual ~get_themes_index();

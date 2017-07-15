@@ -12,10 +12,6 @@ namespace
     typedef QSet<QString> QStringSet;
 
 	const Ext2IconMap& GetExt2IconMap();
-
-    const QStringSet& GetKnownImageExtensions();
-
-    const QStringSet& GetKnownVideoExtensions();
 }
 
 namespace History
@@ -43,20 +39,6 @@ namespace History
         }
 
         return Themes::PixmapResourceId::FileSharingFileTypeIconUnknown;
-    }
-
-    bool IsImageExtension(const QString &ext)
-    {
-        assert(!ext.isEmpty());
-
-        return GetKnownImageExtensions().contains(ext);
-    }
-
-    bool IsVideoExtension(const QString &ext)
-    {
-        assert(!ext.isEmpty());
-
-        return GetKnownVideoExtensions().contains(ext);
     }
 }
 
@@ -122,29 +104,5 @@ namespace
 
 		return map;
 	}
-
-    const QStringSet& GetKnownImageExtensions()
-    {
-        static QStringSet knownExtensions;
-
-        if (knownExtensions.empty())
-        {
-            knownExtensions << "bmp" << "jpg" << "jpeg" << "png" << "tiff" << "tif" << "gif";
-        }
-
-        return knownExtensions;
-    }
-
-    const QStringSet& GetKnownVideoExtensions()
-    {
-        static QStringSet knownExtensions;
-
-        if (knownExtensions.empty())
-        {
-            knownExtensions << "avi" << "mkv" << "wmv" << "flv" << "3gp" << "mpeg4" << "webm" << "mov";
-        }
-
-        return knownExtensions;
-    }
 
 }

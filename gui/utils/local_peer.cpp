@@ -3,7 +3,6 @@
 
 #include <QtNetwork/QLocalSocket>
 
-#include "../constants.h"
 #include "../main_window/MainWindow.h"
 #include "InterConnector.h"
 
@@ -12,7 +11,7 @@ LocalPeer::LocalPeer(QObject* parent, bool other)
     , other_(other)
     , wnd_(0)
 {
-    socket_name_ = crossprocess_pipe_name;
+    socket_name_ = Utils::get_crossprocess_pipe_name();
     if (!other_)
         server_ = new QLocalServer(this);
 }

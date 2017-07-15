@@ -37,10 +37,12 @@ namespace Ui
 
 	public Q_SLOTS:
 
-		void onContactSelected(QString _aimId, qint64 _messageId);
+		void onContactSelected(QString _aimId, qint64 _messageId, qint64 _quoteId);
 		void onSmilesMenu();
 		void onInputEditFocusOut();
         void onSendMessage(QString _contact);
+
+		void onContactSelectedToLastMessage(QString _aimId, qint64 _messageId);
 
     private Q_SLOTS:
         void updateDragOverlay();
@@ -48,9 +50,11 @@ namespace Ui
         void onCtrlFPressedInInputWidget();
 
 	Q_SIGNALS:
-		void contactSelected(QString _aimId, qint64 _messageId);
+		void contactSelected(QString _aimId, qint64 _messageId, qint64 _quoteId);
 		void sendMessage(QString);
         void clicked();
+
+		void contactSelectedToLastMessage(QString _aimId, qint64 _messageId);
 
 	private:
 		HistoryControl*				historyControlWidget_;

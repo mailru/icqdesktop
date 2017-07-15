@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MessageContentWidget.h"
+#include "../../mplayer/VideoPlayer.h"
 
 namespace Ui
 {
@@ -12,20 +13,16 @@ namespace HistoryControl
 
     class PreviewContentWidget : public MessageContentWidget
     {
-        friend class ImagePreviewWidget;
-
         Q_OBJECT
 
     public:
         PreviewContentWidget(QWidget *parent, const bool isOutgoing, const QString &text, const bool previewsEnabled, QString _aimId);
 
-        virtual QPoint deliveryStatusOffsetHint(const int32_t statusLineWidth) const override final;
-
         const QRect& getLastPreviewGeometry() const;
 
         virtual bool hasTextBubble() const override;
 
-        virtual void render(QPainter &p) override final;
+        virtual void render(QPainter &p, const QColor& quate_color) override final;
 
         virtual void select(const bool value) override;
 
@@ -33,9 +30,17 @@ namespace HistoryControl
 
         virtual QSize sizeHint() const override;
 
-        virtual bool haveContentMenu(QPoint) const override;
+        virtual bool hasContextMenu(QPoint) const override;
 
-        bool isTextPresented();
+        virtual void onActivityChanged(const bool isActive) {}
+
+        virtual void onVisibilityChanged(const bool isVisible) {}
+
+        virtual void onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect) {}
+
+        QSharedPointer<Ui::DialogPlayer> videoPlayer_;
+
+        QPixmap Preview_;
 
     protected:
         const bool PreviewsEnabled_;
@@ -48,13 +53,15 @@ namespace HistoryControl
 
         virtual bool isPreloaderVisible() const = 0;
 
-        virtual void renderPreview(QPainter &p, const bool isAnimating);
+        virtual void renderPreview(QPainter &p, const bool isAnimating, QPainterPath& _path, const QColor& qoute_color);
 
         void invalidateSizes();
 
         void renderTextBubble(QPainter &p);
 
         QPainterPath evaluateClippingPath() const;
+
+        QPainterPath evaluateRelativeClippingPath() const;
 
         virtual void resizeEvent(QResizeEvent *event) override;
 
@@ -66,16 +73,19 @@ namespace HistoryControl
 
         void setTextVisible(const bool isVisible);
 
+        QRect updateWidgetSize();
+
     private Q_SLOTS:
         void onPreviewSizeLimited(QPixmap preview);
 
     private:
-        QPixmap Preview_;
 
         QSizeF PreviewGenuineSize_;
 
 
         QPainterPath ClippingPath_;
+
+        QPainterPath RelativePreviewClippingPath_;
 
         const QString Text_;
 
@@ -99,7 +109,7 @@ namespace HistoryControl
 
         QSizeF evaluatePreviewScaledSize(const int boundWidth) const;
 
-        QSize evaluateWidgetSize(const bool withStatus) const;
+        QSize evaluateWidgetSize() const;
 
         QSizeF getPreviewScaledSizeF() const;
 
@@ -113,13 +123,12 @@ namespace HistoryControl
 
         void prepareTextGeometry();
 
-        void renderNoPreview(QPainter &p);
+        void renderNoPreview(QPainter &p, const QColor& quote_color);
 
-        void renderPreloader(QPainter &p);
+        void renderPreloader(QPainter &p, const QColor& quote_color);
 
-        void renderPreloaderBubble(QPainter &p);
+        void renderPreloaderBubble(QPainter &p, const QColor& quote_color);
 
-        QRect updateWidgetSize();
 
     };
 

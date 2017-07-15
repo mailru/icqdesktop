@@ -13,6 +13,7 @@ namespace core
 namespace Ui
 {
 	class LineEditEx;
+    class TextEditEx;
 	class CountrySearchCombobox;
     class CustomButton;
     class BackButton;
@@ -36,7 +37,7 @@ namespace Ui
 		void loginResult(int64_t, int);
 		void loginResultAttachUin(int64_t, int);
 		void loginResultAttachPhone(int64_t, int);
-		void clearErrors();
+		void clearErrors(bool ignorePhoneInfo = false);
 		void codeEditChanged(QString);
 		void countryCodeChanged(QString);
 		void redrawCountryCode();
@@ -44,6 +45,8 @@ namespace Ui
         void stats_edit_phone();
         void stats_resend_sms();
         void phoneInfoResult(qint64, Data::PhoneInfo);
+        void phoneTextChanged();
+        void authError(const int _result);
 
     public Q_SLOTS:
 		void prevPage();
@@ -87,14 +90,15 @@ namespace Ui
 		LineEditEx*					uinEdit;
 		LineEditEx*					passwordEdit;
         QCheckBox*                  keepLogged;
-		QLineEdit*					codeEdit;
+        LineEditEx*					codeEdit;
 		QLabel*						errorLabel;
 		QLabel*						enteredPhone;
-		QLabel*						hintLabel;
+        QLabel*						hintLabel;
         QPushButton*				passwordForgottenLabel;
         bool                        isLogin_;
         int64_t                     sendSeq_;
         int                         codeLength_;
+        bool                        phoneChangedAuto_;
         
         Data::PhoneInfo             receivedPhoneInfo_;
 	};

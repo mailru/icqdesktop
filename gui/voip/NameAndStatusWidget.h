@@ -9,7 +9,7 @@ namespace Ui
     class ShadowedWidget : public __Base
     {
     public:
-        ShadowedWidget(QWidget* _parent = NULL, int _tailLen = 30, int _alphaFrom = 255, int _alphaTo = 0);
+        ShadowedWidget(QWidget* _parent = NULL, int _tailLen = 30, double _alphaFrom = 1, double _alphaTo = 0);
         virtual ~ShadowedWidget();
 
     protected:

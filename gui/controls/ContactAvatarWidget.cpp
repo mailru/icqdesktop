@@ -14,10 +14,9 @@
 
 namespace
 {
-    const auto MIN_AVATAR_SIZE = 600;
+    const auto MIN_AVATAR_SIZE = 200;
     const int ADD_PHOTO_FONTSIZE = 24;
-    const QColor STROKE_COLOR(0x57, 0x9e, 0x1c);
-    const QColor ADD_PHOTO_COLOR(0x28, 0x28, 0x28, 0x7f);
+    const QColor STROKE_COLOR("#579e1c");
 }
 
 namespace Ui
@@ -32,6 +31,7 @@ namespace Ui
         , mode_(Mode::Common)
         , isVisibleShadow_(false)
         , isVisibleSpinner_(false)
+        , isVisibleOutline_(false)
         , spinnerMovie_(nullptr)
         , connected_(false)
         , seq_(-1)
@@ -82,12 +82,21 @@ namespace Ui
         }
 
 		bool isDefault = false;
-		const auto &avatar = Logic::GetAvatarStorage()->GetRounded(aimid_, displayName_, Utils::scale_bitmap(size_), GetState(), !Logic::getContactListModel()->isChat(aimid_), isDefault, false, false);
+        const auto &avatar = Logic::GetAvatarStorage()->GetRounded(aimid_, displayName_, isVisibleOutline_ ? Utils::scale_bitmap(size_ - Utils::scale_value(4)) : Utils::scale_bitmap(size_), GetState(), !Logic::getContactListModel()->isChat(aimid_), isDefault, false, false);
 
 		if (avatar->isNull())
             return;
 
 		QPainter p(this);
+        if (isVisibleOutline_)
+        {
+            p.setRenderHint(QPainter::Antialiasing);
+            QPen pen;
+            pen.setBrush(Qt::white);
+            pen.setWidth(Utils::scale_value(4));
+            p.setPen(pen);
+            p.drawEllipse(QPointF(size_ / 2, size_ / 2), size_ / 2 - Utils::scale_value(2), size_ / 2 - Utils::scale_value(2));
+        }
         if (mode_ == Mode::MyProfile && isDefault)
         {
             p.setPen(Qt::NoPen);
@@ -109,13 +118,15 @@ namespace Ui
             );
 
             p.setFont(Fonts::appFontScaled(ADD_PHOTO_FONTSIZE, Fonts::FontWeight::Light));
-            p.setPen(QPen(ADD_PHOTO_COLOR));
+            p.setPen(QPen(QColor("#767676")));
 
             p.drawText(QRectF(0, 0, size_, size_), Qt::AlignCenter, QT_TRANSLATE_NOOP("avatar_upload", "Add\nphoto"));
         }
         else
         {
-		    p.drawPixmap(0, 0, size_, size_, *avatar);
+            auto size = isVisibleOutline_ ? size_ - Utils::scale_value(4) : size_;
+            auto from = isVisibleOutline_ ? Utils::scale_value(2) : 0;
+		    p.drawPixmap(QRect(from, from, size, size), *avatar, avatar->rect());
         }
 
         if (isVisibleSpinner_)
@@ -147,7 +158,7 @@ namespace Ui
     {
         if (_event->source() == Qt::MouseEventNotSynthesized)
         {
-            emit clicked();
+            emit clickedInternal();
             _event->accept();
         }
     }
@@ -182,7 +193,7 @@ namespace Ui
             if (!connected_)
             {
                 connected_ = true;
-                connect(this, &ContactAvatarWidget::clicked, this, &ContactAvatarWidget::selectFileForAvatar, Qt::QueuedConnection);
+                connect(this, &ContactAvatarWidget::clickedInternal, this, &ContactAvatarWidget::selectFileForAvatar, Qt::QueuedConnection);
                 connect(this, &ContactAvatarWidget::mouseEntered, this, &ContactAvatarWidget::avatarEnter, Qt::QueuedConnection);
                 connect(this, &ContactAvatarWidget::mouseLeft, this, &ContactAvatarWidget::avatarLeave, Qt::QueuedConnection);
                 this->setCursor(Qt::CursorShape::PointingHandCursor);
@@ -193,14 +204,14 @@ namespace Ui
             if (!connected_)
             {
                 connected_ = true;
-                connect(this, &ContactAvatarWidget::clicked, this, &ContactAvatarWidget::selectFileForAvatar, Qt::QueuedConnection);
+                connect(this, &ContactAvatarWidget::clickedInternal, this, &ContactAvatarWidget::selectFileForAvatar, Qt::QueuedConnection);
                 this->setCursor(Qt::CursorShape::PointingHandCursor);
             }
         }
         else
         {
             connected_ = false;
-            disconnect(this, &ContactAvatarWidget::clicked, this, &ContactAvatarWidget::selectFileForAvatar);
+            disconnect(this, &ContactAvatarWidget::clickedInternal, this, &ContactAvatarWidget::selectFileForAvatar);
             disconnect(this, &ContactAvatarWidget::mouseEntered, this, &ContactAvatarWidget::avatarEnter);
             disconnect(this, &ContactAvatarWidget::mouseLeft, this, &ContactAvatarWidget::avatarLeave);
             this->setCursor(Qt::CursorShape::ArrowCursor);
@@ -233,6 +244,12 @@ namespace Ui
         {
             spinnerMovie_->stop();
         }
+    }
+
+    void ContactAvatarWidget::SetOutline(bool _isVisibleOutline)
+    {
+        isVisibleOutline_ = _isVisibleOutline;
+        update();
     }
 
     void ContactAvatarWidget::applyAvatar(const QPixmap &alter)
@@ -319,7 +336,7 @@ this
                         QT_TRANSLATE_NOOP("avatar_upload", "Choose file"),
                         NULL,
                         QT_TRANSLATE_NOOP("avatar_upload", "Upload photo"),
-                        QT_TRANSLATE_NOOP("avatar_upload", "Image should be at least 600x600 px"),
+                        QT_TRANSLATE_NOOP("avatar_upload", "Image should be at least 200x200 px"),
                         NULL))
                     {
                         isContinue = true;
@@ -364,9 +381,8 @@ this
             hostLayout->setContentsMargins(Utils::scale_value(24), Utils::scale_value(12), Utils::scale_value(24), 0);
 
             mainWidget = new QWidget(hostWidget);
-            mainLayout = new QHBoxLayout(mainWidget);
+            mainLayout = Utils::emptyHLayout(mainWidget);
             mainWidget->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Preferred);
-            mainLayout->setContentsMargins(0, 0, 0, 0);
             hostLayout->addWidget(mainWidget);
         }
         else
@@ -379,7 +395,7 @@ this
         auto avatarCropper = new Ui::ImageCropper(mainWidget, imageCropSize_);
         avatarCropper->setProportion(QSizeF(1.0, 1.0));
         avatarCropper->setProportionFixed(true);
-        avatarCropper->setBackgroundColor(QColor(255, 255, 255, 255));
+        avatarCropper->setBackgroundColor(QColor("#ffffff"));
         if (!infoForSetAvatar_.croppingRect.isNull())
         {
             avatarCropper->setCroppingRect(infoForSetAvatar_.croppingRect);
@@ -541,6 +557,11 @@ this
         }
         else
         {
+            if (build::is_agent())
+            {
+                Logic::GetAvatarStorage()->SetAvatar(aimid_, infoForSetAvatar_.croppedImage);
+            }
+
             emit afterAvatarChanged();
         }
     }

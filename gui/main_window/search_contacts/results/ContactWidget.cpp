@@ -87,22 +87,19 @@ namespace Ui
 	}
 
 	ContactWidget::ContactWidget(QWidget* _parent, std::shared_ptr<Logic::contact_profile> _profile, const std::map<QString, QString>& _countries)
-		:	QWidget(_parent),
-			profile_(_profile),
-            name_(new TextEmojiWidget(this, Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), Utils::scale_value(18), CommonStyle::getTextCommonColor())),
-			info_(new TextEmojiWidget(this, Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), Utils::scale_value(14), QColor(0x69, 0x69, 0x69))),
-			addButton_(new QPushButton(this)),
-			msgButton_(new QPushButton(this)),
-			callButton_(new QPushButton(this))
-	{
-		Utils::grabTouchWidget(this);
+        :QWidget(_parent),
+        profile_(_profile),
+        name_(new TextEmojiWidget(this, Fonts::appFontScaled(18), CommonStyle::getTextCommonColor())),
+        info_(new TextEmojiWidget(this, Fonts::appFontScaled(14), QColor("#767676"))),
+        addButton_(new QPushButton(this)),
+        msgButton_(new QPushButton(this)),
+        callButton_(new QPushButton(this))
+    {
+        Utils::grabTouchWidget(this);
 
-		setFixedHeight(Utils::scale_value(widget_height));
-		setFixedWidth(Utils::scale_value(widget_width));
+        setFixedSize(Utils::scale_value(widget_width), Utils::scale_value(widget_height));
 
-		QHBoxLayout* rootLayout = new QHBoxLayout();
-        rootLayout->setContentsMargins(0, 0, 0, 0);
-        rootLayout->setSpacing(0);
+		QHBoxLayout* rootLayout = Utils::emptyHLayout();
         rootLayout->setAlignment(Qt::AlignLeft);
 
 		const QString displayName = _profile->get_contact_name();
@@ -120,13 +117,12 @@ namespace Ui
 
 		Utils::grabTouchWidget(avatarWidget);
 
-		QVBoxLayout* infoLayout = new QVBoxLayout();
+		QVBoxLayout* infoLayout = Utils::emptyVLayout();
 		infoLayout->setContentsMargins(Utils::scale_value(12), 0, 0, 0);
-		infoLayout->setSpacing(0);
 		infoLayout->setAlignment(Qt::AlignTop);
 
 		name_->setObjectName("contact_name");
-        name_->setEllipsis(true);
+        name_->setFading(true);
 		name_->setText(_profile->get_contact_name());
 		infoLayout->addWidget(name_);
 		Utils::grabTouchWidget(name_);
@@ -181,7 +177,7 @@ namespace Ui
 			emit callContact(profile_->get_aimid());
 		});
 
-        connect(avatarWidget, &ContactAvatarWidget::clicked, [this]()
+        connect(avatarWidget, &ContactAvatarWidget::clickedInternal, [this]()
         {
             emit contactInfo(profile_->get_aimid());
         });

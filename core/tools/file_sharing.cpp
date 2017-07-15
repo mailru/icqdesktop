@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include "strings.h"
+
 #include "file_sharing.h"
 
 CORE_TOOLS_NS_BEGIN
@@ -15,10 +17,6 @@ namespace
     const auto new_id_regex_a = sregex::compile(NET_URI_PREFIX "/(?P<id>\\w{33,})$");
 
     const auto new_id_regex_b = sregex::compile(COM_URI_PREFIX "/(?P<id>\\w{33,})$");
-
-    const auto previewable_regex_a = sregex::compile(NET_URI_PREFIX "/(?P<id>([0-9]|[A-F])\\w{32,})$");
-
-    const auto previewable_regex_b = sregex::compile(COM_URI_PREFIX "/(?P<id>([0-9]|[A-F])\\w{32,})$");
 
     const auto NEW_ID_LENGTH_MIN = 33;
 }
@@ -57,16 +55,6 @@ std::string format_file_sharing_preview_uri(const std::string &_id, const file_s
     result.append(_id);
 
     return result;
-}
-
-bool is_new_file_sharing_uri(const std::string &_uri)
-{
-    assert(!_uri.empty());
-
-    smatch m;
-    return (
-        regex_match(_uri, m, new_id_regex_a) ||
-        regex_match(_uri, m, new_id_regex_b));
 }
 
 bool get_content_type_from_uri(const std::string& _uri, Out core::file_sharing_content_type& _type)
@@ -132,7 +120,6 @@ bool get_content_type_from_file_sharing_id(const std::string& _file_id, Out core
     }
 
     const auto is_ptt = (
-        ((id0 >= 'G') && (id0 <= 'N')) ||
         ((id0 >= 'I') && (id0 <= 'J')));
     if (is_ptt)
     {
@@ -141,16 +128,6 @@ bool get_content_type_from_file_sharing_id(const std::string& _file_id, Out core
     }
 
     return false;
-}
-
-bool is_previewable_file_sharing_uri(const std::string &_uri)
-{
-    assert(!_uri.empty());
-
-    smatch m;
-    return (
-        regex_match(_uri, m, previewable_regex_a) ||
-        regex_match(_uri, m, previewable_regex_b));
 }
 
 bool parse_new_file_sharing_uri(const std::string &_uri, Out std::string &_fileId)
@@ -170,6 +147,19 @@ bool parse_new_file_sharing_uri(const std::string &_uri, Out std::string &_fileI
     assert(_fileId.length() >= NEW_ID_LENGTH_MIN);
 
     return true;
+}
+
+std::string get_file_id(const std::string& _uri)
+{
+    auto id = core::tools::trim_right<std::string>(_uri, "/");
+
+    const auto pos = id.rfind("/");
+    if (std::string::npos != pos)
+    {
+        return id.substr(pos + 1);
+    }
+
+    return std::string();
 }
 
 CORE_TOOLS_NS_END

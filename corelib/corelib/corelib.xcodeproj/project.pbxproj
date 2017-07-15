@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		182429B21C1F0E0500E788D8 /* collection_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 182429AF1C1F0E0500E788D8 /* collection_helper.cpp */; };
+		320BADA71E72B5D800EB7C1A /* libevent_pthreads.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 320BADA51E72B5D800EB7C1A /* libevent_pthreads.a */; };
+		320BADA81E72B5D800EB7C1A /* libevent.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 320BADA61E72B5D800EB7C1A /* libevent.a */; };
 		329DD1001CCE27C10077E736 /* libiconv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 329DD0FE1CCE20760077E736 /* libiconv.a */; };
 		5D2AEF0C1C103EB100CC7BF8 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D2AEF0B1C103EB100CC7BF8 /* AVFoundation.framework */; };
 		5D2AEF0E1C103EB800CC7BF8 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D2AEF0D1C103EB800CC7BF8 /* CoreAudio.framework */; };
@@ -24,7 +26,6 @@
 		5DE38BAF1CB6A2BC0060A43A /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DE38BAE1CB6A2BC0060A43A /* VideoToolbox.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		71F6D8581CF87C5000224AF7 /* common_defs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71F6D8561CF87C5000224AF7 /* common_defs.cpp */; };
 		71F6D8591CF87C5000224AF7 /* common_defs.h in Headers */ = {isa = PBXBuildFile; fileRef = 71F6D8571CF87C5000224AF7 /* common_defs.h */; };
-		860A30A61BDF7CE7000F0DF2 /* common.h in Headers */ = {isa = PBXBuildFile; fileRef = 860A30A51BDF7CE7000F0DF2 /* common.h */; };
 		861162D91BD8F0A70092F60E /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 861162D61BD8F0A60092F60E /* libcrypto.a */; };
 		861162DA1BD8F0A70092F60E /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 861162D71BD8F0A60092F60E /* libcurl.a */; };
 		861162DB1BD8F0A70092F60E /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 861162D81BD8F0A60092F60E /* libssl.a */; };
@@ -68,6 +69,8 @@
 
 /* Begin PBXFileReference section */
 		182429AF1C1F0E0500E788D8 /* collection_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = collection_helper.cpp; path = ../collection_helper.cpp; sourceTree = "<group>"; };
+		320BADA51E72B5D800EB7C1A /* libevent_pthreads.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libevent_pthreads.a; path = "../../external/mac/libevent-2.1.8/lib/libevent_pthreads.a"; sourceTree = "<group>"; };
+		320BADA61E72B5D800EB7C1A /* libevent.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libevent.a; path = "../../external/mac/libevent-2.1.8/lib/libevent.a"; sourceTree = "<group>"; };
 		329DD0FE1CCE20760077E736 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiconv.a; path = ../../external/mac/libiconv.a; sourceTree = "<group>"; };
 		5D2AEF0B1C103EB100CC7BF8 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		5D2AEF0D1C103EB800CC7BF8 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
@@ -84,7 +87,6 @@
 		5DE38BAE1CB6A2BC0060A43A /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		71F6D8561CF87C5000224AF7 /* common_defs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = common_defs.cpp; sourceTree = "<group>"; };
 		71F6D8571CF87C5000224AF7 /* common_defs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common_defs.h; sourceTree = "<group>"; };
-		860A30A51BDF7CE7000F0DF2 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../common.h; sourceTree = "<group>"; };
 		861162D61BD8F0A60092F60E /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../external/mac/libcrypto.a; sourceTree = "<group>"; };
 		861162D71BD8F0A60092F60E /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcurl.a; path = ../../external/mac/libcurl.a; sourceTree = "<group>"; };
 		861162D81BD8F0A60092F60E /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = ../../external/mac/libssl.a; sourceTree = "<group>"; };
@@ -116,6 +118,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				320BADA71E72B5D800EB7C1A /* libevent_pthreads.a in Frameworks */,
+				320BADA81E72B5D800EB7C1A /* libevent.a in Frameworks */,
 				329DD1001CCE27C10077E736 /* libiconv.a in Frameworks */,
 				5DE38BAF1CB6A2BC0060A43A /* VideoToolbox.framework in Frameworks */,
 				5D2AEF221C103FB600CC7BF8 /* CoreVideo.framework in Frameworks */,
@@ -141,6 +145,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		320BADA41E72B5D800EB7C1A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				320BADA51E72B5D800EB7C1A /* libevent_pthreads.a */,
+				320BADA61E72B5D800EB7C1A /* libevent.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		D55389AC1BC7E05B0088FBA6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -191,9 +204,9 @@
 				D5E14CE81BC6840A007F8671 /* stdafx.cpp */,
 				D5E14CE91BC6840A007F8671 /* stdafx.h */,
 				D5E14CEA1BC6840A007F8671 /* targetver.h */,
-				860A30A51BDF7CE7000F0DF2 /* common.h */,
 				86FAD9671C27F50E0016200F /* corelib-Prefix.pch */,
 				D5E14CD61BC683F9007F8671 /* Products */,
+				320BADA41E72B5D800EB7C1A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -223,7 +236,6 @@
 				D5E14CEB1BC6840A007F8671 /* collection_helper.h in Headers */,
 				95CDDFA41C27E64200240739 /* ivalue.h in Headers */,
 				B2ADEBE71DC23525001E2CF9 /* url_parser.h in Headers */,
-				860A30A61BDF7CE7000F0DF2 /* common.h in Headers */,
 				D5E14CF51BC6840A007F8671 /* targetver.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -416,6 +428,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 					../../external/mac,
+					"../../external/mac/libevent-2.1.8/lib",
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
@@ -448,6 +461,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 					../../external/mac,
+					"../../external/mac/libevent-2.1.8/lib",
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;

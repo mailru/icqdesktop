@@ -22,12 +22,9 @@ namespace Ui
         ,   info_(_info)
         ,   joinButton_(new QPushButton(this))
     {
-        auto layout = new QVBoxLayout(this);
-        layout->setSpacing(0);
-        layout->setContentsMargins(0, 0, 0, 0);
+        auto layout = Utils::emptyVLayout(this);
         profile_ = new LiveChatProfileWidget(_parent, _info.Stamp_);
-        profile_->setFixedHeight(Utils::scale_value(profile_height));
-        profile_->setFixedWidth(Utils::scale_value(profile_width));
+        profile_->setFixedSize(Utils::scale_value(profile_width), Utils::scale_value(profile_height));
         profile_->viewChat(std::make_shared<Data::ChatInfo>(_info));
         layout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(spacing), QSizePolicy::Preferred, QSizePolicy::Fixed));
         layout->addWidget(profile_);
@@ -40,7 +37,7 @@ namespace Ui
         hLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
         layout->addLayout(hLayout);
         layout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(spacing), QSizePolicy::Preferred, QSizePolicy::Fixed));
-        setStyleSheet("background: white; border-radius: 8px;");
+        setStyleSheet("background: #ffffff; border-radius: 8px;");
         setFixedWidth(Utils::scale_value(profile_width));
         setFixedHeight(profile_->height() + Utils::scale_value(spacing) * 3 + joinButton_->height());
         Utils::addShadowToWidget(this);

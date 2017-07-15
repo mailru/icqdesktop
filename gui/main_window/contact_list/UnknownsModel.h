@@ -26,7 +26,7 @@ namespace Logic
         void updated();
         void readStateChanged(QString);
         void selectContact(QString);
-        void dlgStateHandled(Data::DlgState);
+        void dlgStatesHandled(std::shared_ptr<QList<Data::DlgState>>);
         
     public Q_SLOTS:
         void refresh();
@@ -34,7 +34,7 @@ namespace Logic
     private Q_SLOTS:
         void activeDialogHide(QString);
         void contactChanged(QString);
-        void dlgState(Data::DlgState);
+        void dlgStates(std::shared_ptr<QList<Data::DlgState>>);
         void sortDialogs();
 
     public:
@@ -46,6 +46,8 @@ namespace Logic
         Qt::ItemFlags flags(const QModelIndex& _index) const;
 
         int itemsCount() const;
+
+        void add(const QString& _aimId);
         
         Data::DlgState getDlgState(const QString& _aimId = QString(), bool _fromDialog = false);
 

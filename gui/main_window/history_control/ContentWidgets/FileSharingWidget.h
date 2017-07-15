@@ -3,6 +3,7 @@
 #include "../../../namespaces.h"
 
 #include "PreviewContentWidget.h"
+#include "../../../utils/LoadMovieFromFileTask.h"
 
 UI_NS_BEGIN
 
@@ -52,6 +53,8 @@ namespace HistoryControl
             const QString &contactUin,
             const FileSharingInfoSptr& fsInfo,
             const bool previewsEnabled);
+        
+        void shareRoutine();
 
 		virtual ~FileSharingWidget() override;
 
@@ -71,11 +74,17 @@ namespace HistoryControl
 
         virtual void saveAs() override;
 
-        virtual bool haveContentMenu(QPoint) const override;
+        virtual bool hasContextMenu(QPoint) const override;
 
         virtual QString toLink() const override;
 
-        virtual bool haveOpenInBrowserMenu() override;
+        virtual bool hasOpenInBrowserMenu() override;
+
+        virtual void onActivityChanged(const bool isActive) override;
+
+        virtual void onVisibilityChanged(const bool isVisible) override;
+
+        virtual void onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect) override;
 
 	// --------------------------------------------------------------------------------------------------------------------------------
 	// Protected
@@ -93,7 +102,7 @@ namespace HistoryControl
 
 		virtual void mouseReleaseEvent(QMouseEvent *event) override;
 
-        virtual void renderPreview(QPainter &p, const bool isAnimating) override;
+        virtual void renderPreview(QPainter &p, const bool isAnimating, QPainterPath& _path, const QColor& quote_color) override;
 
         virtual void resizeEvent(QResizeEvent *e) override;
 
@@ -115,8 +124,6 @@ namespace HistoryControl
 
 		void fileSharingError(qint64 seq, QString rawUri, qint32 errorCode);
 
-		void fileLocalCopyChecked(qint64, bool, QString);
-
 		void fileSharingUploadingProgress(QString, qint64);
 
         void fileSharingUploadingResult(QString seq, bool success, QString localPath, QString uri, int contentType, bool isFileTooBig);
@@ -126,6 +133,8 @@ namespace HistoryControl
         void previewDownloaded(qint64, QString, QPixmap, QString);
 
         void previewDownloadError(int64_t seq, QString rawUri);
+
+        void onPaused();
 
 	// --------------------------------------------------------------------------------------------------------------------------------
 	// Private Member Variables
@@ -196,8 +205,6 @@ namespace HistoryControl
 
         int64_t PreviewDownloadId_;
 
-        int64_t CheckLocalCopyExistenceId_;
-
         QString LastProgressText_;
 
         QRect ProgressTextRect_;
@@ -205,6 +212,10 @@ namespace HistoryControl
         Themes::IThemePixmapSptr CurrentCtrlIcon_;
 
         bool IsCtrlButtonHovered_;
+
+        bool IsVisible_;
+
+        const bool autoplayVideo_;
 
         struct Retry
         {
@@ -233,17 +244,19 @@ namespace HistoryControl
             int PreviewDownloadRetryCount_;
         } Retry_;
 
-        QSharedPointer<QMovie> GifImage_;
-
         Ui::ActionButtonWidget *ShareButton_;
+
+        std::unique_ptr<Utils::LoadMovieToFFMpegPlayerFromFileTask> load_task_;
+
+        bool IsInPreloadDistance_;
+
+        std::shared_ptr<bool> ref_;
 
 	// --------------------------------------------------------------------------------------------------------------------------------
 	// Private Methods
 
 	private:
 		bool canStartImageDownloading(const QPoint &mousePos) const;
-
-		void checkLocalCopyExistence();
 
         void connectErrorSignal();
 
@@ -283,9 +296,11 @@ namespace HistoryControl
 
         bool isFullImageDownloading() const;
 
-        bool isGifImage() const;
+        bool isGifOrVideo() const;
 
-        bool isGifPlaying() const;
+        bool isGif() const;
+
+        bool isGifOrVideoPlaying() const;
 
         bool isImagePreview() const;
 
@@ -303,13 +318,11 @@ namespace HistoryControl
 
 		bool isState(const State state) const;
 
-        void loadGifImage(const QString &path);
+        void loadGifOrVideo(const QString &path);
 
 		bool loadPreviewFromLocalFile();
 
-        void onGifFrameUpdated(int frameNumber);
-
-        void onGifImageClicked();
+        void onGifOrVideoClicked();
 
         void onShareButtonClicked();
 
@@ -360,6 +373,10 @@ namespace HistoryControl
 		void stopUploading();
 
         void updateShareButtonGeometry();
+
+        void onChangeLoadState(const bool _isLoad);
+
+        bool isInPreloadRange(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect);
 
 	};
 

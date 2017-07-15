@@ -5,30 +5,63 @@
 using namespace core;
 using namespace wim;
 
-#ifdef __APPLE__ //MacICQ DevId
-#define WIM_DEV_ID				"ic18eTwFBO7vAdt9"
-#else //Window & Linux ICQ DevID
-#define WIM_DEV_ID				"ic1nmMjqg7Yu-0hL"
-#endif //__APPLE__
+const auto startup_period = std::chrono::seconds(30);
+
+inline std::string get_dev_id()
+{
+    if (build::is_icq())
+    {
+        if (platform::is_apple())
+        {
+            return "ic18eTwFBO7vAdt9";
+        }
+        else
+        {
+            return "ic1nmMjqg7Yu-0hL";
+        }
+    }
+    else
+    {
+        if (platform::is_apple())
+        {
+            return "ic1gBBFr7Ir9EOA2";
+        }
+        else
+        {
+            return "ic1ReaqsoxgOBHFX";
+        }
+    }
+}
 
 core::wim::auth_parameters::auth_parameters()
     : exipired_in_(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))
     , time_offset_(0)
-    , dev_id_(WIM_DEV_ID)
+    , dev_id_(get_dev_id())
     , robusto_client_id_(-1)
     , serializable_(true)
-    , need_promo_(false)
     , login_()
     , fetch_url_()
 {
 }
 
+bool core::wim::auth_parameters::is_valid_agent_token() const
+{
+    return (!agent_token_.empty() && !login_.empty() && !product_guid_8x_.empty());
+}
+
+bool core::wim::auth_parameters::is_valid_token() const
+{
+    return (!a_token_.empty() && !session_key_.empty() && !dev_id_.empty());
+}
+
+bool core::wim::auth_parameters::is_valid_md5() const
+{
+    return (!password_md5_.empty() && !login_.empty());
+}
+
 bool core::wim::auth_parameters::is_valid() const
 {
-    return (
-        !a_token_.empty() && 
-        !session_key_.empty() && 
-        !dev_id_.empty());
+    return (is_valid_token() || is_valid_md5() || is_valid_agent_token());
 }
 
 void core::wim::auth_parameters::reset_robusto()
@@ -45,6 +78,8 @@ void core::wim::auth_parameters::clear()
     dev_id_.clear();
     aimsid_.clear();
     version_.clear();
+    product_guid_8x_.clear();
+    agent_token_.clear();
 
     reset_robusto();
 }
@@ -178,28 +213,28 @@ bool core::wim::auth_parameters::unserialize(const rapidjson::Value& _node)
     aimid_ = iter_aimid->value.GetString();
 
     auto iter_atoken = _node.FindMember("atoken");
-    if (iter_atoken == _node.MemberEnd() || !iter_atoken->value.IsString())
-        return false;
-    
-    a_token_ = iter_atoken->value.GetString();
+    if (iter_atoken != _node.MemberEnd() && iter_atoken->value.IsString())
+        a_token_ = iter_atoken->value.GetString();
+
+    auto iter_agenttoken = _node.FindMember("agenttoken");
+    if (iter_agenttoken != _node.MemberEnd() && iter_agenttoken->value.IsString())
+        agent_token_ = iter_agenttoken->value.GetString();
+
+    auto iter_guid = _node.FindMember("productguid");
+    if (iter_guid != _node.MemberEnd() && iter_guid->value.IsString())
+        product_guid_8x_ = iter_guid->value.GetString();
 
     auto iter_session_key = _node.FindMember("sessionkey");
-    if (iter_session_key == _node.MemberEnd() || !iter_session_key->value.IsString())
-        return false;
-
-    session_key_ = iter_session_key->value.GetString();
+    if (iter_session_key != _node.MemberEnd() && iter_session_key->value.IsString())
+        session_key_ = iter_session_key->value.GetString();
 
     auto iter_devid = _node.FindMember("devid");
-    if (iter_devid == _node.MemberEnd() || !iter_devid->value.IsString())
-        return false;
-
-    dev_id_ = iter_devid->value.GetString();
+    if (iter_devid != _node.MemberEnd() && iter_devid->value.IsString())
+        dev_id_ = iter_devid->value.GetString();
 
     auto iter_aimsid = _node.FindMember("aimsid");
-    if (iter_aimsid == _node.MemberEnd() || !iter_aimsid->value.IsString())
-        return false;
-
-    aimsid_ = iter_aimsid->value.GetString();
+    if (iter_aimsid != _node.MemberEnd() && iter_aimsid->value.IsString())
+        aimsid_ = iter_aimsid->value.GetString();
 
     // TODO : time_t
     auto iter_expiredin = _node.FindMember("expiredin");
@@ -226,11 +261,13 @@ bool core::wim::auth_parameters::unserialize(const rapidjson::Value& _node)
         fetch_url_ = iter_fetchurl->value.GetString();
     }
 
-    auto iter_promo = _node.FindMember(settings_need_show_promo);
-    if (iter_promo != _node.MemberEnd() && iter_promo->value.IsBool())
+    auto iter_password_md5 = _node.FindMember("password_md5");
+    if (iter_password_md5 != _node.MemberEnd() && iter_password_md5->value.IsString())
     {
-        need_promo_ = iter_promo->value.GetBool();
+        password_md5_ = iter_password_md5->value.GetString();
     }
+
+
 
     return true;
 }
@@ -246,7 +283,9 @@ void core::wim::auth_parameters::serialize(rapidjson::Value& _node, rapidjson_al
     _node.AddMember("timeoffset", (int64_t)time_offset_, _a);
     _node.AddMember("aimsid", aimsid_, _a);
     _node.AddMember("fetchurl", fetch_url_, _a);
-    _node.AddMember(settings_need_show_promo, need_promo_, _a);
+    _node.AddMember("password_md5", password_md5_, _a);
+    _node.AddMember("productguid", product_guid_8x_, _a);
+    _node.AddMember("agenttoken", agent_token_, _a);
 }
 
 

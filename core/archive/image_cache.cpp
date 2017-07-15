@@ -289,7 +289,7 @@ bool core::archive::image_cache::build(const contact_archive& _archive)
 
         cancel_build_.clear();
 
-        _archive.get_messages(from, fetch_size, messages, contact_archive::get_message_policy::skip_patches_and_deleted, true /* to_older */);
+        _archive.get_messages(from, fetch_size, -1, messages, contact_archive::get_message_policy::skip_patches_and_deleted);
         if (messages.empty())
         {
             building_in_progress_ = false;
@@ -432,7 +432,9 @@ void core::archive::image_cache::extract_images(int64_t _msgid, const std::strin
             if ((content_type == file_sharing_content_type::image) ||
                 (content_type == file_sharing_content_type::gif) ||
                 (content_type == file_sharing_content_type::snap_image) ||
-                (content_type == file_sharing_content_type::snap_gif))
+                (content_type == file_sharing_content_type::snap_gif ||
+                (content_type == file_sharing_content_type::snap_video) ||
+                (content_type == file_sharing_content_type::video)))
             {
                 _images.emplace_back(_msgid, url_info.url_, url_info.is_filesharing());
             }
@@ -479,7 +481,7 @@ void core::archive::image_cache::erase_deleted_from_tree(const archive_index& _i
     int64_t from = -1;
     while (true)
     {
-        _index.serialize_from(from, fetch_size, headers, true /* to_older */);
+        _index.serialize_from(from, fetch_size, -1, headers);
         if (headers.empty())
             break;
 

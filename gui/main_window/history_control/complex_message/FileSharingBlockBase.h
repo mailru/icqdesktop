@@ -36,8 +36,6 @@ public:
 
     virtual QString getSelectedText(bool isFullSelect = false) const override;
 
-    virtual bool hasRightStatusPadding() const override;
-
     virtual void initialize() final override;
 
     virtual bool isBubbleRequired() const override;
@@ -50,9 +48,9 @@ public:
 
     virtual int getMaxPreviewWidth() const override { return MaxPreviewWidth_; }
 
-protected:
-    void checkExistingLocalCopy();
+    virtual ContentType getContentType() const { return IItemBlock::FileSharing; }
 
+protected:
     const QString& getFileLocalPath() const;
 
     const QString& getFilename() const;
@@ -99,6 +97,8 @@ protected:
 
     virtual void onDownloadingFailed(const int64_t requestId) = 0;
 
+    virtual void markSnapExpired();
+
     virtual void onLocalCopyInfoReady(const bool isCopyExists) = 0;
 
     virtual void onMenuCopyLink() final override;
@@ -115,13 +115,11 @@ protected:
 
     void requestMetainfo(const bool isPreview);
 
-    void requestDirectUri(const QObject* _object, std::function<void(bool _res, const QString& _uri)> _callback);
-
     void setBlockLayout(IFileSharingBlockLayout *_layout);
 
     void setSelected(const bool isSelected);
 
-    void startDownloading(const bool sendStats);
+    void startDownloading(const bool _sendStats, const bool _forceRequestMetainfo = false, bool _highPriority = false);
 
     void stopDownloading();
 
@@ -129,8 +127,6 @@ private:
     void connectSignals(const bool isConnected);
 
     int64_t BytesTransferred_;
-
-    int64_t CheckLocalCopyRequestId_;
 
     bool CopyFile_;
 
@@ -162,6 +158,8 @@ private:
 
     int MaxPreviewWidth_;
 
+    std::shared_ptr<bool> ref_;
+
 private Q_SLOTS:
     void onFileDownloaded(qint64 seq, QString rawUri, QString localPath);
 
@@ -170,8 +168,6 @@ private Q_SLOTS:
     void onFileMetainfoDownloaded(qint64 seq, QString filename, QString downloadUri, qint64 size);
 
     void onFileSharingError(qint64 seq, QString rawUri, qint32 errorCode);
-
-    void onLocalCopyChecked(qint64 seq, bool success, QString localPath);
 
     void onPreviewMetainfoDownloadedSlot(qint64 seq, QString miniPreviewUri, QString fullPreviewUri);
 

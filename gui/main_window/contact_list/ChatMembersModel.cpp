@@ -42,6 +42,14 @@ namespace Logic
         return currentCount;
     }
 
+    int ChatMembersModel::get_limit(int limit)
+    {
+        if (limit > InitMembersLimit)
+            return limit;
+
+        return InitMembersLimit;
+    }
+
     int ChatMembersModel::rowCount(const QModelIndex &) const
     {
         return (int)getVisibleRowsCount();
@@ -51,7 +59,7 @@ namespace Logic
     {
         int currentCount = getVisibleRowsCount();
 
-        if (!_ind.isValid() || (_role != Qt::DisplayRole && !Testing::isAccessibleRole(_role)) || _ind.row() > currentCount)
+        if (!_ind.isValid() || (_role != Qt::DisplayRole && !Testing::isAccessibleRole(_role)) || _ind.row() >= currentCount)
             return QVariant();
         Data::ChatMemberInfo* ptr = &(members_[_ind.row()]);
 
@@ -212,7 +220,7 @@ namespace Logic
             SLOT(chatInfoFailed(qint64, core::group_chat_info_errors)), Qt::UniqueConnection);
         Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
         collection.set_value_as_qstring("aimid", _aimId);
-        collection.set_value_as_int("limit", _limit);
+        collection.set_value_as_int("limit", get_limit(_limit));
         return Ui::GetDispatcher()->post_message_to_core("chats/info/get", collection.get());
     }
 

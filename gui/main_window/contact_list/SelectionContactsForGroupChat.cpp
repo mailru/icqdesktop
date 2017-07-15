@@ -17,6 +17,9 @@
 namespace Ui
 {
     const double heightPartOfMainWindowForFullView = 0.6;
+    const int dialogWidth = 360;
+    const int search_padding_ver = 6;
+    const int search_padding_hor = 4;
 
     bool SelectContactsWidget::forwardConfirmed(QString aimId)
     {
@@ -67,12 +70,34 @@ namespace Ui
             }
             return;
         }
+        else if (regim_ == Logic::CONTACT_LIST_POPUP)
+        {
+            selectedContact_ = contactList_->getSelectedAimid();
+            if (!selectedContact_.isEmpty())
+            {
+                Logic::getContactListModel()->select(selectedContact_, -1);
+                mainDialog_->accept();
+            }
+        }
 
         contactList_->searchResult();
     }
 
     void SelectContactsWidget::itemClicked(const QString& _current)
     {
+        // Restrict max selected elements.
+        if (regim_ == Logic::VIDEO_CONFERENCE && maximumSelectedCount_ >= 0)
+        {
+			bool isForCheck = !Logic::getContactListModel()->getIsChecked(_current);
+
+            int selectedItemCount = Logic::getContactListModel()->GetCheckedContacts().size();
+            if (isForCheck && selectedItemCount >= maximumSelectedCount_)
+            {
+                // Disable selection.
+                return;
+            }
+        }
+
         selectedContact_ = _current;
 
         if (isShareLinkMode() || isShareTextMode())
@@ -98,10 +123,10 @@ namespace Ui
             return;
         }
 
-        if (Logic::is_delete_members_regim(regim_))
+        if (Logic::is_members_regim(regim_))
         {
             auto globalCursorPos = mainDialog_->mapFromGlobal(QCursor::pos());
-            auto minXofDeleteImage = ::ContactList::GetXOfRemoveImg(false, true, -1);
+            auto minXofDeleteImage = ::ContactList::GetXOfRemoveImg(-1);
 
             if (globalCursorPos.x() > minXofDeleteImage)
             {
@@ -125,11 +150,15 @@ namespace Ui
             return;
         }
 
-        auto chatMembers = Logic::getChatMembersModel();
-        if (!!chatMembers && chatMembers->isContactInChat(_current))
+        // Disable delete for video conference list.
+        if (!Logic::is_video_conference_regim(regim_) && regim_ != Logic::CONTACT_LIST_POPUP)
         {
-            deleteMemberDialog(chatMembers, _current, regim_, this);
-            return;
+            auto chatMembers = Logic::getChatMembersModel();
+            if (!!chatMembers && chatMembers->isContactInChat(_current))
+            {
+                deleteMemberDialog(chatMembers, _current, regim_, this);
+                return;
+            }
         }
 
         Logic::getContactListModel()->setChecked(_current, !Logic::getContactListModel()->getIsChecked(_current));
@@ -145,12 +174,15 @@ namespace Ui
         , mainWidget_(new QWidget(this))
         , sortCL_(true)
         , handleKeyPressEvents_(true)
+        , maximumSelectedCount_(-1)
+		, searchModel_(nullptr)
     {
         init(_labelText);
     }
 
     SelectContactsWidget::SelectContactsWidget(Logic::ChatMembersModel* _chatMembersModel, int _regim, const QString& _labelText,
-        const QString& _buttonText, const QString& _bottomText, QWidget* _parent, bool _handleKeyPressEvents/* = true*/)
+        const QString& _buttonText, const QString& _bottomText, QWidget* _parent, bool _handleKeyPressEvents/* = true*/,
+		Logic::AbstractSearchModel* searchModel /*= nullptr*/)
         : QDialog(_parent)
         , regim_(_regim)
         , chatMembersModel_(_chatMembersModel)
@@ -158,40 +190,44 @@ namespace Ui
         , mainWidget_(new QWidget(this))
         , bottomText_(_bottomText)
         , handleKeyPressEvents_(_handleKeyPressEvents)
+		, searchModel_(searchModel)
     {
         init(_labelText, _buttonText);
     }
 
     void SelectContactsWidget::init(const QString& _labelText, const QString& _buttonText)
     {
+		if (!searchModel_)
+		{
+			searchModel_ = Logic::getCurrentSearchModel(regim_);
+		}
+
         if (chatMembersModel_)
         {
+        // todo
             chatMembersModel_->isShortView_ = true;
             isShortView_ = true;
         }
 
-        auto globalLayout = new QVBoxLayout(mainWidget_);
-        globalLayout->setContentsMargins(0, 0, 0, 0);
-        globalLayout->setMargin(0);
-        globalLayout->setSpacing(0);
-        //mainWidget_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
+        globalLayout_ = Utils::emptyVLayout(mainWidget_);
         mainWidget_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-        mainWidget_->setFixedWidth(Utils::scale_value(380));
+        mainWidget_->setFixedWidth(Utils::scale_value(dialogWidth));
 
-        searchWidget_ = new SearchWidget(true, 0, Utils::scale_value(8));
+        searchWidget_ = new SearchWidget(0, Utils::scale_value(search_padding_hor), Utils::scale_value(search_padding_ver));
         Testing::setAccessibleName(searchWidget_, "CreateGroupChat");
-        globalLayout->addWidget(searchWidget_);
+        globalLayout_->addWidget(searchWidget_);
 
-        contactList_ = new ContactList(this, (Logic::MembersWidgetRegim)regim_, chatMembersModel_);
+        contactList_ = new ContactList(this, (Logic::MembersWidgetRegim)regim_, chatMembersModel_, searchModel_);
         contactList_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
-        contactList_->setTransparent(true);
-        globalLayout->addWidget(contactList_);
+
+        globalLayout_->addWidget(contactList_);
 
         QSpacerItem* contactsLayoutSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum);
-        globalLayout->addSpacerItem(contactsLayoutSpacer);
+        globalLayout_->addSpacerItem(contactsLayoutSpacer);
 
         // TODO : use SetView here
-        mainDialog_.reset(new GeneralDialog(mainWidget_, Utils::InterConnector::instance().getMainWindow(), handleKeyPressEvents_));
+        mainDialog_.reset(new GeneralDialog(mainWidget_, 
+            (isVideoConference() ? parentWidget() : Utils::InterConnector::instance().getMainWindow()), handleKeyPressEvents_));
 
         connect(mainDialog_.get(), &QDialog::finished, this, &SelectContactsWidget::finished);
 
@@ -205,8 +241,8 @@ namespace Ui
             mainDialog_->addBottomLabel(bottomText_, bottomPanelMargins);
         }
 
-        const auto is_show_button = !isShareTextMode() && !Logic::is_delete_members_regim(regim_);
-        if (is_show_button)
+		const auto is_show_button = !isShareTextMode() && !Logic::is_members_regim(regim_) && !Logic::is_video_conference_regim(regim_);
+        if (is_show_button && regim_ != Logic::MembersWidgetRegim::CONTACT_LIST_POPUP)
         {
             mainDialog_->addAcceptButton(_buttonText, bottomPanelMargins, isShareLinkMode());
         }
@@ -217,18 +253,25 @@ namespace Ui
         connect(contactList_, &ContactList::itemSelected, this, &SelectContactsWidget::itemClicked, Qt::QueuedConnection);
 
         connect(searchWidget_, &SearchWidget::searchBegin, this,  &SelectContactsWidget::searchBegin, Qt::QueuedConnection);
+        connect(searchWidget_, &SearchWidget::searchEnd, this,  &SelectContactsWidget::searchWidgetEnd, Qt::QueuedConnection);
         connect(searchWidget_, &SearchWidget::enterPressed, this, &SelectContactsWidget::enterPressed, Qt::QueuedConnection);
         connect(searchWidget_, &SearchWidget::escapePressed, this, &SelectContactsWidget::escapePressed, Qt::QueuedConnection);
         connect(searchWidget_, &SearchWidget::upPressed, contactList_, &ContactList::searchUpPressed, Qt::QueuedConnection);
         connect(searchWidget_, &SearchWidget::downPressed, contactList_, &ContactList::searchDownPressed, Qt::QueuedConnection);
-        connect(searchWidget_, SIGNAL(search(QString)), Logic::getCurrentSearchModel(regim_), SLOT(searchPatternChanged(QString)), Qt::QueuedConnection);
+        connect(searchWidget_, SIGNAL(search(QString)), searchModel_, SLOT(searchPatternChanged(QString)), Qt::QueuedConnection);
 
-        if (Logic::is_delete_members_regim(regim_))
+        if (regim_ == Logic::MembersWidgetRegim::CONTACT_LIST_POPUP)
+            connect(contactList_, &ContactList::itemSelected, this, &QDialog::reject, Qt::QueuedConnection);
+
+        if (Logic::is_members_regim(regim_))
             connect(contactList_, SIGNAL(addContactClicked()), this, SLOT(onViewAllMembers()), Qt::QueuedConnection);
 
-        contactList_->changeTab(Ui::CurrentTab::SEARCH);
-        Logic::getCurrentSearchModel(regim_)->searchPatternChanged("");
-        searchWidget_->setShowButton(false);
+        if (regim_ == Logic::MembersWidgetRegim::CONTACT_LIST_POPUP)
+            contactList_->changeTab(Ui::CurrentTab::ALL);
+        else
+            contactList_->changeTab(Ui::CurrentTab::SEARCH);
+
+		searchModel_->searchPatternChanged("");
     }
 
     const QString& SelectContactsWidget::getSelectedContact() const
@@ -242,7 +285,7 @@ namespace Ui
 
     bool SelectContactsWidget::isCheckboxesVisible() const
     {
-        if (Logic::is_delete_members_regim(regim_))
+        if (Logic::is_members_regim(regim_))
         {
             return false;
         }
@@ -265,6 +308,11 @@ namespace Ui
         return (regim_ == Logic::MembersWidgetRegim::SHARE_TEXT);
     }
 
+    bool SelectContactsWidget::isVideoConference() const
+    {
+        return (regim_ == Logic::MembersWidgetRegim::VIDEO_CONFERENCE);
+    }    
+
     void SelectContactsWidget::searchEnd()
     {
         emit contactList_->searchEnd();
@@ -276,6 +324,11 @@ namespace Ui
         mainDialog_->close();
     }
 
+    void SelectContactsWidget::searchWidgetEnd()
+    {
+        contactList_->setSearchMode(false);
+    }
+
     void SelectContactsWidget::searchBegin()
     {
         contactList_->setSearchMode(true);
@@ -283,32 +336,29 @@ namespace Ui
 
     QRect SelectContactsWidget::CalcSizes() const
     {
-        int newWidth = -1;
-        if (Logic::is_delete_members_regim(regim_))
-            newWidth = ::ContactList::ItemWidth(false /* fromAlert */, isCheckboxesVisible() /* _isWithCheckBox */, isShortView_).px();
-        else
-            newWidth = ::ContactList::ItemWidth(false /* fromAlert */, isCheckboxesVisible() /* _isWithCheckBox */, false /* _isShortView */).px();
+        contactList_->setItemWidth(Utils::scale_value(dialogWidth));
 
-        auto newHeight = ::ContactList::ItemLength(false, heightPartOfMainWindowForFullView, ::ContactList::dip(0)).px();
+        auto newHeight = ::ContactList::ItemLength(false, heightPartOfMainWindowForFullView, 0, 
+            (isVideoConference() ? parentWidget() : Utils::InterConnector::instance().getMainWindow()));
         auto extraHeight = searchWidget_->sizeHint().height();
-        if (!Logic::is_delete_members_regim(regim_))
-            extraHeight += ::ContactList::dip(42).px();
+        if (!Logic::is_members_regim(regim_))
+            extraHeight += Utils::scale_value(42);
 
-        if (Logic::is_delete_members_regim(regim_)
+        if (Logic::is_members_regim(regim_)
             && isShortView_
             && chatMembersModel_->getMembersCount() >= Logic::InitMembersLimit)
         {
-            extraHeight += ::ContactList::dip(52).px();
+            extraHeight += Utils::scale_value(52);
         }
 
-        auto itemHeight = ::ContactList::ContactItemHeight();
+        auto itemHeight = ::ContactList::GetContactListParams().itemHeight();
         int count = (newHeight - extraHeight) / itemHeight;
 
         int clHeight = (count + 0.5) * itemHeight;
-        if (Logic::is_delete_members_regim(regim_))
+        if (Logic::is_members_regim(regim_))
         {
             count = chatMembersModel_->rowCount();
-            clHeight = std::min(clHeight, count * itemHeight + ::ContactList::dip(1).px());
+            clHeight = std::min(clHeight, count * itemHeight + Utils::scale_value(1));
             if (count == 0)
                 extraHeight += itemHeight / 2;
         }
@@ -319,7 +369,7 @@ namespace Ui
         }
         newHeight = extraHeight + clHeight;
 
-        return QRect(0, 0, newWidth, newHeight);
+        return QRect(0, 0, Utils::scale_value(dialogWidth), newHeight);
     }
 
     bool SelectContactsWidget::show(int _x, int _y)
@@ -329,16 +379,15 @@ namespace Ui
 
         Logic::getContactListModel()->setIsWithCheckedBox(!isShareLinkMode() && !isShareTextMode());
 
-        if (Logic::is_delete_members_regim(regim_))
+        if (Logic::is_members_regim(regim_))
             contactList_->changeTab(ALL);
         else
-            Logic::getCurrentSearchModel(regim_)->searchPatternChanged("");
+			searchModel_->searchPatternChanged("");
 
-        mainDialog_->setButtonActive(isShareLinkMode() || isShareTextMode());
+        mainDialog_->setButtonActive(isShareLinkMode() || isShareTextMode() || !Logic::getContactListModel()->GetCheckedContacts().empty());
 
         auto newRect = CalcSizes();
-        mainWidget_->setFixedWidth(newRect.width());
-        mainWidget_->setFixedHeight(newRect.height());
+        mainWidget_->setFixedSize(newRect.width(), newRect.height());
 
         searchWidget_->setFocus();
 
@@ -384,8 +433,7 @@ namespace Ui
     void SelectContactsWidget::UpdateView()
     {
         auto newRect = CalcSizes();
-        mainWidget_->setFixedWidth(newRect.width());
-        mainWidget_->setFixedHeight(newRect.height());
+        mainWidget_->setFixedSize(newRect.width(), newRect.height());
     }
 
     void SelectContactsWidget::UpdateViewForIgnoreList(bool _isEmptyIgnoreList)
@@ -402,11 +450,29 @@ namespace Ui
     void SelectContactsWidget::setSort(bool _isClSorting)
     {
         sortCL_ = _isClSorting;
-        Logic::getCurrentSearchModel(regim_)->setSort(sortCL_);
+		searchModel_->setSort(sortCL_);
     }
 
     void SelectContactsWidget::finished()
     {
-        Logic::getCurrentSearchModel(regim_)->setSort(true);
+		searchModel_->setSort(true);
+    }
+
+    void SelectContactsWidget::setMaximumSelectedCount(int number)
+    {
+        maximumSelectedCount_ = number;
+    }
+
+    void SelectContactsWidget::UpdateContactList()
+    {
+        contactList_->update();
+    }
+
+    void SelectContactsWidget::reject()
+    {
+        if (mainDialog_)
+        {
+            mainDialog_->reject();
+        }
     }
 }

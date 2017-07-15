@@ -1,0 +1,12 @@
+QWidget#menu
+{
+	background: #ffffff;
+}
+
+QPushButton
+{
+    border: none;
+    text-align: left;
+    padding-left: 52dip;
+    font-size: 16dip;
+}

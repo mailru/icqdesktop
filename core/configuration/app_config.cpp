@@ -13,7 +13,7 @@ namespace
 {
     std::unique_ptr<app_config> config_;
 
-    const IntSet& valid_dpi_values();
+    const int_set& valid_dpi_values();
 }
 
 app_config::app_config()
@@ -82,7 +82,10 @@ void load_app_config(const boost::filesystem::wpath &_path)
     }
 
     pt::ptree options;
-    pt::ini_parser::read_ini(_path.string(), Out options);
+
+    auto file = tools::system::open_file_for_read(_path.wstring());
+
+    pt::ini_parser::read_ini(file, Out options);
 
     const auto disable_server_history = options.get<bool>("disable_server_history", false);
 
@@ -106,9 +109,9 @@ void load_app_config(const boost::filesystem::wpath &_path)
 
 namespace
 {
-    const IntSet& valid_dpi_values()
+    const int_set& valid_dpi_values()
     {
-        static IntSet values;
+        static int_set values;
 
         if (values.empty())
         {

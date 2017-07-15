@@ -6,26 +6,31 @@
 UI_COMMON_STYLE_NS_BEGIN
 
 QString getCloseButtonStyle();
+QString getMinimizeButtonStyle();
+QString getMaximizeButtonStyle();
+QString getRestoreButtonStyle();
 
-QColor getContactListHoveredColor();
-QColor getContactListSelectedColor();
+const QColor getContactListHoveredColor();
+const QColor getContactListSelectedColor();
 
 QString getDisabledButtonStyle();
 QString getGrayButtonStyle();
 QString getGreenButtonStyle();
-QString getGreenButtonStyleNoBorder();
 
-QColor getFrameTransparency();
+const QColor getFrameColor();
+const int getBottomPanelHeight();
+const QColor getBottomPanelColor();
+const int getTopPanelHeight();
+const QColor getTopPanelColor();
 
-QColor getLinkColor();
-QColor getLinkColorHovered();
-QColor getLinkColorPressed();
+const QColor getLinkColor();
+const QColor getLinkColorHovered();
+const QColor getLinkColorPressed();
 
-QColor getRedLinkColor();
-QColor getRedLinkColorHovered();
-QColor getRedLinkColorPressed();
+const QColor getRedLinkColor();
+const QColor getRedLinkColorHovered();
 
-QColor getTextCommonColor();
+const QColor getTextCommonColor();
 
 QString getLineEditStyle();
 QString getTextEditStyle();

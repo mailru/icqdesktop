@@ -8,7 +8,7 @@ namespace core
     {
         class threadpool : boost::noncopyable
         {
-            boost::thread::id		creator_thread_id_;
+            boost::thread::id creator_thread_id_;
 
         public:
 
@@ -19,18 +19,17 @@ namespace core
             virtual ~threadpool();
 
             bool push_back(const task _task);
-
             bool push_front(const task _task);
 
             const std::vector<std::thread::id> get_threads_ids() const;
 
-        private:
-            std::vector<std::thread>			threads_;
-            std::vector<std::thread::id>        threads_ids_;
-            std::mutex							queue_mutex_;
-            std::condition_variable				condition_;
-            std::deque<task>					tasks_;
-            std::atomic<bool>					stop_;
+        protected:
+            std::vector<std::thread> threads_;
+            std::vector<std::thread::id> threads_ids_;
+            boost::mutex queue_mutex_;
+            boost::condition_variable condition_;
+            std::deque<task> tasks_;
+            std::atomic<bool> stop_;
 
             bool run_task_impl();
             bool run_task();

@@ -23,6 +23,9 @@ namespace Logic
 
 		void cleanup();
 
+    public Q_SLOTS:
+        void UpdateAvatar(const QString& _aimId, bool force = true);
+        
 	public:
 		~AvatarStorage();
 
@@ -33,10 +36,11 @@ namespace Logic
 		QString GetLocal(const QString& _aimId, const QString& _displayName, const int _sizePx, const bool _isFilled);
 
         void UpdateDefaultAvatarIfNeed(const QString& _aimId);
-        void UpdateAvatar(const QString& _aimId, bool force = true);
         void ForceRequest(const QString& _aimId, const int _sizePx);
-        
-	private:
+
+        void SetAvatar(const QString& _aimId, const QPixmap& _pixmap);
+
+    private:
 		typedef std::map<QString, QPixmapSCptr> CacheMap;
 
 		AvatarStorage();

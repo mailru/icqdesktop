@@ -14,8 +14,7 @@ namespace core
         main_thread();
         virtual ~main_thread();
 
-        void excute_core_context(std::function<void()> task);
-        void excute_core_context_priority(std::function<void()> task);
+        void execute_core_context(std::function<void()> task);
         std::thread::id get_core_thread_id() const;
     };
 }

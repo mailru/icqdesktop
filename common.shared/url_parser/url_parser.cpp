@@ -11,6 +11,18 @@
 namespace
 {
     #include "domain_parser.in"
+
+    const char* FILES_ICQ_NET = "files.icq.net/get/";
+    static const int FILES_ICQ_NET_SAFE_POS = strlen("files.icq.net") - 1;
+
+    const char* ICQ_COM = "icq.com/files/";
+    static const int ICQ_COM_SAFE_POS = strlen("icq.com") - 1;
+
+    const char* CHAT_MY_COM = "chat.my.com/files/";
+    static const int CHAT_MY_COM_SAFE_POS = strlen("chat.my.com") - 1;
+
+    const char* LEFT_DOUBLE_QUOTE = "«";
+    const char* RIGHT_DOUBLE_QUOTE = "»";
 }
 
 const char* to_string(common::tools::url::type _value)
@@ -69,7 +81,17 @@ common::tools::url::url()
 }
 
 common::tools::url::url(const std::string& _url, type _type, protocol _protocol, extension _extension)
-    : url_(_url)
+    : original_(_url)
+    , url_(_url)
+    , type_(_type)
+    , protocol_(_protocol)
+    , extension_(_extension)
+{
+}
+
+common::tools::url::url(const std::string& _original, const std::string& _url, type _type, protocol _protocol, extension _extension)
+    : original_(_original)
+    , url_(_url)
     , type_(_type)
     , protocol_(_protocol)
     , extension_(_extension)
@@ -104,6 +126,41 @@ bool common::tools::url::is_email() const
 bool common::tools::url::is_ftp() const
 {
     return type_ == type::ftp;
+}
+
+bool common::tools::url::has_prtocol() const
+{
+    if (original_.length() < 4)
+        return false;
+
+    return (original_.compare(0, 4, "http", 4) == 0);
+}
+
+bool common::tools::url::operator==(const url& _right) const
+{
+    return url_ == _right.url_
+        && type_ == _right.type_
+        && protocol_== _right.protocol_
+        && extension_ == _right.extension_;
+}
+
+bool common::tools::url::operator!=(const url& _right) const
+{
+    return !(*this == _right);
+}
+
+std::ostream& operator<<(std::ostream& _out, const common::tools::url& _url)
+{
+    _out << "['"
+        << _url.url_
+        << "', "
+        << to_string(_url.type_)
+        << ", "
+        << to_string(_url.protocol_)
+        << ", "
+        << to_string(_url.extension_)
+        << "]";
+    return _out;
 }
 
 common::tools::url_parser::url_parser()
@@ -150,6 +207,16 @@ const common::tools::url& common::tools::url_parser::get_url() const
 bool common::tools::url_parser::skipping_chars() const
 {
     return state_ == states::lookup;
+}
+
+int32_t common::tools::url_parser::raw_url_length() const
+{
+    return buf_.size();
+}
+
+int32_t common::tools::url_parser::tail_size() const
+{
+    return tail_size_;
 }
 
 void common::tools::url_parser::finish()
@@ -201,21 +268,25 @@ void common::tools::url_parser::process()
         if (c == 'w' || c == 'W') { state_ = states::www_2; break; }
         else if (c == 'h' || c == 'H') { protocol_ = url::protocol::http; state_ = states::protocol_t1; break; }
         else if (c == 'f' || c == 'F') { protocol_ = url::protocol::ftp; state_ = states::protocol_t1; break; }
-        else if (c == 'f' || c == 'F') { compare("files.icq.net/get/", states::filesharing_id, states::host); id_length_ = 0; break; }
-        else if (c == 'i' || c == 'I') { compare("icq.com/files/", states::filesharing_id, states::host); id_length_ = 0; break; }
-        else if (c == 'c' || c == 'C') { compare("chat.my.com/files/", states::filesharing_id, states::host); id_length_ = 0; break; }
+        else if (c == 'f' || c == 'F') { compare(FILES_ICQ_NET, states::filesharing_id, states::host, FILES_ICQ_NET_SAFE_POS); id_length_ = 0; break; }
+        else if (c == 'i' || c == 'I') { compare(ICQ_COM, states::filesharing_id, states::host, ICQ_COM_SAFE_POS); id_length_ = 0; break; }
+        else if (c == 'c' || c == 'C') { compare(CHAT_MY_COM, states::filesharing_id, states::host, CHAT_MY_COM_SAFE_POS); id_length_ = 0; break; }
+        else if (c == LEFT_DOUBLE_QUOTE[0] && char_size_ == 2 && char_buf_[1] == LEFT_DOUBLE_QUOTE[1]) return;
         else if (is_letter_or_digit(c, is_utf8_)) { save_char_buf(domain_); state_ = states::host; break; }
         return;
     case states::protocol_t1:
         if (c == 't' || c == 'T') state_ = protocol_ == url::protocol::ftp ? states::protocol_p : states::protocol_t2;
+        else if (is_space(c, is_utf8_)) URL_PARSER_RESET_PARSER
         else { protocol_ = url::protocol::undefined; state_ = states::host; }
         break;
     case states::protocol_t2:
         if (c == 't' || c == 'T') state_ = states::protocol_p;
+        else if (is_space(c, is_utf8_)) URL_PARSER_RESET_PARSER
         else { protocol_ = url::protocol::undefined; state_ = states::host; }
         break;
     case states::protocol_p:
         if (c == 'p' || c == 'P') state_ = states::protocol_s;
+        else if (is_space(c, is_utf8_)) URL_PARSER_RESET_PARSER
         else { protocol_ = url::protocol::undefined; state_ = states::host; }
         break;
     case states::protocol_s:
@@ -227,9 +298,9 @@ void common::tools::url_parser::process()
         break;
     case states::check_www:
         if (c == 'w' || c == 'W') state_ = states::www_2;
-        else if (c == 'f' || c == 'F') { compare("files.icq.net/get/", states::filesharing_id, states::host); id_length_ = 0; break; }
-        else if (c == 'i' || c == 'I') { compare("icq.com/files/", states::filesharing_id, states::host); id_length_ = 0; break; }
-        else if (c == 'c' || c == 'C') { compare("chat.my.com/files/", states::filesharing_id, states::host); id_length_ = 0; break; }
+        else if (c == 'f' || c == 'F') { compare(FILES_ICQ_NET, states::filesharing_id, states::host, FILES_ICQ_NET_SAFE_POS); id_length_ = 0; break; }
+        else if (c == 'i' || c == 'I') { compare(ICQ_COM, states::filesharing_id, states::host, ICQ_COM_SAFE_POS); id_length_ = 0; break; }
+        else if (c == 'c' || c == 'C') { compare(CHAT_MY_COM, states::filesharing_id, states::host, CHAT_MY_COM_SAFE_POS); id_length_ = 0; break; }
         else if (is_allowable_char(c, is_utf8_)) { save_char_buf(domain_); state_ = states::host; }
         else URL_PARSER_RESET_PARSER
         break;
@@ -249,6 +320,8 @@ void common::tools::url_parser::process()
         else URL_PARSER_RESET_PARSER
         break;
     case states::compare:
+        if (compare_pos_ >= safe_position_) state_ = states::compare_safe;
+    case states::compare_safe:
         if (!is_equal(to_compare_ + compare_pos_)) { fallback(*char_buf_); return; }
         save_char_buf(compare_buf_);
         save_to_buf(to_compare_[compare_pos_]);
@@ -270,13 +343,13 @@ void common::tools::url_parser::process()
         break;
     case states::filesharing_id:
         ++id_length_;
-        if (is_space(c, is_utf8_)) { if (id_length_ >= min_filesharing_id_length) URL_PARSER_URI_FOUND }
+        if (is_space(c, is_utf8_)) { if (id_length_ >= min_filesharing_id_length) URL_PARSER_URI_FOUND else { state_ = states::host; need_to_check_domain_ = false; URL_PARSER_URI_FOUND } }
         else if (!is_letter_or_digit(c, is_utf8_)) URL_PARSER_RESET_PARSER
         break;
     case states::check_filesharing:
-        if (c == 'f' || c == 'F') { compare("files.icq.net/get/", states::filesharing_id, states::host); id_length_ = 0; break; }
-        else if (c == 'i' || c == 'I') { compare("icq.com/files/", states::filesharing_id, states::host); id_length_ = 0; break; }
-        else if (c == 'c' || c == 'C') { compare("chat.my.com/files/", states::filesharing_id, states::host); id_length_ = 0; break; }
+        if (c == 'f' || c == 'F') { compare(FILES_ICQ_NET, states::filesharing_id, states::host, FILES_ICQ_NET_SAFE_POS); id_length_ = 0; break; }
+        else if (c == 'i' || c == 'I') { compare(ICQ_COM, states::filesharing_id, states::host, ICQ_COM_SAFE_POS); id_length_ = 0; break; }
+        else if (c == 'c' || c == 'C') { compare(CHAT_MY_COM, states::filesharing_id, states::host, CHAT_MY_COM_SAFE_POS); id_length_ = 0; break; }
         else if (is_allowable_char(c, is_utf8_)) { save_char_buf(domain_); state_ = states::host; }
         else URL_PARSER_RESET_PARSER
         break;
@@ -290,7 +363,7 @@ void common::tools::url_parser::process()
         else if (c == '@') state_ = states::host_at;
         else if (c == '/') { if (protocol_ == url::protocol::undefined) URL_PARSER_RESET_PARSER }
         else if (c == '?') URL_PARSER_RESET_PARSER
-        else if (!is_allowable_char(c, is_utf8_)) URL_PARSER_RESET_PARSER
+        else if (!is_allowable_char(c, is_utf8_)) { if (protocol_ != url::protocol::undefined) URL_PARSER_URI_FOUND else URL_PARSER_RESET_PARSER }
         else save_char_buf(domain_);
         break;
     case states::host_n:
@@ -298,12 +371,11 @@ void common::tools::url_parser::process()
         else if (c == ':') { if (!is_email_ && is_valid_top_level_domain(domain_)) state_ = states::host_colon; else URL_PARSER_RESET_PARSER }
         else if (c == '@') { if (is_email_ || is_not_email_) URL_PARSER_RESET_PARSER else { state_ = states::host; is_email_ = true; } }
         else if (c == '/') { if (!is_email_ && is_valid_top_level_domain(domain_)) state_ = states::host_slash; else URL_PARSER_RESET_PARSER }
-        else if (c == '?') { if (!is_email_ && is_valid_top_level_domain(domain_)) state_ = states::query; else URL_PARSER_RESET_PARSER }
-        else if (c == '!') { if (is_valid_top_level_domain(domain_)) URL_PARSER_URI_FOUND}
-        else if (c == ',') { if (is_valid_top_level_domain(domain_)) URL_PARSER_URI_FOUND }
-        else if (c == '.') { if (is_valid_top_level_domain(domain_)) URL_PARSER_URI_FOUND }
+        else if (c == '?') { if (is_email_) URL_PARSER_URI_FOUND else if (is_valid_top_level_domain(domain_)) state_ = states::query; else URL_PARSER_RESET_PARSER }
         else if (c == '#') { if (!is_email_ && is_valid_top_level_domain(domain_)) state_ = states::query; else URL_PARSER_RESET_PARSER }
         else if (is_space(c, is_utf8_)) { if (is_valid_top_level_domain(domain_)) URL_PARSER_URI_FOUND else URL_PARSER_RESET_PARSER; }
+        else if (is_ending_char(c)) { if (is_valid_top_level_domain(domain_)) URL_PARSER_URI_FOUND else URL_PARSER_RESET_PARSER }
+        else if (c == RIGHT_DOUBLE_QUOTE[0] && char_size_ == 2 && char_buf_[1] == RIGHT_DOUBLE_QUOTE[1]) { if (is_valid_top_level_domain(domain_)) URL_PARSER_URI_FOUND else URL_PARSER_RESET_PARSER }
         else if (!is_letter_or_digit(c, is_utf8_) && c != '-') URL_PARSER_RESET_PARSER
         else save_char_buf(domain_);
         break;
@@ -349,6 +421,8 @@ void common::tools::url_parser::process()
         else if (c == '/') state_ = states::path_slash;
         else if (c == '?') state_ = states::query;
         else if (is_space(c, is_utf8_)) URL_PARSER_URI_FOUND
+        else if (is_ending_char(c)) { if (is_valid_top_level_domain(domain_)) URL_PARSER_URI_FOUND else URL_PARSER_RESET_PARSER }
+        else if (c == RIGHT_DOUBLE_QUOTE[0] && char_size_ == 2 && char_buf_[1] == RIGHT_DOUBLE_QUOTE[1]) { if (is_valid_top_level_domain(domain_)) URL_PARSER_URI_FOUND else URL_PARSER_RESET_PARSER }
         else if (!is_allowable_char(c, is_utf8_)) URL_PARSER_RESET_PARSER
         break;
     case states::path_dot:
@@ -363,6 +437,7 @@ void common::tools::url_parser::process()
         else if (c == '3') state_ = states::_3gp_g;
         else if (c == 'w' || c == 'W') state_ = states::webm_e;
         else if (is_allowable_char(c, is_utf8_)) state_ = states::path;
+        else if (is_space(c, is_utf8_)) URL_PARSER_URI_FOUND
         else URL_PARSER_RESET_PARSER
         break;
     case states::path_slash:
@@ -519,6 +594,8 @@ void common::tools::url_parser::process()
         if (is_space(c, is_utf8_)) URL_PARSER_URI_FOUND
         else if (c == '>') URL_PARSER_URI_FOUND
         else if (c == '?' || c == '!' || c == ',' || c == '#' || c == '/' || c == ':' || c == '.') state_ = states::query;
+        else if (c == '_') state_ = states::path;
+        else if (is_letter_or_digit(c, is_utf8_)) { extension_ = url::extension::undefined; state_ = states::query; }
         else URL_PARSER_RESET_PARSER
         break; 
     case states::query:
@@ -542,7 +619,7 @@ void common::tools::url_parser::reset()
 
     protocol_ = url::protocol::undefined;
 
-    buf_.clear();;
+    buf_.clear();
     domain_.clear();
 
     to_compare_ = nullptr;
@@ -566,6 +643,10 @@ void common::tools::url_parser::reset()
     is_utf8_ = false;
 
     url_.type_ = url::type::undefined;
+
+    need_to_check_domain_ = true;
+
+    tail_size_ = 0;
 }
 
 bool common::tools::url_parser::save_url()
@@ -592,6 +673,9 @@ bool common::tools::url_parser::save_url()
         return false;
     case states::compare:
         return false;
+    case states::compare_safe:
+        url_ = make_url(protocol_ == url::protocol::ftp || protocol_ == url::protocol::ftps ? common::tools::url::type::ftp : common::tools::url::type::site);
+        return true;
     case states::delimeter_colon:
         return false;
     case states::delimeter_slash1:
@@ -698,9 +782,12 @@ bool common::tools::url_parser::save_url()
         return false;
 
     while (is_ending_char(buf_.back()))
+    {
         buf_.pop_back();
+        ++tail_size_;
+    }
 
-    if (is_email_)
+    if (is_email_ && protocol_ == url::protocol::undefined)
     {
         url_ = make_url(common::tools::url::type::email);
     }
@@ -734,7 +821,7 @@ bool common::tools::url_parser::save_url()
         }
         else
         {
-            if (!is_valid_top_level_domain(domain_))
+            if (need_to_check_domain_ && !is_valid_top_level_domain(domain_))
                 return false;
             url_ = make_url(protocol_ == url::protocol::ftp || protocol_ == url::protocol::ftps ? common::tools::url::type::ftp : common::tools::url::type::site);
         }
@@ -750,22 +837,22 @@ common::tools::url common::tools::url_parser::make_url(url::type _type) const
         switch (protocol_)
         {
         case url::protocol::undefined:
-            return url("http://" + buf_, _type, url::protocol::http, extension_);
+            return url(buf_, "http://" + buf_, _type, url::protocol::http, extension_);
         case url::protocol::http:
-            return url("http://" + buf_, _type, protocol_, extension_);
+            return url(buf_, "http://" + buf_, _type, protocol_, extension_);
         case url::protocol::ftp:
-            return url("ftp://" + buf_, _type, protocol_, extension_);
+            return url(buf_, "ftp://" + buf_, _type, protocol_, extension_);
         case url::protocol::https:
-            return url("https://" + buf_, _type, protocol_, extension_);
+            return url(buf_, "https://" + buf_, _type, protocol_, extension_);
         case url::protocol::ftps:
-            return url("ftps://" + buf_, _type, protocol_, extension_);
+            return url(buf_, "ftps://" + buf_, _type, protocol_, extension_);
         }
     }
 
-    return url(buf_, _type, protocol_, extension_);
+    return url(buf_, buf_, _type, protocol_, extension_);
 }
 
-void common::tools::url_parser::compare(const char* _text, states _ok_state, states _fallback_state)
+void common::tools::url_parser::compare(const char* _text, states _ok_state, states _fallback_state, int _safe_position)
 {
     if (!is_equal(_text))
     {
@@ -780,6 +867,7 @@ void common::tools::url_parser::compare(const char* _text, states _ok_state, sta
     state_ = states::compare;
     ok_state_ = _ok_state;
     fallback_state_ = _fallback_state;
+    safe_position_ = _safe_position;
 }
 
 void common::tools::url_parser::fallback(char _last_char)
@@ -848,8 +936,8 @@ bool common::tools::url_parser::is_allowable_char(char _c, bool _is_utf8) const
 
     return _c == '-' || _c == '.' || _c == '_' || _c == '~' || _c == '!' || _c == '$' || _c == '&'
         || _c == '\'' || _c == '(' || _c == ')'|| _c == '*' || _c == '+' || _c == ',' || _c == ';'
-        || _c == '=' || _c == ':' || _c == '%' || _c == '?' || _c == '#'
-        || _c == '{' || _c == '}';
+        || _c == '=' || _c == ':' || _c == '%' || _c == '?' || _c == '#' || _c == '@'
+        || _c == '{' || _c == '}' || _c == '/';
 
     /*
         https://www.w3.org/Addressing/URL/uri-spec.html
@@ -873,7 +961,19 @@ bool common::tools::url_parser::is_allowable_query_char(char _c, bool _is_utf8) 
 
 bool common::tools::url_parser::is_ending_char(char _c) const
 {
-    return _c == '.' || _c == ',' || _c == '!' || _c == '?';
+    switch (_c)
+    {
+    case '.': return true;
+    case ',': return true;
+    case '!': return true;
+    case '?': return true;
+    case '"': return true;
+    case '\'': return true;
+    case '`': return true;
+    case '>': return true;
+    case ']': return true;
+    }
+    return false;
 }
 
 bool common::tools::url_parser::is_valid_top_level_domain(const std::string& _name) const

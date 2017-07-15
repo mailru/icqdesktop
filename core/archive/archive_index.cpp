@@ -10,6 +10,7 @@ using namespace archive;
 namespace
 {
     void skip_patches_forward(const headers_map &_headers, headers_map::const_reverse_iterator &_iter);
+    void skip_patches_forward(headers_map &_headers, headers_map::reverse_iterator &_iter);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -43,8 +44,11 @@ void archive_index::serialize(headers_list& _list) const
         _list.emplace_back(iter_header->second);
 }
 
-bool archive_index::serialize_from(int64_t _from, int64_t _count, headers_list& _list, bool _to_older) const
+bool archive_index::serialize_from(int64_t _from, int64_t _count_early, int64_t _count_later, headers_list& _list) const
 {
+    bool _to_older = _count_early > 0;
+    int _count = 30;
+
     if (headers_index_.empty())
         return true;
 
@@ -63,7 +67,7 @@ bool archive_index::serialize_from(int64_t _from, int64_t _count, headers_list& 
             return false;
         }
     }
-    
+
     if (_to_older)
     {
         while (iter_header != headers_index_.begin())
@@ -89,6 +93,63 @@ bool archive_index::serialize_from(int64_t _from, int64_t _count, headers_list& 
     }
 
     return true;
+
+    //if (headers_index_.empty())
+    //    return true;
+
+    //headers_map::const_iterator iter_header;
+
+    //if (_from == -1)
+    //{
+    //    iter_header = headers_index_.end();
+    //}
+    //else
+    //{
+    //    iter_header = headers_index_.lower_bound(_from);
+    //    if (iter_header == headers_index_.end())
+    //    {
+    //        assert(!"invalid index number");
+    //        return false;
+    //    }
+    //}
+    //
+    //if (_count_early > 0)
+    //{
+    //    auto it_before = iter_header;
+    //    while (it_before != headers_index_.begin())
+    //    {
+    //        --it_before;
+    //        
+    //        if (_count_early-- == 0)
+    //            break;
+
+    //        _list.emplace_front(it_before->second);
+    //    }
+    //}
+
+    //if (_count_later > 0)
+    //{
+    //    auto it_after = iter_header;
+    //    while (it_after != headers_index_.end())
+    //    {
+    //        _list.emplace_back(it_after->second);
+
+    //        ++it_after;
+
+    //        if (--_count_later == 0)
+    //            break;
+    //    };
+    //}
+
+    //std::stringstream str;
+    //str << "SERIAL" << _from << "\n";
+    //for (auto val : _list)
+    //{
+    //    str << "  id:" << val.get_id() << "\n";
+    //}
+    //OutputDebugStringA(str.str().data());
+
+    //return true;
 }
 
 void archive_index::insert_block(const archive::headers_list& _inserted_headers)
@@ -354,9 +415,7 @@ int64_t archive_index::get_last_msgid()
 bool archive_index::get_next_hole(int64_t _from, archive_hole& _hole, int64_t _depth) const
 {
     if (headers_index_.empty())
-    {
         return true;
-    }
 
     int64_t current_depth = 0;
 
@@ -396,19 +455,12 @@ bool archive_index::get_next_hole(int64_t _from, archive_hole& _hole, int64_t _d
 
     const auto only_patches_in_index = (iter_cursor == headers_index_.crend());
     if (only_patches_in_index)
-    {
         return true;
-    }
 
     // 2. search for holes
 
-    for(;;)
+    while (iter_cursor != headers_index_.crend())
     {
-        if (iter_cursor == headers_index_.crend())
-        {
-            return false;
-        }
-
         current_depth++;
 
         const auto &current_header = iter_cursor->second;
@@ -443,13 +495,48 @@ bool archive_index::get_next_hole(int64_t _from, archive_hole& _hole, int64_t _d
         }
 
         if (_depth != -1 && current_depth >= _depth)
-        {
             return false;
-        }
 
         ++iter_cursor;
         skip_patches_forward(headers_index_, iter_cursor);
     }
+
+    return false;
+}
+
+int64_t archive_index::validate_hole_request(const archive_hole& _hole, const int32_t _count)
+{
+    int64_t ret_from = _hole.get_from();
+
+    do 
+    {
+        if (_hole.get_from() <= 0 || _hole.get_to() <= 0 || abs(_count) <= 1)
+            break;
+
+        auto from_iter = headers_index_.find(_hole.get_from());
+        if (from_iter == headers_index_.cend())
+            break;
+
+        auto iter_cursor = headers_map::reverse_iterator(++from_iter);
+        if (iter_cursor->second.is_patch())
+            break;
+
+        auto iter_prev = iter_cursor;
+        ++iter_prev;
+
+        skip_patches_forward(headers_index_, iter_prev);
+
+        if (iter_prev == headers_index_.rend())
+            break;
+
+        if (iter_prev->first != iter_cursor->second.get_prev_msgid())
+        {
+            ret_from = iter_prev->first;
+        }
+    }
+    while (false);
+
+    return ret_from;
 }
 
 bool archive_index::need_optimize()
@@ -482,7 +569,20 @@ void archive_index::optimize()
 
 namespace
 {
-    void skip_patches_forward(const headers_map &_headers, headers_map::const_reverse_iterator &_iter)
+    void skip_patches_forward(const headers_map& _headers, headers_map::const_reverse_iterator &_iter)
+    {
+        for (; _iter != _headers.crend(); ++_iter)
+        {
+            const auto &header = _iter->second;
+
+            if (!header.is_patch())
+            {
+                break;
+            }
+        }
+    }
+
+    void skip_patches_forward(headers_map& _headers, headers_map::reverse_iterator &_iter)
     {
         for (; _iter != _headers.crend(); ++_iter)
         {

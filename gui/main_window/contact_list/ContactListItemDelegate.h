@@ -4,10 +4,12 @@
 
 namespace Logic
 {
+    class ChatMembersModel;
+
 	class ContactListItemDelegate : public AbstractItemDelegateWithRegim
 	{
 	public:
-		ContactListItemDelegate(QObject* parent, int _regim);
+		ContactListItemDelegate(QObject* parent, int _regim, ChatMembersModel* chatMembersModel = nullptr);
 
 		virtual ~ContactListItemDelegate();
 
@@ -34,5 +36,6 @@ namespace Logic
         bool renderRole_;
         QModelIndex DragIndex_;
         ContactList::ViewParams viewParams_;
+        ChatMembersModel* chatMembersModel_;
     };
 }

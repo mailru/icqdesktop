@@ -18,6 +18,10 @@ namespace core
             std::string dev_id_;
             std::string aimsid_;
             std::string locale_;
+            std::string password_md5_;
+            std::string product_guid_8x_;
+            std::string agent_token_;
+
             time_t exipired_in_;
             time_t time_offset_;
                         
@@ -29,9 +33,11 @@ namespace core
 
             std::string login_;
             std::string fetch_url_;
-            bool need_promo_;
 
             auth_parameters();
+            bool is_valid_agent_token() const;
+            bool is_valid_token() const;
+            bool is_valid_md5() const;
             bool is_valid() const;
             bool is_robusto_valid() const;
 

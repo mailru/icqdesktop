@@ -60,7 +60,6 @@ namespace core
     {
         main_thread* core_thread_;
         std::unique_ptr<network_log> network_log_;
-        std::unique_ptr<ithread_callback> http_handles_;
         std::unique_ptr<scheduler> scheduler_;
 
         std::shared_ptr<im_container> im_container_;
@@ -80,8 +79,6 @@ namespace core
         icore_factory* core_factory_;
         std::unique_ptr<async_executer> save_thread_;
 
-        std::mutex user_proxy_mutex_;
-
         // updater
         std::unique_ptr<update::updater> updater_;
 
@@ -93,9 +90,9 @@ namespace core
         uint32_t delayed_stat_timer_id_;
 
         void load_gui_settings();
-        void load_proxy_settings();
         void load_hosts_config();
         void post_gui_settings();
+        void post_logins();
         void post_app_config();
         void on_message_update_gui_settings_value(int64_t _seq, coll_helper _params);
         void on_message_log(coll_helper _params) const;
@@ -110,6 +107,8 @@ namespace core
 
         void load_statistics();
 
+        void post_user_proxy_to_gui();
+
     public:
 
         core_dispatcher();
@@ -117,8 +116,7 @@ namespace core
 
         void start(const common::core_gui_settings&);
         std::string get_uniq_device_id();
-        void excute_core_context(std::function<void()> _func);
-        void excute_core_context_priority(std::function<void()> _func);
+        void execute_core_context(std::function<void()> _func);
 
         uint32_t add_timer(std::function<void()> _func, uint32_t _timeout);
         void stop_timer(uint32_t _id);
@@ -143,7 +141,7 @@ namespace core
         void begin_history_search();
         unsigned end_history_search();
 
-        void unlogin();
+        void unlogin(const bool _is_auth_error);
 
         std::string get_root_login();
         std::string get_login_after_start();
@@ -165,10 +163,8 @@ namespace core
 
         network_log& get_network_log();
 
-        proxy_settings get_auto_proxy_settings();
         proxy_settings get_proxy_settings();
-        proxy_settings get_registry_proxy_settings();
-        proxy_settings get_user_proxy_settings();
+        bool try_to_apply_alternative_settings();
 
         void set_user_proxy_settings(const proxy_settings& _user_proxy_settings);
 
@@ -176,30 +172,11 @@ namespace core
         void set_locale(const std::string& _locale);
         std::string get_locale() const;
 
-        void switch_proxy_settings();
-
-        proxy_settings get_core_proxy_settings();
-        void post_user_proxy_to_gui();
-
         std::thread::id get_core_thread_id() const;
         bool is_core_thread() const;
 
         void save_themes_etag(const std::string &etag);
         std::string load_themes_etag();
-
-        //template<typename __ParamType> void on_voip_signal(voip_manager::eNotificationTypes type, const __ParamType* param) {
-        //    coll_helper coll(create_collection(), true);
-        //    type >> coll;
-        //    if (param) {
-        //        *param >> coll;
-        //    }
-        //    post_message_to_gui(L"voip_signal", 0, coll.get());
-        //}
-        //void on_voip_signal(voip_manager::eNotificationTypes type) {
-        //    coll_helper coll(create_collection(), true);
-        //    type >> coll;
-        //    post_message_to_gui(L"voip_signal", 0, coll.get());
-        //}
 
         // We save fix voip mute flag in settings,
         // Because we want to call this fix once.
@@ -207,6 +184,9 @@ namespace core
         bool get_voip_mute_fix_flag();
 
         hosts_config& get_hosts_config();
+
+        void post_need_promo();
+        void set_need_show_promo(bool _need_show_promo);
     };
 
     extern std::unique_ptr<core::core_dispatcher>		g_core;

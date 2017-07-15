@@ -16,19 +16,15 @@ void GeneralSettingsWidget::Creator::initVoiceVideo(QWidget* _parent, VoiceAndVi
     Utils::grabTouchWidget(scrollArea->viewport(), true);
 
     auto mainWidget = new QWidget(scrollArea);
-    mainWidget->setGeometry(QRect(0, 0, Utils::scale_value(800), Utils::scale_value(600)));
     Utils::grabTouchWidget(mainWidget);
 
-    auto mainLayout = new QVBoxLayout(mainWidget);
-    mainLayout->setSpacing(0);
+    auto mainLayout = Utils::emptyVLayout(mainWidget);
     mainLayout->setAlignment(Qt::AlignTop);
-    mainLayout->setContentsMargins(Utils::scale_value(48), 0, 0, Utils::scale_value(48));
+    mainLayout->setContentsMargins(Utils::scale_value(36), 0, 0, Utils::scale_value(36));
 
     scrollArea->setWidget(mainWidget);
 
-    auto layout = new QHBoxLayout(_parent);
-    layout->setSpacing(0);
-    layout->setContentsMargins(0, 0, 0, 0);
+    auto layout = Utils::emptyHLayout(_parent);
     layout->addWidget(scrollArea);
 
     auto __deviceChanged = [&_voiceAndVideo, _parent](const int ix, const voip_proxy::EvoipDevTypes dev_type)
@@ -80,8 +76,7 @@ void GeneralSettingsWidget::Creator::initVoiceVideo(QWidget* _parent, VoiceAndVi
         {
             __deviceChanged(ix, voip_proxy::kvoipDevTypeAudioCapture);
         },
-
-            false, false, [](bool) -> QString { return ""; });
+            [](bool) -> QString { return ""; });
 
         _voiceAndVideo.audioCaptureDevices = di.menu;
         _voiceAndVideo.aCapSelected = di.currentSelected;
@@ -99,7 +94,7 @@ void GeneralSettingsWidget::Creator::initVoiceVideo(QWidget* _parent, VoiceAndVi
         {
             __deviceChanged(ix, voip_proxy::kvoipDevTypeAudioPlayback);
         },
-            false, false, [](bool) -> QString { return ""; });
+            [](bool) -> QString { return ""; });
 
         _voiceAndVideo.audioPlaybackDevices = di.menu;
         _voiceAndVideo.aPlaSelected = di.currentSelected;
@@ -117,7 +112,7 @@ void GeneralSettingsWidget::Creator::initVoiceVideo(QWidget* _parent, VoiceAndVi
         {
             __deviceChanged(ix, voip_proxy::kvoipDevTypeVideoCapture);
         },
-            false, false, [](bool) -> QString { return ""; });
+            [](bool) -> QString { return ""; });
 
         _voiceAndVideo.videoCaptureDevices = di.menu;
         _voiceAndVideo.vCapSelected = di.currentSelected;

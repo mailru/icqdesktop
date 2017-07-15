@@ -8,7 +8,6 @@
 #include "SChar.h"
 #include "profiling/auto_stop_watch.h"
 #include "translit.h"
-#include "../constants.h"
 #include "../gui_settings.h"
 #include "../core_dispatcher.h"
 #include "../cache/countries.h"
@@ -23,6 +22,7 @@
 #include "../main_window/contact_list/Common.h"
 #include "../main_window/history_control/MessageStyle.h"
 #include "../theme_settings.h"
+#include "../../common.shared/version_info.h"
 
 
 #ifdef _WIN32
@@ -31,9 +31,14 @@
 
 #ifdef __APPLE__
     #include "macos/mac_support.h"
+    typedef unsigned char byte;
 #endif
 
 #endif
+
+#ifdef __linux__
+#define byte uint8_t
+#endif //__linux__
 
 namespace
 {
@@ -209,6 +214,41 @@ namespace
 		return QChar(Result);
 	}
 #endif //_WIN32
+
+    QString msgIdFromUidl(const QString& uidl)
+    {
+        if (uidl.size() != 16)
+        {
+            assert(!"wrong uidl");
+            return QString();
+        }
+
+        byte b[8] = {0};
+        bool ok;
+        b[0] = uidl.mid(0, 2).toUInt(&ok, 16);
+        b[1] = uidl.mid(2, 2).toUInt(&ok, 16);
+        b[2] = uidl.mid(4, 2).toUInt(&ok, 16);
+        b[3] = uidl.mid(6, 2).toUInt(&ok, 16);
+        b[4] = uidl.mid(8, 2).toUInt(&ok, 16);
+        b[5] = uidl.mid(10, 2).toUInt(&ok, 16);
+        b[6] = uidl.mid(12, 2).toUInt(&ok, 16);
+        b[7] = uidl.mid(14, 2).toUInt(&ok, 16);
+
+        QString result;
+        result.sprintf("%u%010u", *(int*)(b), *(int*)(b + 4*sizeof(byte)));
+
+        return result;
+    }
+
+    const QString redirect = "&noredirecttologin=1";
+    const QString page = "https://r.mail.ru:443/cls3564/win.mail.ru/cgi-bin/auth";
+    const QString fail_page = "https://r.mail.ru:443/cls3564/win.mail.ru/cgi-bin/auth";
+    const QString base_mail_url = "https://auth.mail.ru/cgi-bin/auth?Login=%1&agent=%2&ver=%3&agentlang=%4";
+    const QString mail_url = base_mail_url + redirect + "&page=" + page + "&FailPage=" + fail_page;
+
+    const QString read_msg_page = "https://r.mail.ru:443/cln8791/mra-mail.mail.ru/cgi-bin/readmsg?id=";
+    const QString mail_open_mail_url = base_mail_url + redirect + "&page=" + read_msg_page + "%5&lang=%4" + "&FailPage=" + read_msg_page + "%5&lang=%4";
+
 }
 
 namespace Utils
@@ -331,9 +371,13 @@ namespace Utils
 
 	void ShadowWidgetEventFilter::setGradientColor(QGradient& _gradient, bool _isActive)
 	{
-		_gradient.setColorAt(0, QColor(0, 0, 0, 50));
-		_gradient.setColorAt(0.2, QColor(0, 0, 0, _isActive ? 20 : 10));
-		_gradient.setColorAt(0.6, _isActive ? QColor(0, 0, 0, 5) : Qt::transparent);
+        QColor windowGradientColor("#000000");
+        windowGradientColor.setAlphaF(0.2);
+        _gradient.setColorAt(0, windowGradientColor);
+        windowGradientColor.setAlphaF(_isActive ? 0.08 : 0.04);
+		_gradient.setColorAt(0.2, windowGradientColor);
+        windowGradientColor.setAlphaF(0.02);
+		_gradient.setColorAt(0.6, _isActive ? windowGradientColor : Qt::transparent);
 		_gradient.setColorAt(1, Qt::transparent);
 	}
 
@@ -437,7 +481,7 @@ namespace Utils
     {
         if (_widget)
         {
-            QString newStyle = Utils::SetFont(Utils::ScaleStyle(_style, Utils::getScaleCoefficient()));
+            QString newStyle = Fonts::SetFont(Utils::ScaleStyle(_style, Utils::getScaleCoefficient()));
             if (newStyle != _widget->styleSheet())
                 _widget->setStyleSheet(newStyle);
         }
@@ -459,35 +503,9 @@ namespace Utils
 			return "";
 		}
 
-		return ScaleStyle(SetFont(qss), Utils::getScaleCoefficient());
+		return ScaleStyle(Fonts::SetFont(qss), Utils::getScaleCoefficient());
 	}
 
-    QString SetFont(const QString& _qss)
-    {
-        QString result(_qss);
-
-        const auto fontFamily = Fonts::appFontFamilyNameQss(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Normal);
-        const auto fontFamilyBold = Fonts::appFontFamilyNameQss(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Bold);
-        const auto fontFamilySemibold = Fonts::appFontFamilyNameQss(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Semibold);
-        const auto fontFamilyLight = Fonts::appFontFamilyNameQss(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Light);
-
-        result.replace("%FONT_FAMILY%", fontFamily);
-		result.replace("%FONT_FAMILY_BOLD%", fontFamilyBold);
-		result.replace("%FONT_FAMILY_SEMIBOLD%", fontFamilySemibold);
-		result.replace("%FONT_FAMILY_LIGHT%", fontFamilyLight);
-
-        const auto fontWeightQss = Fonts::appFontWeightQss(Fonts::FontWeight::Normal);
-        const auto fontWeightBold = Fonts::appFontWeightQss(Fonts::FontWeight::Bold);
-        const auto fontgWeightSemibold = Fonts::appFontWeightQss(Fonts::FontWeight::Semibold);
-        const auto fontWeightLight = Fonts::appFontWeightQss(Fonts::FontWeight::Light);
-
-        result.replace("%FONT_WEIGHT%", fontWeightQss);
-        result.replace("%FONT_WEIGHT_BOLD%", fontWeightBold);
-        result.replace("%FONT_WEIGHT_SEMIBOLD%", fontgWeightSemibold);
-        result.replace("%FONT_WEIGHT_LIGHT%", fontWeightLight);
-
-        return result;
-    }
 
 	QPixmap getDefaultAvatar(const QString& _uin, const QString& _displayName, const int _sizePx, const bool _isFilled)
 	{
@@ -505,7 +523,10 @@ namespace Utils
         QColor color = ColorTable[colorIndex];
 
         if (_uin.isEmpty() && _displayName.isEmpty())
-            color = QColor("#efefef");
+            color = QColor("#ebebeb");
+
+        if (_uin == "mail")
+            color = QColor("#579e1c");
 
 		QPainter painter(&bigResult);
 
@@ -534,7 +555,7 @@ namespace Utils
 		else
 		{
 			bigResult.fill(Qt::transparent);
-			painter.setBrush(Qt::white);
+			painter.setBrush(QColor("#ffffff"));
 
 			const auto correction = ((hollowPenWidth / 2) + 1);
 			const auto ellipseRadius = (bigSizePx - (correction * 2));
@@ -543,6 +564,19 @@ namespace Utils
 
 		auto scaledBigResult = bigResult.scaled(QSize(_sizePx, _sizePx), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
+        if (_uin == "mail")
+        {
+            QPainter scaled(&scaledBigResult);
+            scaled.setRenderHint(QPainter::Antialiasing);
+            scaled.setRenderHint(QPainter::TextAntialiasing);
+            scaled.setRenderHint(QPainter::SmoothPixmapTransform);
+
+            QPixmap p(parse_image_name(":/resources/alert_magent_100.png"));
+            p = p.scaled(QSize(_sizePx, _sizePx), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            scaled.drawPixmap(0, 0, p);
+            return QPixmap::fromImage(scaledBigResult);
+        }
+
 		const auto trimmedDisplayName = _displayName.trimmed();
         if (trimmedDisplayName.isEmpty())
         {
@@ -550,9 +584,10 @@ namespace Utils
             scaled.setRenderHint(QPainter::Antialiasing);
             scaled.setRenderHint(QPainter::TextAntialiasing);
             scaled.setRenderHint(QPainter::SmoothPixmapTransform);
-            const auto img = QImage(":/resources/contr_attach_200.png");
+            QPixmap img(Utils::parse_image_name(":/resources/photo_100.png"));
+            Utils::check_pixel_ratio(img);
             const auto off = (float)scaledBigResult.width() * 0.25;
-            scaled.drawImage(QRectF(off, off, scaledBigResult.width() - off * 2., scaledBigResult.height() - off * 2.), img, img.rect());
+            scaled.drawPixmap(QRectF(off, off, scaledBigResult.width() - off * 2., scaledBigResult.height() - off * 2.), img, img.rect());
             return QPixmap::fromImage(scaledBigResult);
         }
 
@@ -611,7 +646,7 @@ namespace Utils
 		else if (firstChar.IsEmoji())
 		{
             QPainter emojiPainter(&scaledBigResult);
-            const auto nearestSizeAvailable = Emoji::GetNearestSizeAvailable(_sizePx / 2);// + (platform::is_apple() ? 8 : 0));
+            const auto nearestSizeAvailable = Emoji::GetNearestSizeAvailable(_sizePx / 2);
             const auto &emoji = Ui::DpiAwareImage(Emoji::GetEmoji(firstChar.Main(), firstChar.Ext(), nearestSizeAvailable));
             emoji.draw(emojiPainter, (_sizePx - emoji.width()) / 2, (_sizePx - emoji.height()) / 2 - (platform::is_apple() ? 0 : 1));
 		}
@@ -643,6 +678,24 @@ namespace Utils
 		for (int i = 0; i < _text.length(); i++)
 		{
             auto scanEx = ::VkKeyScanEx(_text.at(i).unicode(), hCurrent);
+
+            if (scanEx == -1)
+            {
+                bool found = false;
+                for (int j = 0; j < nCount; ++j)
+                {
+                    if (::VkKeyScanEx(_text.at(i).unicode(), aLayouts[j]) != -1)
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    if (!found)
+                    {
+                        return std::vector<QStringList>();
+                    }
+                }
+            }
 
             for (int j = 0; j < nCount; ++j)
             {
@@ -701,7 +754,7 @@ namespace Utils
         const auto xRnd = 50;
         const auto yRnd = 36;
 
-        if (_state == "mobile")
+        if (_state == "mobile" || _state == "mobile_active")
         {
             QPainterPath stPath(QPointF(0, 0));
             if (_miniIcons)
@@ -745,34 +798,44 @@ namespace Utils
 
         if (_state == "photo enter")
         {
-            painter.setBrush(QBrush(QColor(0, 0, 0, 80)));
+            QColor photoEnterColor("#000000");
+            photoEnterColor.setAlphaF(0.3);
+            painter.setBrush(QBrush(photoEnterColor));
             painter.drawEllipse(0, 0, scale, scale);
             painter.setBrush(Qt::NoBrush);
 
             const auto fontSize = Utils::scale_bitmap(18);
             painter.setFont(Fonts::appFontScaled(fontSize));
-            painter.setPen(QPen(Qt::white));
+            painter.setPen(QPen(QColor("#ffffff")));
 
             painter.drawText(QRectF(0, 0, scale, scale), Qt::AlignCenter, QT_TRANSLATE_NOOP("avatar_upload", "Edit\nphoto"));
             painter.setPen(Qt::NoPen);
         }
 
-        if (_state == "online" || _state == "dnd")
+        if (_state == "online" || _state == "dnd" || _state == "online_active")
         {
             QPainterPath stPath(QPointF(0,0));
             stPath.addRect(0, 0, scale, scale);
             painter.setClipPath(stPath);
-            QPixmap p(Utils::parse_image_name(_miniIcons ? ":/resources/cl_status_online_mini_100.png" : ":/resources/cl_status_online_100.png"));
+            QPixmap p;
+            if (_state == "online_active")
+                p = QPixmap(Utils::parse_image_name(_miniIcons ? ":/resources/cl_status_online_mini_100_active.png" : ":/resources/cl_status_online_100_active.png"));
+            else
+                p = QPixmap(Utils::parse_image_name(_miniIcons ? ":/resources/cl_status_online_mini_100.png" : ":/resources/cl_status_online_100.png"));
             int x = (scale - p.width());
             int y = (scale - p.height());
             painter.drawPixmap(x, y, p);
         }
-        else if (_state == "mobile")
+        else if (_state == "mobile" || _state == "mobile_active")
         {
             QPainterPath stPath(QPointF(0,0));
             stPath.addRect(0, 0, scale, scale);
             painter.setClipPath(stPath);
-            QPixmap p(Utils::parse_image_name(_miniIcons ? ":/resources/cl_status_mobile_mini_100.png" : ":/resources/cl_status_mobile_100.png"));
+            QPixmap p;
+            if (_state == "mobile")
+                p = QPixmap(Utils::parse_image_name(_miniIcons ? ":/resources/cl_status_mobile_mini_100.png" : ":/resources/cl_status_mobile_100.png"));
+            else
+                p = QPixmap(Utils::parse_image_name(_miniIcons ? ":/resources/cl_status_mobile_mini_100_active.png" : ":/resources/cl_status_mobile_100_active.png"));
             int x = (scale - p.width());
             int y = (scale - p.height());
             painter.drawPixmap(x, y, p);
@@ -981,7 +1044,9 @@ namespace Utils
 	void addShadowToWidget(QWidget* _target)
 	{
 		QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(_target);
-		shadow->setColor(QColor(0, 0, 0, 75));
+        QColor widgetShadowColor("#000000");
+        widgetShadowColor.setAlphaF(0.3);
+		shadow->setColor(widgetShadowColor);
 		shadow->setBlurRadius(scale_value(16));
 		shadow->setXOffset(scale_value(0));
 		shadow->setYOffset(scale_value(2));
@@ -1057,7 +1122,11 @@ namespace Utils
 
     QString rgbaStringFromColor(const QColor& _color)
     {
-        QString textColorString = QString("rgba(%1, %2, %3, %4%)").arg(_color.red()).arg(_color.green()).arg(_color.blue()).arg(_color.alpha()*100/255);
+        QString textColorString = QString("rgba(%1, %2, %3, %4%)")
+            .arg(_color.red())
+            .arg(_color.green())
+            .arg(_color.blue())
+            .arg(_color.alpha()*100/255);
         return textColorString;
     }
 
@@ -1126,7 +1195,7 @@ namespace Utils
             typedef HRESULT  (__stdcall * SetCurrentProcessExplicitAppUserModelID_Type)(PCWSTR);
             SetCurrentProcessExplicitAppUserModelID_Type SetCurrentProcessExplicitAppUserModelID_Func;
             SetCurrentProcessExplicitAppUserModelID_Func = (SetCurrentProcessExplicitAppUserModelID_Type)::GetProcAddress(libShell32,"SetCurrentProcessExplicitAppUserModelID");
-            SetCurrentProcessExplicitAppUserModelID_Func(_enabled ? application_user_model_id : L"");
+            SetCurrentProcessExplicitAppUserModelID_Func(_enabled ? (build::is_icq() ? application_user_model_id_icq : application_user_model_id_agent) : L"");
         }
 #endif //_WIN32
     }
@@ -1140,8 +1209,8 @@ namespace Utils
 
         wchar_t bufferPath[1025];
         ULONG len = 1024;
-
-        if (keySoftwareRun.QueryStringValue((const wchar_t*) product_name.utf16(), bufferPath, &len) != ERROR_SUCCESS)
+        auto productName = getProductName();
+        if (keySoftwareRun.QueryStringValue((const wchar_t*) productName.utf16(), bufferPath, &len) != ERROR_SUCCESS)
             return false;
 
 #endif //_WIN32
@@ -1167,12 +1236,14 @@ namespace Utils
                 return;
 
             CAtlString exePath = buffer;
-            if (ERROR_SUCCESS != keySoftwareRun.SetStringValue((const wchar_t*) product_name.utf16(), CAtlString("\"") + exePath + "\"" + " /startup"))
+            auto productName = getProductName();
+            if (ERROR_SUCCESS != keySoftwareRun.SetStringValue((const wchar_t*) productName.utf16(), CAtlString("\"") + exePath + "\"" + " /startup"))
                 return;
         }
         else
         {
-            ::SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", (const wchar_t*) product_name.utf16());
+            auto productName = getProductName();
+            ::SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", (const wchar_t*) productName.utf16());
         }
 #endif //_WIN32
     }
@@ -1213,13 +1284,6 @@ namespace Utils
         return 10000;
     }
 
-    bool stateEqualsOnline(const QString& _state)
-    {
-        auto l = _state.toLower();
-//        return (l == "online" || l == "mobile"); // enumerate all possible states or just check if it's offline?
-        return (l != "offline" && l.size());
-    }
-
     int calcAge(const QDateTime& _birthdate)
     {
         QDate thisdate = QDateTime::currentDateTime().date();
@@ -1235,37 +1299,21 @@ namespace Utils
         return age;
     }
 
-    void initCrashHandlersInCore()
+    QString DefaultDownloadsPath()
     {
-#ifdef _WIN32
-        QLibrary libcore(CORELIBRARY);
-        if (!libcore.load())
-        {
-            assert(false);
-        }
-
-        typedef bool (*init_handlers_function)();
-        init_handlers_function initHandlersInstance = (init_handlers_function) libcore.resolve("init_crash_handlers");
-        initHandlersInstance();
-#endif // _WIN32
-    }
-
-    const QString &DefaultDownloadsPath()
-    {
-        static QString defaultDownloadsPath;
-        if (!defaultDownloadsPath.length())
-        {
-#ifdef __APPLE__
-            defaultDownloadsPath = QDir::toNativeSeparators(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)) + QDir::toNativeSeparators("/ICQ");
-#else
-            defaultDownloadsPath = QDir::toNativeSeparators(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
-#endif
-            if (Ui::get_gui_settings()->get_value(settings_download_directory, QString()).isEmpty())
-            {
-                QDir().mkpath(defaultDownloadsPath);
-            }
-        }
+        QString defaultDownloadsPath = QDir::toNativeSeparators(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
+        if (platform::is_apple())
+            defaultDownloadsPath += build::is_agent() ? "/Mail.ru Agent" : "/ICQ";
         return defaultDownloadsPath;
+    }
+    
+    QString UserDownloadsPath()
+    {
+        QString result = QDir::toNativeSeparators(Ui::get_gui_settings()->get_value(settings_download_directory, Utils::DefaultDownloadsPath()));
+        if (platform::is_windows())
+            result += build::is_agent() ? "/Mail.ru Agent" : "/ICQ";
+
+        return result;
     }
 
     bool is_image_extension(const QString& _ext)
@@ -1280,6 +1328,30 @@ namespace Utils
         return imagesExtensions.contains(_ext.toLower());
     }
 
+    bool is_image_extension_not_gif(const QString& _ext)
+    {
+        static QStringList imagesExtensions;
+
+        if (imagesExtensions.isEmpty())
+        {
+            imagesExtensions << "jpg" << "png" << "jpeg" << "bmp" << "tif" << "tiff" << "jpeg";
+        }
+
+        return imagesExtensions.contains(_ext.toLower());
+    }
+
+    bool is_video_extension(const QString& _ext)
+    {
+        static QStringList videoExtensions;
+
+        if (videoExtensions.isEmpty())
+        {
+            videoExtensions << "avi" << "mkv" << "wmv" << "flv" << "3gp" << "mpeg4" << "webm" << "mov";
+        }
+
+        return videoExtensions.contains(_ext.toLower());
+    }
+
     void copyFileToClipboard(const QString& _path)
     {
         QMimeData* mimeData = new QMimeData();
@@ -1287,38 +1359,39 @@ namespace Utils
         QApplication::clipboard()->setMimeData(mimeData);
     }
 
-    bool saveAs(const QString& _inputFilename, QString& _filename, QString& _directory, bool asSheet/* = true*/)
+    void saveAs(const QString& _inputFilename, std::function<void (QString& _filename, QString& _directory)> _callback, std::function<void ()> _cancel_callback, bool asSheet)
     {
-        static auto lastDirectory = QDir::toNativeSeparators(Ui::get_gui_settings()->get_value(settings_download_directory, Utils::DefaultDownloadsPath()));
-
-        _filename.clear();
-        _directory.clear();
+        static auto lastDirectory = UserDownloadsPath();
 
         int dot = _inputFilename.lastIndexOf('.');
         QString ext = dot != -1 ? _inputFilename.mid(dot, _inputFilename.length()) : QString();
         QString name = (_inputFilename.contains(QRegExp("\\/:*?\"<>\\|\"")) || _inputFilename.length() >= 128) ? QT_TRANSLATE_NOOP("chat_page", "File") : _inputFilename;
         QString fullName = QDir::toNativeSeparators(QDir(lastDirectory).filePath(name));
+
 #ifdef __APPLE__
-        QString destination = asSheet ?
-            MacSupport::saveFileName(QT_TRANSLATE_NOOP("context_menu", "Save as..."), fullName, "*" + ext)
-            :
-            QFileDialog::getSaveFileName(0, QT_TRANSLATE_NOOP("context_menu", "Save as..."), fullName, "*" + ext);
-#else
+        if (asSheet)
+        {
+            MacSupport::saveFileName(QT_TRANSLATE_NOOP("context_menu", "Save as..."), fullName, "*" + ext, _callback, ext, lastDirectory, _cancel_callback);
+            return;
+        }
+#endif //__APPLE__
         QString destination = QFileDialog::getSaveFileName(0, QT_TRANSLATE_NOOP("context_menu", "Save as..."), fullName, "*" + ext);
-#endif
         if (!destination.isEmpty())
         {
             QFileInfo info(destination);
             lastDirectory = info.dir().absolutePath();
-            _directory = info.dir().absolutePath();
-            _filename = info.fileName();
+            QString directory = info.dir().absolutePath();
+            QString filename = info.fileName();
             if (info.suffix().isEmpty() && !ext.isEmpty())
             {
-                _filename += ext;
+                filename += ext;
             }
-            return true;
+            _callback(filename, directory);
         }
-        return false;
+        else if (_cancel_callback)
+        {
+            _cancel_callback();
+        }
     }
 
     const SendKeysIndex& getSendKeysIndex()
@@ -1350,7 +1423,7 @@ namespace Utils
         props.emplace_back(std::make_pair("Settings_Taskbar", std::to_string(Ui::get_gui_settings()->get_value<bool>(settings_show_in_taskbar, true))));
         props.emplace_back(std::make_pair("Settings_Sounds", std::to_string(Ui::get_gui_settings()->get_value<bool>(settings_sounds_enabled, true))));
 
-        auto currentDownloadDir = Ui::get_gui_settings()->get_value<QString>(settings_download_directory, Utils::DefaultDownloadsPath());
+        auto currentDownloadDir = UserDownloadsPath();
         props.emplace_back(std::make_pair("Settings_Download_Folder", std::to_string(currentDownloadDir == Utils::DefaultDownloadsPath())));
 
         QString keyToSend;
@@ -1387,22 +1460,30 @@ namespace Utils
         stream << Utils::get_proxy_settings()->type_;
         props.emplace_back(std::make_pair("Proxy_Type", stream.str()));
 
+		props.emplace_back(std::make_pair("Settings_Scroll_To_New", std::to_string(Ui::get_gui_settings()->get_value<bool>(settings_auto_scroll_new_messages, false))));
+
         Ui::GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::client_settings, props);
     }
 
     QRect GetMainRect()
     {
         assert(!!Utils::InterConnector::instance().getMainWindow() && "Common.cpp (ItemLength)");
+        QRect mainRect = GetWindowRect(Utils::InterConnector::instance().getMainWindow());
+        assert("Couldn't get rect: Common.cpp (ItemLength)");
+        return mainRect;
+    }
+
+    QRect GetWindowRect(QWidget* window)
+    {
         QRect mainRect(0, 0, 0, 0);
-        if (Utils::InterConnector::instance().getMainWindow())
+        if (window)
         {
-            mainRect = Utils::InterConnector::instance().getMainWindow()->geometry();
+            mainRect = window->geometry();
         }
         else if (auto window = qApp->activeWindow())
         {
             mainRect = window->geometry();
         }
-        assert("Couldn't get rect: Common.cpp (ItemLength)");
         return mainRect;
     }
 
@@ -1455,11 +1536,10 @@ namespace Utils
         auto mainWidget = new QWidget(_parent);
         mainWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 
-        auto layout = new QVBoxLayout(mainWidget);
-        layout->setSpacing(0);
+        auto layout = Utils::emptyVLayout(mainWidget);
         layout->setContentsMargins(Utils::scale_value(24), Utils::scale_value(15), Utils::scale_value(24), 0);
 
-        auto textEdit = new Ui::TextEditEx(mainWidget, Fonts::defaultAppFontFamily(), Utils::scale_value(18), Ui::MessageStyle::getTextColor(), true, true);
+        auto textEdit = new Ui::TextEditEx(mainWidget, Fonts::appFontScaled(18), Ui::MessageStyle::getTextColor(), true, true);
         Utils::ApplyStyle(textEdit, Ui::CommonStyle::getLineEditStyle());
         textEdit->setObjectName("input_edit_control");
         textEdit->setPlaceholderText(_chatName);
@@ -1519,17 +1599,15 @@ namespace Utils
         const QString& _buttonRightText,
         const QString& _messageText,
         const QString& _labelText,
-        QWidget* _parent)
+        QWidget* _parent,
+        QWidget* _mainWindow)
     {
         auto mainWidget = new QWidget(_parent);
 
-        auto layout = new QVBoxLayout(mainWidget);
-        layout->setSpacing(0);
-        layout->setMargin(0);
-        layout->setContentsMargins(0, 0, 0, 0);
+        auto layout = Utils::emptyVLayout(mainWidget);
         mainWidget->setLayout(layout);
 
-        auto generalDialog = new Ui::GeneralDialog(mainWidget, Utils::InterConnector::instance().getMainWindow());
+        auto generalDialog = new Ui::GeneralDialog(mainWidget, _mainWindow ? _mainWindow : Utils::InterConnector::instance().getMainWindow());
         generalDialog->addHead();
         generalDialog->addLabel(_labelText);
         generalDialog->addText(_messageText, Utils::scale_value(12));
@@ -1655,7 +1733,9 @@ namespace Utils
             QPainter painter;
             painter.begin(&p);
             painter.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-            painter.fillRect(p.rect(), QColor(0, 0, 0, 120));
+            QColor dragPreviewColor("#000000");
+            dragPreviewColor.setAlphaF(0.5);
+            painter.fillRect(p.rect(), dragPreviewColor);
             painter.end();
 
             drag->setPixmap(p);
@@ -1709,16 +1789,6 @@ namespace Utils
         }
     }
 
-    int GetMinWidthOfMainWindow()
-    {
-        return Utils::scale_value(800);
-    }
-
-    int GetDragDistance()
-    {
-        return Utils::scale_value(50);
-    }
-
     bool haveText(const QMimeData * mimedata)
     {
         if (!mimedata)
@@ -1741,5 +1811,289 @@ namespace Utils
         QUrl url(text);
 
         return !text.isEmpty() && (!url.isValid() || url.host().isEmpty());
+    }
+
+    QString normalizeLink(const QString& _link)
+    {
+        QString link = _link;
+        while (!link.isEmpty() && (link.endsWith(QChar::Space) ||
+                                   link.endsWith(QChar::LineFeed) ||
+                                   link.endsWith(QChar::CarriageReturn)))
+        {
+            link.truncate(link.length() - 1);
+        }
+
+        return link;
+    }
+
+    const wchar_t* get_crossprocess_mutex_name()
+    {
+        return (build::is_icq() ? crossprocess_mutex_name_icq : crossprocess_mutex_name_agent);
+    }
+
+    const char* get_crossprocess_pipe_name()
+    {
+        return (build::is_icq() ? crossprocess_pipe_name_icq : crossprocess_pipe_name_agent);
+    }
+
+    QHBoxLayout* emptyHLayout(QWidget* parent)
+    {
+        auto layout = new QHBoxLayout(parent);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(0);
+        return layout;
+    }
+
+    QVBoxLayout* emptyVLayout(QWidget* parent)
+    {
+        auto layout = new QVBoxLayout(parent);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(0);
+        return layout;
+    }
+
+    void openMailBox(const QString& email, const QString& mrimKey, const QString& mailId)
+    {
+        core::tools::version_info infoCurrent;
+        QString url;
+        if (!mailId.isEmpty())
+            url = mail_open_mail_url.arg(email).arg(mrimKey).arg(infoCurrent.get_build()).arg(Utils::GetTranslator()->getCurrentLang()).arg(msgIdFromUidl(mailId));
+        else
+            url = mail_url.arg(email).arg(mrimKey).arg(infoCurrent.get_build()).arg(Utils::GetTranslator()->getCurrentLang());
+
+        QDesktopServices::openUrl(url);
+
+        emit Utils::InterConnector::instance().mailBoxOpened();
+    }
+
+    void openAgentUrl(
+        const QString& _url,
+        const QString& _fail_url,
+        const QString& _email,
+        const QString& _mrimKey)
+    {
+        core::tools::version_info infoCurrent;
+
+        const QString signed_url = base_mail_url + redirect + "&page=" + _url + "&FailPage=" + _fail_url;
+
+        const QString final_url = signed_url.arg(_email).arg(_mrimKey).arg(infoCurrent.get_build()).arg(Utils::GetTranslator()->getCurrentLang());
+
+        QDesktopServices::openUrl(final_url);
+    }
+
+
+    QString getProductName()
+    {
+        return (build::is_icq() ? product_name_icq : product_name_agent);
+    }
+
+    QString getInstallerName()
+    {
+        return (build::is_icq() ? installer_exe_name_icq : installer_exe_name_agent);
+    }
+
+    QString getUnreadsBadgeStr(int _unreads)
+    {
+        QString cnt;
+        if (_unreads < 1000)
+            cnt = QString::number(_unreads);
+        else if (_unreads < 10000)
+            cnt = QString("%1k").arg(_unreads / 1000);
+        else
+            cnt = "9k+";
+
+        return cnt;
+    }
+    
+    void drawUnreads(QPainter *p, const QFont &font, const QColor *bgColor, const QColor *textColor, const QColor *borderColor, int unreads, int balloonSize, int x, int y)
+    {
+        if (p && unreads > 0)
+        {
+            QFontMetrics m(font);
+
+            const auto text = getUnreadsBadgeStr(unreads);
+            const auto unreadsRect = m.tightBoundingRect(text);
+            const auto firstChar = text[0];
+            const auto lastChar = text[text.size() - 1];
+            const auto unreadsWidth = (unreadsRect.width() + m.leftBearing(firstChar) + m.rightBearing(lastChar));
+            const auto unreadsHeight = unreadsRect.height();
+
+            auto balloonWidth = unreadsWidth;
+            const auto isLongText = (text.length() > 1);
+            if (isLongText)
+            {
+                balloonWidth += (Utils::scale_value(16));
+            }
+            else
+            {
+                balloonWidth = balloonSize;
+            }
+
+            const auto balloonRadius = (balloonSize / 2);
+
+            p->save();
+            p->setPen(Qt::NoPen);
+            p->setRenderHint(QPainter::Antialiasing);
+
+            int borderWidth = 0;
+            if (borderColor)
+            {
+                p->setBrush(*borderColor);
+                p->setPen(*borderColor);
+                borderWidth = Utils::scale_value(1);
+                p->drawRoundedRect(x - borderWidth, y - borderWidth, balloonWidth + borderWidth * 2, balloonSize + borderWidth * 2, balloonRadius, balloonRadius);
+            }
+
+            p->setBrush(*bgColor);
+            p->drawRoundedRect(x, y, balloonWidth, balloonSize, balloonRadius, balloonRadius);
+
+            p->setFont(font);
+            p->setPen(*textColor);
+            if (platform::is_apple())
+            {
+                p->drawText(QRectF(x, y, balloonWidth, balloonSize), text, QTextOption(Qt::AlignCenter));
+            }
+            else
+            {
+                const float textX = floorf((float)x + ((float)balloonWidth - (float)unreadsWidth) / 2.);
+                const float textY = ceilf((float)y + ((float)balloonSize + (float)unreadsHeight) / 2.);
+                p->drawText(textX, textY, text);
+            }
+        }
+    }
+
+	QPoint getUnreadsSize(QPainter *p, const QFont &font, bool bBorder, int unreads, int balloonSize)
+    {
+		QPoint ret;
+        if (p)
+        {
+            QFontMetrics m(font);
+
+            const auto text = getUnreadsBadgeStr(unreads);
+            const auto unreadsRect = m.tightBoundingRect(text);
+            const auto firstChar = text[0];
+            const auto lastChar = text[text.size() - 1];
+            const auto unreadsWidth = (unreadsRect.width() + m.leftBearing(firstChar) + m.rightBearing(lastChar));
+            const auto unreadsHeight = unreadsRect.height();
+
+            auto balloonWidth = unreadsWidth;
+            const auto isLongText = (text.length() > 1);
+            if (isLongText)
+            {
+                balloonWidth += (Utils::scale_value(16));
+            }
+            else
+            {
+                balloonWidth = balloonSize;
+            }
+
+            const auto balloonRadius = (balloonSize / 2);
+
+            int borderWidth = 0;
+            if (bBorder)
+            {
+                borderWidth = Utils::scale_value(1);
+				ret.setX(balloonWidth + borderWidth * 2);
+				ret.setY(balloonSize + borderWidth * 2);
+            }
+			else
+			{
+				ret.setX(balloonWidth);
+				ret.setY(balloonSize);
+			}
+		}
+		return ret;
+	}
+
+    QImage iconWithCounter(int size, int count, QColor bg, QColor fg, QImage back)
+    {
+        QString cnt = getUnreadsBadgeStr(count);
+
+        QImage result = back.isNull() ? QImage(size, size, QImage::Format_ARGB32) : back;
+        int32_t cntSize = cnt.size();
+        if (back.isNull())
+            result.fill(Qt::transparent);
+
+        {
+            QPainter p(&result);
+            p.setBrush(bg);
+            p.setPen(Qt::NoPen);
+            p.setRenderHint(QPainter::Antialiasing);
+            p.setRenderHint(QPainter::TextAntialiasing);
+            p.setRenderHint(QPainter::HighQualityAntialiasing);
+            int32_t fontSize;
+            if (back.isNull())
+            {
+                if (size == 16) 
+                    fontSize = (cntSize < 3) ? 11 : 8;
+                else 
+                    fontSize = (cntSize < 3) ? 22 : 16;
+            }
+            else
+            {
+                if (size == 16) 
+                    fontSize = 8;
+                else 
+                    fontSize = 16;
+            }
+            
+            auto f = Fonts::appFont(fontSize, Fonts::FontWeight::Normal);
+            f.setStyleStrategy(QFont::PreferQuality);
+
+            //don't try to understand it. just walk away. really.
+            QFontMetrics m(f);
+            int32_t d = 0, r = 0, l = 0, k = 0, o = 0;
+            if (back.isNull())
+            {
+                if (size == 16) 
+                {
+                    l = cntSize > 2 ? 2 : 0;
+                    d = cntSize > 2 ? 4 : 0;
+                    k = count > 10000 ? 1 : 0;
+                    r = cntSize > 2 ? 6 : 8;
+                }
+                else
+                {
+                    l = cntSize > 2 ? 4 : 0;
+                    d = cntSize > 2 ? 8 : 0;
+                    k = count > 10000 ? 2 : 0;
+                    r = cntSize > 2 ? 12 : 16;
+                }
+            }
+            else
+            {
+                if (size == 16) 
+                {
+                    o = cntSize > 2 ? 0 : 4;
+                    l = cntSize > 2 ? 2 : 2;
+                    d = 4;
+                    k = count > 10000 ? 1 : 0;
+                    r = cntSize > 2 ? 6 : 8;
+                }
+                else
+                {
+                    o = cntSize > 2 ? 0 : 8;
+                    l = cntSize > 2 ? 4 : 4;
+                    d = 8;
+                    k = count > 10000 ? 2 : 0;
+                    r = cntSize > 2 ? 12 : 16;
+                }
+            }
+            
+            auto rect = QRect(o, d, size - o, size - d);
+            p.drawRoundedRect(rect, r, r);
+            p.setFont(f);
+            p.setPen(fg);
+
+            const auto unreadsRect = m.tightBoundingRect(cnt);
+            const auto firstChar = cnt[0];
+            const auto lastChar = cnt[cnt.size() - 1];
+            const auto unreadsWidth = (unreadsRect.width() + m.leftBearing(firstChar) + m.rightBearing(lastChar));
+            const auto unreadsHeight = unreadsRect.height();
+            const float textX = floorf(((float)size - (float)unreadsWidth) / 2. + k + o / 2.);
+            const float textY = ceilf(((float)size + (float)unreadsHeight) / 2. + l);
+            p.drawText(textX, textY, cnt);
+        }
+        return result;
     }
 }

@@ -75,9 +75,7 @@ QString Previewer::ImageLoader::getFileName()
         QEventLoop wait;
         connect(this, &Previewer::ImageLoader::metainfoLoaded, &wait, &QEventLoop::quit);
 
-        const auto seq = Ui::GetDispatcher()->downloadSharedFile(
-            aimId_, image_.url_, Ui::get_gui_settings()->get_value<QString>(settings_download_directory, Utils::DefaultDownloadsPath()),
-            QString(), core::file_sharing_function::download_file_metainfo);
+        const auto seq = Ui::GetDispatcher()->downloadFileSharingMetainfo(image_.url_);
 
         QString fileName;
         connect(Ui::GetDispatcher(), &Ui::core_dispatcher::fileSharingFileMetainfoDownloaded, this,
@@ -115,9 +113,7 @@ void Previewer::ImageLoader::start()
 
     if (image_.is_filesharing_)
     {
-        seq_ = Ui::GetDispatcher()->downloadSharedFile(
-            aimId_, image_.url_, Ui::get_gui_settings()->get_value<QString>(settings_download_directory, Utils::DefaultDownloadsPath()),
-            QString(), core::file_sharing_function::download_file);
+        seq_ = Ui::GetDispatcher()->downloadSharedFile(aimId_, image_.url_, false, QString(), true);
     }
     else
     {

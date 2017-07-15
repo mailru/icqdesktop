@@ -49,3 +49,8 @@ template <>
             return iter->second->get_value<tools::binary_stream>();
         }
 
+bool core::tools::settings::value_exists(uint32_t _value_key) const
+{
+    auto iter = values_.find(_value_key);
+    return iter != values_.end();
+}

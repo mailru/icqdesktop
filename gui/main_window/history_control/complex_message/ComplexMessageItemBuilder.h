@@ -8,7 +8,6 @@ class ComplexMessageItem;
 
 namespace ComplexMessageItemBuilder
 {
-
     ComplexMessageItem* makeComplexItem(
         QWidget *parent,
         const int64_t id,
@@ -20,7 +19,8 @@ namespace ComplexMessageItemBuilder
         const QString &senderFriendly,
         const QList<Data::Quote>& quotes,
         HistoryControl::StickerInfoSptr sticker,
-        const bool isOutgoing);
+        const bool isOutgoing,
+        const bool isNotAuth);
 
 }
 

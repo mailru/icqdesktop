@@ -3,71 +3,80 @@
 
 #include "../../utils/utils.h"
 #include "../../gui_settings.h"
+#include "../../controls/CommonStyle.h"
+
+#include "../../utils/InterConnector.h"
+#include "../MainWindow.h"
 
 #include "FFMpegPlayer.h"
-
-
+#include "../../fonts.h"
 
 namespace Ui
 {
-    int getControlPanelMaxHeight()
+    int getMargin(bool _isFullScreen)
     {
-        return (int) Utils::scale_value(104);
+        return (int) Utils::scale_value(_isFullScreen ? 16 : 8);
     }
 
-    int getTimeWidth()
+    int getVolumeSliderHeight(bool _isFullScreen)
     {
-        return (int) Utils::scale_value(70 - 16);
+        return (int) Utils::scale_value(_isFullScreen ? 80 : 48);
     }
 
-    int getMargin()
+    int getControlPanelSoundHeight(bool _isFullScreen)
     {
-        return (int) Utils::scale_value(16);
+        return (int) getVolumeSliderHeight(_isFullScreen) + getMargin(_isFullScreen);
     }
 
-    int getVolumeSliderWidth()
+    int getControlPanelButtonSize(bool _isFullScreen)
     {
-        return (int) Utils::scale_value(70);
+        return (int) Utils::scale_value(_isFullScreen ? 32 : 24);
     }
 
-    int getVolumeSliderHeight()
+    int getSoundButtonVolumeSpacerHeight(bool _isFullScreen)
     {
-        return (int) Utils::scale_value(24);
+        return (int) Utils::scale_value(_isFullScreen ? 8 : 4);
     }
 
-    int getHeaderMaxHeight()
+    int getSoundsWidgetHeight(bool _isFullScreen)
     {
-        return (int) Utils::scale_value(32);
+        return (int) getControlPanelButtonSize(_isFullScreen) + getControlPanelSoundHeight(_isFullScreen);
     }
 
-    double getMinWidth()
+    int getControlPanelMaxHeight(bool _isFullScreen)
     {
-        return Utils::scale_value(320.0);
+        return (int) getSoundsWidgetHeight(_isFullScreen) + 2 * getMargin(_isFullScreen) + getSoundButtonVolumeSpacerHeight(_isFullScreen);
     }
 
-    double getMinHeight()
+    int getVolumeSliderWidth(bool _isFullScreen)
     {
-        return Utils::scale_value(300.0);
+        return (int) Utils::scale_value(_isFullScreen ? 28 : 24);
     }
 
-    double getMinCenteredWidht()
+    int getTimeRightMargin(bool _isFullScreen)
     {
-        return Utils::scale_value(500.0);
+        return (int) Utils::scale_value(_isFullScreen ? 8 : 4);
+    }
+
+    int getTimeBottomMargin(bool _isFullScreen)
+    {
+        return (int) Utils::scale_value(_isFullScreen ? 8 : 4);
     }
 
     const uint32_t hideTimeout = 2000;
     const uint32_t hideTimeoutShort = 100;
 
+
     //////////////////////////////////////////////////////////////////////////
     // VideoProgressSlider
     //////////////////////////////////////////////////////////////////////////
-    VideoProgressSlider::VideoProgressSlider(Qt::Orientation _orientation, QWidget* _parent = 0)
+    InstChangedSlider::InstChangedSlider(Qt::Orientation _orientation, QWidget* _parent = 0)
         : QSlider(_orientation, _parent)
     {
 
     }
 
-    void VideoProgressSlider::mousePressEvent(QMouseEvent* _event)
+    void InstChangedSlider::mousePressEvent(QMouseEvent* _event)
     {
         int32_t sliderWidth = width();
 
@@ -89,231 +98,206 @@ namespace Ui
             _event->accept();
 
             emit sliderMoved(value);
+            emit sliderReleased();
         }
 
         QSlider::mousePressEvent(_event);
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    // VideoPlayerHeader
-    //////////////////////////////////////////////////////////////////////////
-    VideoPlayerHeader::VideoPlayerHeader(QWidget* _parent, const QString& _caption)
-        : QWidget(nullptr)
+    void InstChangedSlider::wheelEvent(QWheelEvent* _event)
     {
-        setAttribute(Qt::WA_TranslucentBackground, true);
-        
-        setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
-        
-        setStyleSheet(Utils::LoadStyle(":/main_window/mplayer/mstyles.qss"));
-        
-        
-        QHBoxLayout* rootLayout = new QHBoxLayout();
-        rootLayout->setContentsMargins(Utils::scale_value(12), 0, 0, 0);
+        QSlider::wheelEvent(_event);
 
-        caption_ = new QLabel(this);
-        caption_->setObjectName("VideoPlayerCaption");
-        caption_->setText(_caption);
-
-        rootLayout->addWidget(caption_);
-
-        rootLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding));
-
-        closeButton_ = new QPushButton(this);
-        closeButton_->setObjectName("VideoPlayerCloseButton");
-        closeButton_->setFixedHeight(Utils::scale_value(32));
-        closeButton_->setFixedWidth(Utils::scale_value(48));
-        closeButton_->setCursor(Qt::PointingHandCursor);
-        rootLayout->addWidget(closeButton_);
-
-        setLayout(rootLayout);
-
-        connect(closeButton_, &QPushButton::clicked, this, [this](bool)
-        {
-            emit signalClose();
-        });
-
-        setMouseTracking(true);
+        emit sliderMoved(value());
+        emit sliderReleased();
     }
-
-    VideoPlayerHeader::~VideoPlayerHeader()
-    {
-
-    }
-
-    void VideoPlayerHeader::setCaption(const QString& _caption)
-    {
-        caption_->setText(_caption);
-    }
-
-    void VideoPlayerHeader::paintEvent(QPaintEvent* _e)
-    {
-        QStyleOption opt;
-        opt.init(this);
-        QPainter p(this);
-        style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
-
-        return QWidget::paintEvent(_e);
-    }
-
-
-
-
-
-
 
     //////////////////////////////////////////////////////////////////////////
     // VideoPlayerControlPanel
     //////////////////////////////////////////////////////////////////////////
-    VideoPlayerControlPanel::VideoPlayerControlPanel(QWidget* _parent, FFMpegPlayer* _player)
-        :   QWidget(nullptr),
+    VideoPlayerControlPanel::VideoPlayerControlPanel(
+        VideoPlayerControlPanel* _copyFrom, 
+        QWidget* _parent, 
+        FFMpegPlayer* _player, 
+        const QString& _mode)
+
+        :   QWidget(_parent),
             player_(_player),
-            duration_(0),
-            position_(0),
-            positionSliderTimer_(new QTimer(this))
+            duration_(_copyFrom ? _copyFrom->duration_ : 0),
+            position_(_copyFrom ? _copyFrom->position_ : 0),
+            positionSliderTimer_(new QTimer(this)),
+            fullscreen_(_mode == "full_screen"),
+            lastSoundButtonMode_(_copyFrom ? _copyFrom->lastSoundButtonMode_ : "0")
     {
-        setWindowOpacity(0.65f);
-        
-        setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
-        
+        setProperty("mode", _mode);
+
         setStyleSheet(Utils::LoadStyle(":/main_window/mplayer/mstyles.qss"));
-        
-        bool mute = get_gui_settings()->get_value<bool>(setting_mplayer_mute, false);
+
         int32_t volume = get_gui_settings()->get_value<int32_t>(setting_mplayer_volume, 100);
 
-        player_->setVolume(volume);
-        player_->setMute(mute);
+        QVBoxLayout* rootLayout = new QVBoxLayout();
+        rootLayout->setContentsMargins(0, 0, 0, 0);
 
-        QHBoxLayout* rootLayout = new QHBoxLayout();
-        rootLayout->setContentsMargins(getMargin(), Utils::scale_value(6), getMargin(), getMargin());
-        rootLayout->setAlignment(Qt::AlignTop);
+        gradient_ = new QWidget(this);
+        gradient_->setObjectName("control_panel_gradient");
+        gradient_->setProperty("mode", _mode);
+        gradient_->show();
 
-        QWidget* sliderWidget = new QWidget(this);
-        rootLayout->addWidget(sliderWidget);
+        baseLayout_ = new QHBoxLayout();
+        baseLayout_->setContentsMargins(getMargin(isFullScreen()), getMargin(isFullScreen()), getMargin(isFullScreen()), getMargin(isFullScreen()));
+        baseLayout_->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
 
         {
-            QVBoxLayout* sliderLayout = new QVBoxLayout();
-            sliderLayout->setContentsMargins(0, 0, 0, 0);
-            sliderLayout->setSpacing(0);
+            playLayout_ = new QVBoxLayout();
+            playLayout_->setContentsMargins(0, getControlPanelSoundHeight(isFullScreen()), 0, 0);
+            playLayout_->setSpacing(0);
+            playLayout_->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
 
+            playButton_ = new QPushButton(this);
+            playButton_->setObjectName("VideoPlayerPlayButton");
+            playButton_->setFixedHeight(getControlPanelButtonSize(isFullScreen()));
+            playButton_->setFixedWidth(getControlPanelButtonSize(isFullScreen()));
+            playButton_->setCursor(Qt::PointingHandCursor);
+            playButton_->setCheckable(true);
 
-            progressSlider_ = new VideoProgressSlider(Qt::Orientation::Horizontal, this);
-            progressSlider_->setObjectName("VideoProgressSlider");
-            progressSlider_->setFixedHeight(Utils::scale_value(24));
-            progressSlider_->setCursor(Qt::PointingHandCursor);
-
-            sliderLayout->addWidget(progressSlider_);
-
-            {
-                QHBoxLayout* buttonsLayout = new QHBoxLayout();
-                buttonsLayout->setContentsMargins(0, 0, 0, 0);
-                buttonsLayout->setSpacing(Utils::scale_value(24));
-                buttonsLayout->setAlignment(Qt::AlignBottom | Qt::AlignHCenter);
-
-                volumeSpacer_ = new QSpacerItem(0, 0);
-                buttonsLayout->addSpacerItem(volumeSpacer_);
-
-                playButton_ = new QPushButton(this);
-                playButton_->setObjectName("VideoPlayerPlayButton");
-                playButton_->setFixedHeight(Utils::scale_value(40));
-                playButton_->setFixedWidth(Utils::scale_value(40));
-                playButton_->setCursor(Qt::PointingHandCursor);
-                playButton_->setCheckable(true);
-
-                buttonsLayout->addWidget(playButton_);
-
-                const int soundButtonVolumeSpacing = Utils::scale_value(24);
-
-                soundWidget_ = new QWidget(this);
-                soundWidget_->setFixedHeight(Utils::scale_value(40));
-                soundWidget_->setFixedWidth(Utils::scale_value(40) + getVolumeSliderWidth() + soundButtonVolumeSpacing);
-                QHBoxLayout* soundLayout = new QHBoxLayout();
-                soundLayout->setContentsMargins(0, 0, 0, 0);
-                soundLayout->setSpacing(0);
-                soundWidget_->setLayout(soundLayout);
-                soundWidget_->installEventFilter(this);
-                buttonsLayout->addWidget(soundWidget_);
-                {
-                    soundButton_ = new QPushButton(this);
-                    soundButton_->setObjectName("VideoPlayerSoundButton");
-                    soundButton_->setFixedHeight(Utils::scale_value(40));
-                    soundButton_->setFixedWidth(Utils::scale_value(40));
-                    soundButton_->setCursor(Qt::PointingHandCursor);
-                    soundButton_->setCheckable(true);
-                    soundButton_->setChecked(!mute);
-                    soundButton_->installEventFilter(this);
-                    
-                    soundLayout->addWidget(soundButton_);
-
-                    soundLayout->addSpacing(soundButtonVolumeSpacing);
-                        
-                    QWidget* volumeContainer = new QWidget(this);
-                    volumeContainer->setFixedWidth(getVolumeSliderWidth());
-                    soundLayout->addWidget(volumeContainer);
-                    {
-                        QHBoxLayout* volumeLayout = new QHBoxLayout();
-                        volumeLayout->setContentsMargins(0, 0, 0, 0);
-                        volumeLayout->setSpacing(0);
-                        volumeContainer->setLayout(volumeLayout);
-
-                        volumeSlider_ = new QSlider(this);
-                        volumeSlider_->setOrientation(Qt::Orientation::Horizontal);
-                        volumeSlider_->setObjectName("VideoVolumeSlider");
-                        volumeSlider_->setMinimum(0);
-                        volumeSlider_->setMaximum(100);
-                        volumeSlider_->setPageStep(10);
-                        volumeSlider_->setFixedHeight(getVolumeSliderHeight());
-                        volumeSlider_->setCursor(Qt::PointingHandCursor);
-                        volumeSlider_->setSliderPosition(volume);
-                        volumeSlider_->setFixedWidth(getVolumeSliderWidth());
-                        volumeSlider_->hide();
-                        volumeLayout->addWidget(volumeSlider_);
-                    }
-                }
-                                
-                sliderLayout->addLayout(buttonsLayout);
-            }
-
-            sliderWidget->setLayout(sliderLayout);
+            playLayout_->addWidget(playButton_);
+            baseLayout_->addLayout(playLayout_);
         }
 
-        QWidget* timeRightWidget = new QWidget(this);
-        timeRightWidget->setFixedWidth(getTimeWidth());
-        QVBoxLayout* timeRightLayout = new QVBoxLayout();
-        timeRightLayout->setContentsMargins(0, Utils::scale_value(10), 0, 0);
-        timeRightLayout->setSpacing(0);
-        timeRightWidget->setLayout(timeRightLayout);
         {
+            progressSliderLayout_ = new QVBoxLayout();
+            progressSliderLayout_->setContentsMargins(0, getControlPanelSoundHeight(false), 0, 0);
+            progressSliderLayout_->setSpacing(0);
+            progressSliderLayout_->setAlignment(Qt::AlignBottom);
+
+            progressSlider_ = new InstChangedSlider(Qt::Orientation::Horizontal, this);
+            progressSlider_->setObjectName("VideoProgressSlider");
+            progressSlider_->setProperty("mode", _mode);
+            progressSlider_->setFixedHeight(getControlPanelButtonSize(isFullScreen()));
+            progressSlider_->setCursor(Qt::PointingHandCursor);
+            progressSliderLayout_->addWidget(progressSlider_);
+            baseLayout_->addLayout(progressSliderLayout_);
+        }
+
+        {
+            timeLayout_ = new QVBoxLayout();
+            timeLayout_->setContentsMargins(
+                getTimeRightMargin(isFullScreen()), 
+                getControlPanelSoundHeight(isFullScreen()), 
+                getTimeRightMargin(isFullScreen()), 
+                getTimeBottomMargin(isFullScreen()));
+
+            timeLayout_->setSpacing(0);
+            timeLayout_->setAlignment(Qt::AlignBottom);
+
             timeRight_ = new QLabel(this);
             timeRight_->setObjectName("VideoTimeProgress");
-            timeRight_->setText("00:00:00");
-            timeRight_->setFixedWidth(getTimeWidth());
-            timeRight_->setAlignment(Qt::AlignRight);
-            timeRightLayout->addWidget(timeRight_);
-
-            timeRightLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding));
-
-            QHBoxLayout* fsLayout = new QHBoxLayout();
-            fsLayout->setContentsMargins(0, 0, 0, 0);
-            fsLayout->setAlignment(Qt::AlignRight);
-            fullscreenButton_ = new QPushButton(this);
-            fullscreenButton_->setObjectName("VideoPlayerFullscreenButton");
-            fullscreenButton_->setFixedHeight(Utils::scale_value(40));
-            fullscreenButton_->setFixedWidth(Utils::scale_value(40));
-            fullscreenButton_->setCursor(Qt::PointingHandCursor);
-            fullscreenButton_->setCheckable(true);
+            timeRight_->setProperty("mode", _mode);
+            timeRight_->setText("0:00");
             
-            fsLayout->addWidget(fullscreenButton_);
+            timeLayout_->addWidget(timeRight_);
+            baseLayout_->addLayout(timeLayout_);
+        }
+        
+        {
+            soundWidget_ = new QWidget(this);
+            soundWidget_->setFixedHeight(getSoundsWidgetHeight(isFullScreen()));
+            soundWidget_->setFixedWidth(getControlPanelButtonSize(isFullScreen()));
 
-            timeRightLayout->addLayout(fsLayout);
+            QVBoxLayout* soundLayout = new QVBoxLayout();
+            soundLayout->setContentsMargins(0, 0, 0, 0);
+            soundLayout->setSpacing(0);
+            soundLayout->setAlignment(Qt::AlignBottom);
+
+            soundWidget_->setLayout(soundLayout);
+            soundWidget_->installEventFilter(this);
+            {
+                soundButton_ = new QPushButton(this);
+                soundButton_->setObjectName("VideoPlayerSoundButton");
+                soundButton_->setFixedHeight(getControlPanelButtonSize(isFullScreen()));
+                soundButton_->setFixedWidth(getControlPanelButtonSize(isFullScreen()));
+                soundButton_->setCursor(Qt::PointingHandCursor);
+                soundButton_->setProperty("mode", lastSoundButtonMode_);
+                soundButton_->installEventFilter(this);
+
+                volumeContainer_ = new QWidget(this);
+                volumeContainer_->setFixedWidth(getVolumeSliderWidth(isFullScreen()));
+                soundLayout->addWidget(volumeContainer_);
+                {
+                    QHBoxLayout* volumeLayout = new QHBoxLayout();
+                    volumeLayout->setContentsMargins(0, 0, 0, 0);
+                    volumeLayout->setSpacing(0);
+                    volumeContainer_->setLayout(volumeLayout);
+
+                    volumeSlider_ = new InstChangedSlider(Qt::Orientation::Vertical, this);
+                    volumeSlider_->setOrientation(Qt::Orientation::Vertical);
+                    volumeSlider_->setObjectName("VideoVolumeSlider");
+                    volumeSlider_->setProperty("mode", _mode);
+                    volumeSlider_->setMinimum(0);
+                    volumeSlider_->setMaximum(100);
+                    volumeSlider_->setPageStep(10);
+                    volumeSlider_->setFixedHeight(getVolumeSliderHeight(isFullScreen()));
+                    volumeSlider_->setCursor(Qt::PointingHandCursor);
+                    volumeSlider_->setSliderPosition(volume);
+                    volumeSlider_->setFixedWidth(getVolumeSliderWidth(isFullScreen()));
+                    volumeSlider_->hide();
+                    volumeLayout->addWidget(volumeSlider_);
+                }
+                
+                soundButtonVolumeSpacer_ = new QWidget();
+                soundButtonVolumeSpacer_->setFixedHeight(getSoundButtonVolumeSpacerHeight(isFullScreen()));
+                soundLayout->addWidget(soundButtonVolumeSpacer_);
+                soundLayout->addWidget(soundButton_);
+            }
+            baseLayout_->addWidget(soundWidget_);
         }
 
-        rootLayout->addWidget(timeRightWidget);
+        {
+            fullScreenLayout_ = new QVBoxLayout();
+            fullScreenLayout_->setSpacing(0);
+            fullScreenLayout_->setContentsMargins(0, getControlPanelSoundHeight(false), 0, 0);
+            fullScreenLayout_->setAlignment(Qt::AlignBottom);
+
+            fullscreenButton_ = new QPushButton(this);
+            fullscreenButton_->setObjectName("VideoPlayerFullscreenButton");
+            fullscreenButton_->setFixedHeight(getControlPanelButtonSize(false));
+            fullscreenButton_->setFixedWidth(getControlPanelButtonSize(false));
+            fullscreenButton_->setCursor(Qt::PointingHandCursor);
+            fullscreenButton_->setVisible(!isFullScreen());
+
+            normalscreenButton_ = new QPushButton(this);
+            normalscreenButton_->setObjectName("VideoPlayerNormalscreenButton");
+            normalscreenButton_->setFixedHeight(getControlPanelButtonSize(false));
+            normalscreenButton_->setFixedWidth(getControlPanelButtonSize(false));
+            normalscreenButton_->setCursor(Qt::PointingHandCursor);
+            normalscreenButton_->setVisible(isFullScreen());
+
+            fullScreenLayout_->addWidget(fullscreenButton_);
+            fullScreenLayout_->addWidget(normalscreenButton_);
+
+            baseLayout_->addLayout(fullScreenLayout_);
+        }
+
+        rootLayout->addLayout(baseLayout_);
 
         setLayout(rootLayout);
 
         connectSignals(_player);
 
         setMouseTracking(true);
+
+        if (_copyFrom)
+        {
+            videoDurationChanged(duration_);
+            videoPositionChanged(_copyFrom->progressSlider_->value());
+            playButton_->setChecked(_copyFrom->playButton_->isChecked());
+            volumeSlider_->setSliderPosition(_copyFrom->volumeSlider_->sliderPosition());
+
+            connect(progressSlider_, &QSlider::sliderMoved, _copyFrom->progressSlider_, [_copyFrom](int _value)
+            {
+                _copyFrom->videoPositionChanged(_value);
+            });
+        }
     }
     
     VideoPlayerControlPanel::~VideoPlayerControlPanel()
@@ -334,10 +318,11 @@ namespace Ui
 
     void VideoPlayerControlPanel::paintEvent(QPaintEvent* _e)
     {
-        QStyleOption opt;
-        opt.init(this);
+        QStyleOption style_option;
+        style_option.init(this);
+
         QPainter p(this);
-        style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+        style()->drawPrimitive(QStyle::PE_Widget, &style_option, &p, this);
 
         return QWidget::paintEvent(_e);
     }
@@ -359,29 +344,12 @@ namespace Ui
         return QObject::eventFilter(_obj, _event);
     }
 
-    void VideoPlayerControlPanel::mouseDoubleClickEvent(QMouseEvent* /*_event*/)
+    void VideoPlayerControlPanel::mousePressEvent(QMouseEvent* _event)
     {
-
+        QWidget::mousePressEvent(_event);
     }
 
-    void VideoPlayerControlPanel::mousePressEvent(QMouseEvent* /*_event*/)
-    {
-
-    }
-
-    void VideoPlayerControlPanel::resizeEvent(QResizeEvent* _event)
-    {
-        if (_event->size().width() < getMinCenteredWidht())
-        {
-            volumeSpacer_->changeSize(0, 0);
-        }
-        else
-        {
-            volumeSpacer_->changeSize(getVolumeSliderWidth(), 0);
-        }
-    }
-
-    QString getDurationString(const qint64& _duration)
+    QString getDurationString(const qint64& _duration, const qint64& _init_duration)
     {
         const qint64 one_hour = (1000 * 60 * 60);
         const qint64 one_minute = (1000 * 60);
@@ -391,34 +359,143 @@ namespace Ui
         qint64 minutes = (_duration - hours * one_hour) / one_minute;
         qint64 seconds = (_duration - hours * one_hour - minutes * one_minute) / one_sec;
 
+        qint64 duration_hours = _init_duration / one_hour;
+        qint64 duration_minutes = (_init_duration - duration_hours * one_hour) / one_minute;
+
         QString sout;
-        sout.sprintf("%02d:%02d:%02d", (int) hours, (int) minutes, (int) seconds);
+
+        QString hourString;
+        if (duration_hours != 0)
+            hourString.sprintf("%02d:", (int) hours);
+
+        QString minutesString;
+        if (duration_minutes >= 10)
+            minutesString.sprintf("%02d:", (int) minutes);
+        else
+            minutesString.sprintf("%01d:", (int) minutes);
+
+        QString secondsString;
+        secondsString.sprintf("%02d", (int) seconds);
+
+        sout = hourString + minutesString + secondsString;
 
         return sout;
     }
 
+    QString getZeroTime(const qint64& _init_duration)
+    {
+        const qint64 one_hour = (1000 * 60 * 60);
+        const qint64 one_minute = (1000 * 60);
+
+        qint64 duration_hours = _init_duration / one_hour;
+        qint64 duration_minutes = (_init_duration - duration_hours * one_hour) / one_minute;
+
+        QString sout;
+
+        QString hourString;
+        if (duration_hours != 0)
+            hourString.sprintf("%02d:", (int) 0);
+
+        QString minutesString;
+        if (duration_minutes >= 10)
+            minutesString.sprintf("%02d:", (int) 0);
+        else
+            minutesString.sprintf("%01d:", (int) 0);
+
+        QString secondsString;
+        secondsString.sprintf("%02d", (int) 0);
+
+        sout = hourString + minutesString + secondsString;
+
+        return sout;
+    }
+
+    void VideoPlayerControlPanel::resizeEvent(QResizeEvent* _event)
+    {
+        const auto button_size = getControlPanelButtonSize(isFullscreen());
+
+        progressSlider_->setFixedHeight(getControlPanelButtonSize(isFullscreen()));
+
+        volumeContainer_->setFixedWidth(getVolumeSliderWidth(isFullscreen()));
+
+        volumeSlider_->setFixedHeight(getVolumeSliderHeight(isFullscreen()));
+        volumeSlider_->setFixedWidth(getVolumeSliderWidth(isFullscreen()));
+
+        auto font = Fonts::appFontScaled(isFullscreen() ? 18 : 14, Fonts::FontWeight::Medium);
+        QFontMetrics m(font);
+
+        timeRight_->setVisible(_event->size().width() >= Utils::scale_value(200));
+        progressSlider_->setVisible(_event->size().width() >= Utils::scale_value(96));
+
+        if (_event->size().width() < Utils::scale_value(68))
+        {
+            fullscreenButton_->setFixedWidth(0);
+            normalscreenButton_->setFixedWidth(0);
+        }
+        else
+        {
+            fullscreenButton_->setFixedSize(button_size, button_size);
+            normalscreenButton_->setFixedSize(button_size, button_size);
+        }
+
+        if (_event->size().width() < Utils::scale_value(48))
+        {
+            soundWidget_->setFixedWidth(0);
+        }
+        else
+        {
+            soundWidget_->setFixedHeight(getSoundsWidgetHeight(isFullscreen()));
+            soundWidget_->setFixedWidth(getControlPanelButtonSize(isFullscreen()));
+
+            soundButton_->setFixedHeight(getControlPanelButtonSize(isFullscreen()));
+            soundButton_->setFixedWidth(getControlPanelButtonSize(isFullscreen()));
+        }
+
+        playButton_->setFixedSize(button_size, button_size);
+
+        const char* mode = isFullscreen() ? "full_screen" : "dialog";
+
+        timeRight_->setProperty("mode", mode);
+        progressSlider_->setProperty("mode", mode);
+        volumeSlider_->setProperty("mode", mode);
+
+        const int gradientHeight = isFullscreen() ? Utils::scale_value(64) : Utils::scale_value(40);
+        const int gradientWidth = _event->size().width();
+        gradient_->setFixedSize(gradientWidth, gradientHeight);
+        gradient_->move(QPoint(0, _event->size().height() - gradientHeight));
+    }
+
+    void VideoPlayerControlPanel::videoDurationChanged(const qint64 _duration)
+    {
+        duration_ = _duration;;
+
+        progressSlider_->setMinimum(0);
+        progressSlider_->setMaximum((int) _duration);
+        progressSlider_->setPageStep(_duration/10);
+
+        timeRight_->setText(getDurationString(_duration, duration_));
+
+        auto font = Fonts::appFontScaled((isFullscreen() ? 18 : 14), Fonts::FontWeight::Medium);
+        QFontMetrics m(font);
+        timeRight_->setFixedWidth(m.width(getZeroTime(duration_)));
+    }
+
+    void VideoPlayerControlPanel::videoPositionChanged(const qint64 _position)
+    {
+        position_ = _position;
+
+        if (!progressSlider_->isSliderDown())
+            progressSlider_->setSliderPosition((int) _position);
+
+        timeRight_->setText(getDurationString(duration_ - position_, duration_));
+    }
+
     void VideoPlayerControlPanel::connectSignals(FFMpegPlayer* _player)
     {
-        connect(_player, &FFMpegPlayer::durationChanged, this, [this](qint64 _duration)
-        {
-            duration_ = _duration;
-
-            progressSlider_->setMinimum(0);
-            progressSlider_->setMaximum((int) _duration);
-            progressSlider_->setPageStep(_duration/10);
-
-            timeRight_->setText(getDurationString(_duration));
-        });
-
-        connect(_player, &FFMpegPlayer::positionChanged, this, [this](qint64 _position)
-        {
-            position_ = _position;
-
-            if (!progressSlider_->isSliderDown())
-                progressSlider_->setSliderPosition((int) _position);
-
-            timeRight_->setText(getDurationString(duration_ - position_));
-        });
+        connect(_player, &FFMpegPlayer::durationChanged, this, &VideoPlayerControlPanel::videoDurationChanged);
+        connect(_player, &FFMpegPlayer::positionChanged, this, &VideoPlayerControlPanel::videoPositionChanged);
+        connect(_player, &FFMpegPlayer::paused, this, &VideoPlayerControlPanel::playerPaused, Qt::QueuedConnection);
+        connect(_player, &FFMpegPlayer::played, this, &VideoPlayerControlPanel::playerPlayed, Qt::QueuedConnection);
 
         connect(progressSlider_, &QSlider::sliderMoved, this, [this](int /*_value*/)
         {
@@ -433,28 +510,69 @@ namespace Ui
             if (_checked)
             {
                 player_->pause();
+                player_->setPausedByUser(true);
             }
             else
             {
-                player_->play();
+                player_->play(true /* _init */);
+                player_->setPausedByUser(false);
             }
         });
 
-         connect(volumeSlider_, &QSlider::valueChanged, this, [this](int _value)
-         {
-             player_->setVolume(_value);
-             get_gui_settings()->set_value<int32_t>(setting_mplayer_volume, _value);
-         });
+        connect(volumeSlider_, &QSlider::sliderMoved, this, [this](int _value)
+        {
+            setVolume(_value, false);
+        });
+
+        connect(volumeSlider_, &QSlider::sliderReleased, this, [this]()
+        {
+            auto pos = volumeSlider_->sliderPosition();
+
+            if (pos != 0)
+            {
+                player_->setRestoreVolume(pos);
+
+                Ui::get_gui_settings()->set_value<int32_t>(setting_mplayer_volume, pos);
+            }
+        });
+
 
         connect(soundButton_, &QPushButton::clicked, this, [this](bool _checked)
         {
-            player_->setMute(!_checked);
-            get_gui_settings()->set_value<bool>(setting_mplayer_mute, !_checked);
+            if (volumeSlider_->sliderPosition() == 0)
+            {
+                restoreVolume();
+            }
+            else
+            {
+                setVolume(0, false);
+            }
         });
 
         connect(fullscreenButton_, &QPushButton::clicked, this, [this](bool _checked)
         {
-            emit signalFullscreen(_checked);
+            QString mode = property("mode").toString();
+
+            if (mode != "dialog")
+            {
+                fullscreenButton_->setVisible(false);
+                normalscreenButton_->setVisible(true);
+            }
+
+            emit signalFullscreen(true);
+        });
+
+        connect(normalscreenButton_, &QPushButton::clicked, this, [this](bool _checked)
+        {
+            QString mode = property("mode").toString();
+
+            if (mode != "dialog")
+            {
+                normalscreenButton_->setVisible(false);
+                fullscreenButton_->setVisible(true);
+            }
+
+            emit signalFullscreen(false);
         });
 
         connect(_player, &FFMpegPlayer::mediaFinished, this, [this]()
@@ -462,19 +580,27 @@ namespace Ui
             playButton_->setChecked(true);
             progressSlider_->setValue(0);
         });
+    }
 
+    void VideoPlayerControlPanel::playerPaused()
+    {
+        if (playButton_->isChecked())
+            return;
 
+        playButton_->setChecked(true);
+    }
 
+    void VideoPlayerControlPanel::playerPlayed()
+    {
+        if (!playButton_->isChecked())
+            return;
+
+        playButton_->setChecked(false);
     }
 
     bool VideoPlayerControlPanel::isFullscreen() const
     {
-        return fullscreenButton_->isChecked();
-    }
-
-    void VideoPlayerControlPanel::setFullscreen(const bool _fullScreen)
-    {
-        fullscreenButton_->setChecked(_fullScreen);
+        return fullscreen_;
     }
 
     bool VideoPlayerControlPanel::isPause() const
@@ -487,198 +613,184 @@ namespace Ui
         playButton_->setChecked(_pause);
     }
 
+    QString VideoPlayerControlPanel::getSoundButtonMode(const int32_t _volume)
+    {
+        if (_volume == 0)
+        {
+            return "0";
+        }
+        else if (_volume < 50)
+        {
+            return "1";
+        }
+        else
+        {
+            return "2";
+        }
+    }
+
+    void VideoPlayerControlPanel::setVolume(const int32_t _value, const bool _toRestore)
+    {
+        player_->setVolume(_value);
+
+        player_->setMute(_value == 0);
+
+        volumeSlider_->setValue(_value);
+
+        if (_toRestore)
+        {
+            player_->setRestoreVolume(_value);
+
+            Ui::get_gui_settings()->set_value<int32_t>(setting_mplayer_volume, _value);
+        }
+
+        updateSoundButtonState();
+    }
+
+    int32_t VideoPlayerControlPanel::getVolume() const
+    {
+        return player_->getVolume();
+    }
+
+    void VideoPlayerControlPanel::restoreVolume()
+    {
+        volumeSlider_->setValue(player_->getRestoreVolume());
+
+        player_->setVolume(player_->getRestoreVolume());
+
+        player_->setMute(false);
+
+        updateSoundButtonState();
+    }
+
+    void VideoPlayerControlPanel::updateSoundButtonState()
+    {
+        auto newSoundButtonMode = getSoundButtonMode(player_->isMute() ? 0 : player_->getVolume());
+
+        if (lastSoundButtonMode_ != newSoundButtonMode)
+        {
+            lastSoundButtonMode_ = newSoundButtonMode;
+            soundButton_->setProperty("mode", newSoundButtonMode);
+            soundButton_->style()->unpolish(soundButton_);
+            soundButton_->style()->polish(soundButton_);
+            soundButton_->update();
+        }
+    }
+
+    
+
+
     void VideoPlayerControlPanel::mouseMoveEvent(QMouseEvent * _event)
     {
         QWidget::mouseMoveEvent(_event);
     }
-    
-    
 
-    VideoPlayer::VideoPlayer(QWidget* _parent)
-    :   QWidget(platform::is_windows() ? nullptr : _parent),
-            animControlPanel_(nullptr),
-            animHeader_(nullptr),
-            parent_(_parent),
-            mediaLoaded_(false),
-            controlsShowed_(false)
+
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // DialogPlayer
+    //////////////////////////////////////////////////////////////////////////
+    DialogPlayer::DialogPlayer(QWidget* _parent, const uint32_t _flags)
+        :   QWidget(_parent)
+            , attachedPlayer_(nullptr)
+            , showControlPanel_(_flags & DialogPlayer::Flags::enable_control_panel)
     {
-        if (platform::is_windows())
+        const QString mode = ((_flags & DialogPlayer::Flags::as_window) ? "window" : "dialog");
+
+        if (DialogPlayer::Flags::as_window & _flags)
         {
-            setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
+            setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         }
-        
-        setStyleSheet(Utils::LoadStyle(":/main_window/mplayer/mstyles.qss"));
-        
-        setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-        
-        QVBoxLayout* rootLayout = new QVBoxLayout();
-        rootLayout->setContentsMargins(0, 0, 0, 0);
-        rootLayout->setSpacing(0);
 
-        player_ = new FFMpegPlayer(this);
-        rootLayout->addWidget(player_);
+        ffplayer_ = new FFMpegPlayer(this, (_flags & DialogPlayer::Flags::use_opengl));
 
-        controlPanel_.reset(new VideoPlayerControlPanel(this, player_));
-        header_.reset(new VideoPlayerHeader(this, ""));
-        
-        
-        connect(header_.get(), &VideoPlayerHeader::signalClose, this, [this]()
-        {
-            emit signalClose();
-        });
+        init(_parent, (_flags &DialogPlayer::Flags::is_gif));
 
-        connect(player_, &FFMpegPlayer::mouseMoved, this, &VideoPlayer::playerMouseMoved);
-        connect(player_, &FFMpegPlayer::mouseLeaveEvent, this, &VideoPlayer::playerMouseLeaved);
+        isFullScreen_ = false;
 
-        installEventFilter(this);
+        rootLayout_->addWidget(ffplayer_);
+
+        controlPanel_.reset(new VideoPlayerControlPanel(nullptr, this, ffplayer_, mode));
         controlPanel_->installEventFilter(this);
-        header_->installEventFilter(this);
 
-        connect(controlPanel_.get(), &VideoPlayerControlPanel::signalFullscreen, this, &VideoPlayer::fullScreen);
+        if (showControlPanel_)
+        {
+            //controlPanel_->raise();
+        }
+        else
+        {
+            controlPanel_->hide();
+        }
 
-        setMouseTracking(true);
+        connect(controlPanel_.get(), &VideoPlayerControlPanel::signalFullscreen, this, &DialogPlayer::fullScreen);
+    }
 
-        updateSize(QSize(getMinWidth(), getMinHeight()));
+    DialogPlayer::~DialogPlayer()
+    {
+        if (attachedPlayer_)
+        {
+            attachedPlayer_->setVolume(getVolume(), false);
+            attachedPlayer_->setAttachedPlayer(nullptr);
+        }
+    }
+
+    void DialogPlayer::init(QWidget* _parent, const bool _isGif)
+    {
+        controlsShowed_ = false;
 
         timerHide_ = new QTimer(this);
-        connect(timerHide_, &QTimer::timeout, this, &VideoPlayer::timerHide, Qt::QueuedConnection);
+        timerMousePress_ = new QTimer(this);
+
+        parent_ = _parent;
+        isLoad_ = false;
+        isGif_ = _isGif;
+
+        rootLayout_ = new QVBoxLayout();
+        rootLayout_->setContentsMargins(0, 0, 0, 0);
+        rootLayout_->setSpacing(0);
+
+        setLayout(rootLayout_);
+
+        connect(timerHide_, &QTimer::timeout, this, &DialogPlayer::timerHide, Qt::QueuedConnection);
+        connect(timerMousePress_, &QTimer::timeout, this, &DialogPlayer::timerMousePress, Qt::QueuedConnection);
+        connect(ffplayer_, &FFMpegPlayer::mouseMoved, this, &DialogPlayer::playerMouseMoved);
+        connect(ffplayer_, &FFMpegPlayer::mouseLeaveEvent, this, &DialogPlayer::playerMouseLeaved);
+        connect(ffplayer_, &FFMpegPlayer::fileLoaded, this, &DialogPlayer::onLoaded);
+        connect(ffplayer_, &FFMpegPlayer::firstFrameReady, this, &DialogPlayer::onFirstFrameReady);
+        setMouseTracking(true);
+
+        installEventFilter(this);
     }
 
-    VideoPlayer::~VideoPlayer()
+    void DialogPlayer::moveToScreen()
     {
+        const auto screen = Utils::InterConnector::instance().getMainWindow()->getScreen();
 
+        const auto screenGeometry = QApplication::desktop()->screenGeometry(screen);
+
+        setGeometry(screenGeometry);
     }
 
-    void VideoPlayer::changeEvent(QEvent* _e)
+    void DialogPlayer::paintEvent(QPaintEvent* _e)
     {
-        if (QEvent::ActivationChange == _e->type())
-        {
-            if (!isActiveWindow())
-            {
-                //emit signalClose();
-            }
-        }
+        QStyleOption style_option;
+        style_option.init(this);
+
+        QPainter p(this);
+        style()->drawPrimitive(QStyle::PE_Widget, &style_option, &p, this);
+
+        return QWidget::paintEvent(_e);
     }
 
-    void VideoPlayer::mouseDoubleClickEvent(QMouseEvent* /*_event*/)
-    {
-        bool isFullScreen = controlPanel_->isFullscreen();
-
-        fullScreen(!isFullScreen);
-
-        controlPanel_->setFullscreen(!isFullScreen);
-    }
-
-    void VideoPlayer::mouseReleaseEvent(QMouseEvent* _event)
-    {
-        moveToTop();
-
-        if (!rect().contains(_event->pos()))
-            return QWidget::mouseReleaseEvent(_event);
-
-        bool isPause = controlPanel_->isPause();
-
-        if (isPause)
-        {
-            player_->play();
-        }
-        else
-        {
-            player_->pause();
-        }
-
-        controlPanel_->setPause(!isPause);
-    }
-
-    void VideoPlayer::mousePressEvent(QMouseEvent* /*_event*/)
-    {
-
-    }
-
-    const QSize VideoPlayer::calculatePlayerSize(const QSize& _videoSize)
-    {
-        const QSize _scaledVideoSize(Utils::scale_value(_videoSize.width()), Utils::scale_value(_videoSize.height()));
-
-        const double minWidth = getMinWidth();
-        const double minHeight = getMinHeight();
-
-        const QRect parentRect = parent_->geometry();
-
-        const double maxWidth = ((double) parentRect.width()) * 0.6;
-        const double maxHeight = ((double) parentRect.height()) * 0.7;
-
-        QSize outSize(_videoSize);
-
-        if (_videoSize.width() < _videoSize.height())
-        {
-            if (_scaledVideoSize.height() > maxHeight)
-            {
-                outSize.setHeight(maxHeight);
-                outSize.setWidth(_scaledVideoSize.width()*(maxHeight/_scaledVideoSize.height()));
-            }
-        }
-        else
-        {
-            if (_scaledVideoSize.width() > maxWidth)
-            {
-                outSize.setWidth(maxWidth);
-                outSize.setHeight(_scaledVideoSize.height()*(maxWidth/_scaledVideoSize.width()));
-            }
-        }
-
-        if (outSize.width() < minWidth)
-            outSize.setWidth(minWidth);
-
-        if (outSize.height() < minHeight)
-            outSize.setHeight(minHeight);
-
-        return outSize;
-    }
-
-    void VideoPlayer::updateSize(const QSize& _sz)
-    {
-        setFixedWidth(_sz.width());
-        setFixedHeight(_sz.height());
-
-        const auto rcParent = parent_->geometry();
-
-        int cw = (rcParent.width()/2) - (_sz.width()/2);
-        int ch = (rcParent.height()/2) - (_sz.height()/2);
-
-        player_->setFixedSize(_sz);
-        move(rcParent.left() + cw, rcParent.top() + ch);
-
-        controlPanel_->setGeometry(rcParent.left() + cw, rcParent.top() + ch + _sz.height() - getControlPanelMaxHeight(), _sz.width(), getControlPanelMaxHeight());
-        header_->setGeometry(rcParent.left() + cw, rcParent.top() + ch, _sz.width(), getHeaderMaxHeight());
-
-        emit sizeChanged(_sz);
-    }
-
-    void VideoPlayer::play(const QString& _path)
-    {
-        mediaPath_ = QDir::fromNativeSeparators(_path);
-
-        if (player_->openMedia(mediaPath_))
-        {
-            playerSize_ = calculatePlayerSize(player_->getVideoSize());
-
-            updateSize(playerSize_);
-
-            header_->setCaption(QFileInfo(_path).fileName());
-
-            player_->play();
-        }
-    }
-
-    bool VideoPlayer::eventFilter(QObject* _obj, QEvent* _event)
+    bool DialogPlayer::eventFilter(QObject* _obj, QEvent* _event)
     {
         switch (_event->type())
         {
             case QEvent::Enter:
             {
                 QObject* objectcontrolPanel = qobject_cast<QObject*>(controlPanel_.get());
-                QObject* objectHeader = qobject_cast<QObject*>(header_.get());
-                if (_obj == objectcontrolPanel || _obj == objectHeader)
+                if (_obj == objectcontrolPanel)
                 {
                     timerHide_->stop();
                 }
@@ -687,72 +799,57 @@ namespace Ui
             case QEvent::Leave:
             {
                 QObject* objectcontrolPanel = qobject_cast<QObject*>(controlPanel_.get());
-                QObject* objectHeader = qobject_cast<QObject*>(header_.get());
-                if (_obj == objectcontrolPanel || _obj == objectHeader)
+                if (_obj == objectcontrolPanel)
                 {
-                    if (!underMouse())
                     {
                         timerHide_->start(hideTimeoutShort);
                     }
                 }
                 break;
             }
+
+            case QEvent::KeyPress:
+            {
+                QKeyEvent *ke = static_cast<QKeyEvent *>(_event);
+
+                if (ke->key() == Qt::Key_Escape)
+                {
+                    changeFullScreen();
+                }
+
+                return true;
+            }
             default:
                 break;
-                
         }
 
         return QObject::eventFilter(_obj, _event);
     }
 
-    void VideoPlayer::setControlPanelHeight(int _val)
+    void DialogPlayer::timerHide()
     {
-        QRect rcParent = geometry();
+        showControlPanel(false);
+        timerHide_->stop();
+        controlsShowed_ = false;
     }
 
-    int VideoPlayer::getControlPanelHeight() const
+    void DialogPlayer::showControlPanel(const bool _isShow)
     {
-        return controlPanel_->height();
-    }
+        if (!showControlPanel_)
+            return;
 
-    void VideoPlayer::setHeaderHeight(int _val)
-    {
-        QRect rcParent = geometry();
-    }
+        const QRect rcParent = rect();
 
-    int VideoPlayer::getHeaderHeight() const
-    {
-        return header_->height();
-    }
+        auto panelGeom = rcParent;
 
+        panelGeom.setTop(panelGeom.bottom() - getControlPanelMaxHeight(controlPanel_->isFullscreen()));
 
+        controlPanel_->setGeometry(panelGeom);
 
-    void VideoPlayer::showHeader(const bool _isShow)
-    {
         if (_isShow)
         {
-            header_->show();
-
-            QRect rcParent = geometry();
-
-            header_->setGeometry(rcParent.left(), rcParent.top(), geometry().width(), getHeaderMaxHeight());
-        }
-        else
-        {
-            header_->hide();
-        }
-    }
-
-    void VideoPlayer::showControlPanel(const bool _isShow)
-    {
-        QRect rcParent = geometry();
-        
-        if (_isShow)
-        {
-            controlPanel_->setGeometry(rcParent.left(), rcParent.bottom() - getControlPanelMaxHeight(), rcParent.width(), getControlPanelMaxHeight() + 1);
-            
             controlPanel_->show();
-            
+            controlPanel_->raise();
         }
         else
         {
@@ -760,75 +857,311 @@ namespace Ui
         }
     }
 
-    void VideoPlayer::fullScreen(bool _checked)
+    void DialogPlayer::playerMouseMoved()
     {
-        if (_checked)
-        {
-            const auto rcParent = parent_->geometry();
-            const auto videoSize = player_->getVideoSize();
-
-            QSize szOut;
-
-            if (videoSize.width() < videoSize.height())
-            {
-                szOut.setHeight(rcParent.height());
-                szOut.setWidth((int) double(szOut.height()) * (double(videoSize.width()) / double(videoSize.height())));
-            }
-            else
-            {
-                szOut.setWidth(rcParent.width());
-                szOut.setHeight((int) double(szOut.width()) * (double(videoSize.height()) / double(videoSize.width())));
-            }
-            
-
-            updateSize(szOut);
-        }
-        else
-        {
-            updateSize(playerSize_);
-        }
-
-        moveToTop();
+        showControlPanel();
     }
 
-    void VideoPlayer::moveToTop()
+    void DialogPlayer::showControlPanel()
     {
-        raise();
-
-        controlPanel_->raise();
-        header_->raise();
-    }
-
-    void VideoPlayer::playerMouseMoved()
-    {
-        timerHide_->stop();
-        timerHide_->start(hideTimeout);
+        if (isGif_)
+        {
+            return;
+        }
 
         if (controlsShowed_)
             return;
+
+        timerHide_->stop();
+        timerHide_->start(hideTimeout);
         
         controlsShowed_ = true;
-        
         showControlPanel(true);
-        showHeader(true);
-        moveToTop();
     }
 
-    void VideoPlayer::playerMouseLeaved()
+    void DialogPlayer::playerMouseLeaved()
     {
         timerHide_->stop();
         timerHide_->start(hideTimeoutShort);
     }
 
-    void VideoPlayer::timerHide()
+    bool DialogPlayer::openMedia(const QString& _mediaPath)
     {
-        showControlPanel(false);
-        showHeader(false);
-
-        timerHide_->stop();
-
-        moveToTop();
+        isLoad_ = true;
+        mediaPath_ = _mediaPath;
         
-        controlsShowed_ = false;
+        return ffplayer_->openMedia(_mediaPath);
+    }
+
+    void DialogPlayer::setPaused(const bool _paused, const bool _byUser)
+    {
+        if (!_paused)
+        {
+            start(true);
+            setPausedByUser(false);
+        }
+        else
+        {
+            ffplayer_->pause();
+            controlPanel_->setPause(_paused);
+
+            if (ffplayer_->getStarted())
+                showControlPanel();
+
+            setPausedByUser(_byUser);
+
+            emit paused();
+        }
+    }
+
+    void DialogPlayer::setPausedByUser(const bool _paused)
+    {
+        ffplayer_->setPausedByUser(_paused);
+    }
+
+    bool DialogPlayer::isPausedByUser() const
+    {
+        return ffplayer_->isPausedByUser();
+    }
+
+    QMovie::MovieState DialogPlayer::state() const
+    {
+        return ffplayer_->state();
+    }
+
+    void DialogPlayer::setVolume(const int32_t _volume, bool _toRestore)
+    {
+        controlPanel_->setVolume((double) _volume, _toRestore);
+    }
+
+    int32_t DialogPlayer::getVolume() const
+    {
+        return (int32_t) controlPanel_->getVolume();
+    }
+
+    void DialogPlayer::setMute(bool _mute)
+    {
+        if (_mute)
+        {
+            controlPanel_->setVolume(0, false);
+        }
+        else
+        {
+            controlPanel_->restoreVolume();
+        }
+    }
+
+    void DialogPlayer::start(bool _start)
+    {
+        ffplayer_->play(_start);
+        if (_start)
+        {
+            controlPanel_->setPause(false);
+            ffplayer_->setPausedByUser(false);
+        }
+    }
+
+    void DialogPlayer::updateSize(const QRect& _sz)
+    {
+        setGeometry(_sz);
+
+        showControlPanel(controlsShowed_);
+    }
+
+    void DialogPlayer::changeFullScreen()
+    {
+        bool isFullScreen = controlPanel_->isFullscreen();
+
+        fullScreen(!isFullScreen);
+
+    }
+
+    void DialogPlayer::timerMousePress()
+    {
+        moveToTop();
+
+        setPaused(!controlPanel_->isPause(), true);
+
+        timerMousePress_->stop();
+    }
+
+    void DialogPlayer::mousePressEvent(QMouseEvent* _event)
+    {
+        QWidget::mousePressEvent(_event);
+    }
+
+    void DialogPlayer::mouseReleaseEvent(QMouseEvent* _event)
+    {
+        if(_event->button() == Qt::RightButton)
+        {
+            QWidget::mousePressEvent(_event);
+        }
+        else if(_event->button() == Qt::LeftButton)
+        {
+            if (rect().contains(_event->pos()))
+            {
+                if (!isGif())
+                {
+                    if (isFullScreen())
+                    {
+                        setPaused(!controlPanel_->isPause(), true);
+                    }
+
+                    emit mouseClicked();
+                }
+            }
+
+            return QWidget::mouseReleaseEvent(_event);
+        }
+    }
+
+    void DialogPlayer::showAsFullscreen()
+    {
+        normalModePosition_ = geometry();
+
+        const auto screen = Utils::InterConnector::instance().getMainWindow()->getScreen();
+
+        const auto screenGeometry = QApplication::desktop()->screenGeometry(screen);
+
+        hide();
+
+        updateSize(screenGeometry);
+
+        if (platform::is_windows())
+            showMaximized();
+        else
+            showFullScreen();
+
+        showControlPanel(controlsShowed_);
+
+        show();
+    }
+
+    void DialogPlayer::showAs()
+    {
+        show();
+
+        showControlPanel(controlsShowed_);
+    }
+
+    void DialogPlayer::showAsNormal()
+    {
+        showNormal();
+
+        setGeometry(normalModePosition_);
+
+        showControlPanel(controlsShowed_);
+    }
+
+    void DialogPlayer::fullScreen(const bool _checked)
+    {
+        emit fullScreenClicked();
+    }
+
+    void DialogPlayer::moveToTop()
+    {
+        raise();
+        ffplayer_->raise();
+        controlPanel_->raise();
+    }
+
+    bool DialogPlayer::isFullScreen() const
+    {
+        return isFullScreen_;
+    }
+
+    void DialogPlayer::setIsFullScreen(bool _isFullScreen)
+    {
+        isFullScreen_ = _isFullScreen;
+    }
+
+    bool DialogPlayer::inited()
+    {
+        return ffplayer_->getStarted();
+    }
+
+    void DialogPlayer::setPreview(QPixmap _preview)
+    {
+        ffplayer_->setPreview(_preview);
+    }
+
+    QPixmap DialogPlayer::getActiveImage() const
+    {
+        return ffplayer_->getActiveImage();
+    }
+
+    void DialogPlayer::onLoaded()
+    {
+        emit loaded();
+    }
+
+    void DialogPlayer::onFirstFrameReady()
+    {
+        emit firstFrameReady();
+    }
+
+    void DialogPlayer::setLoadingState(bool _isLoad)
+    {
+        //qDebug() << "setLoadingState " << _isLoad << ", old: " << isLoad_ << ", " << mediaPath_;
+
+        if (_isLoad == isLoad_)
+            return;
+        isLoad_ = _isLoad;
+
+        if (isLoad_)
+        {
+            //qDebug() << "reload media " << mediaPath_;
+            ffplayer_->openMedia(mediaPath_);
+        }
+        else
+        {
+            //qDebug() << "unload media " << mediaPath_;
+            ffplayer_->stop();
+        }
+    }
+
+    void DialogPlayer::setHost(QWidget* _host)
+    {
+        parent_ = _host;
+    }
+
+    bool DialogPlayer::isGif() const
+    {
+        return isGif_;
+    }
+
+    void DialogPlayer::setClippingPath(QPainterPath _clippingPath)
+    {
+        ffplayer_->setClippingPath(_clippingPath);
+    }
+
+    void DialogPlayer::setAttachedPlayer(DialogPlayer* _player)
+    {
+        attachedPlayer_ = _player;
+    }
+
+    DialogPlayer* DialogPlayer::getAttachedPlayer() const
+    {
+        return attachedPlayer_;
+    }
+
+    QSize DialogPlayer::getVideoSize() const
+    {
+        if (!ffplayer_)
+            return QSize();
+
+        return ffplayer_->getVideoSize();
+    }
+
+    void DialogPlayer::wheelEvent(QWheelEvent* _event)
+    {
+        emit mouseWheelEvent(_event->delta());
+
+        QWidget::wheelEvent(_event);
+    }
+
+    void DialogPlayer::keyPressEvent(QKeyEvent* _event)
+    {
+        QWidget::keyPressEvent(_event);
     }
 }

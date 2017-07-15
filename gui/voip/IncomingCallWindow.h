@@ -21,7 +21,7 @@ namespace Ui
         typedef platform_specific::GraphicsPanel FrameControl_t;
 
     private Q_SLOTS:
-        void onVoipCallNameChanged(const std::vector<voip_manager::Contact>&);
+        void onVoipCallNameChanged(const voip_manager::ContactsList&);
         void onVoipWindowRemoveComplete(quintptr _winId);
         void onVoipWindowAddComplete(quintptr _winId);
 
@@ -45,29 +45,30 @@ namespace Ui
         void mouseReleaseEvent(QMouseEvent * event) override;
         void mousePressEvent(QMouseEvent * event) override;
         
-        // @return true if we resend message to any transporent panel.
+        // @return true if we resend message to any transparent panel
         template <typename E> void resendMouseEventToPanel(E* event_);
 #endif
         
     private:
         std::unique_ptr<VoipSysPanelHeader>  header_;
         std::unique_ptr<IncomingCallControls> controls_;
+        std::unique_ptr<TransparentPanel>   transparentPanelOutgoingWidget_;
         
         ResizeEventFilter* eventFilter_;
 
-		// List of currect contacts.
+		// List of currect contacts
 		std::vector<voip_manager::Contact> contacts_;
 
-		// List of instances, needs to make cascade of these windows.
+		// List of instances, needs to make cascade of these windows
 		static QList<IncomingCallWindow*> instances_;
 
-		// Shadow of this widnow.
+		// Shadow of this widnow
 		ShadowWindowParent shadow_;
 #ifndef STRIP_VOIP
         FrameControl_t* rootWidget_;
 #endif //STRIP_VOIP
 
-		// Search best position for window related of other windows.
+		// Search for the best position for window related of other windows.
 		QPoint findBestPosition(const QPoint& _windowPosition, const QPoint& _offset);
 
         void showEvent(QShowEvent*) override;

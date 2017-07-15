@@ -5,7 +5,7 @@
 #include "pages/start_page.h"
 #include "pages/progress_page.h"
 #include "pages/error_page.h"
-#include "pages/accounts_page.h"
+#include "pages/account_selector.h"
 
 #include "../../logic/worker.h"
 
@@ -16,9 +16,17 @@ namespace installer
         main_window::main_window(main_window_start_page _start_page)
             :	pages_(new QStackedWidget(this))
         {
-            setFixedHeight(dpi::scale(400));
+            setFixedHeight(dpi::scale(450));
             setFixedWidth(dpi::scale(520));
-            setWindowTitle(QT_TR_NOOP("ICQ Setup"));
+
+            if (build::is_icq())
+            {
+                setWindowTitle(QT_TR_NOOP("ICQ Setup"));
+            }
+            else
+            {
+                setWindowTitle(QT_TR_NOOP("Mail.Ru Agent Setup"));
+            }
 
             start_page_ = nullptr;
             progress_page_ = nullptr;
@@ -51,7 +59,6 @@ namespace installer
             {
                 assert(false);
             }
-            
 
             setCentralWidget(pages_);
 
@@ -118,7 +125,7 @@ namespace installer
         {
             if (!accounts_page_)
             {
-                accounts_page_ = new accounts_page(this);
+                accounts_page_ = new accounts_page_agent(this);
                 pages_->addWidget(accounts_page_);
 
                 connect(accounts_page_, SIGNAL(account_selected()), this, SLOT(on_account_selected()));

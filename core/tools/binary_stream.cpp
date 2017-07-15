@@ -6,6 +6,15 @@
 using namespace core;
 using namespace tools;
 
+void binary_stream::write_stream(std::istream& _source)
+{
+    const auto size = buffer_.size();
+    std::copy(
+        std::istreambuf_iterator<typename std::istream::char_type>(_source),
+        std::istreambuf_iterator<char>(),
+        std::back_inserter(buffer_));
+    input_cursor_ += (buffer_.size() - size);
+}
 
 bool binary_stream::save_2_file(const std::wstring& _file_name) const
 {
@@ -21,11 +30,7 @@ bool binary_stream::save_2_file(const std::wstring& _file_name) const
     std::wstring temp_file_name = _file_name + L".tmp";
 
     {
-#ifdef _WIN32
-        std::ofstream outfile(temp_file_name, std::ofstream::binary | std::ofstream::trunc);
-#else
-        std::ofstream outfile(tools::from_utf16(temp_file_name), std::ofstream::binary | std::ofstream::trunc);
-#endif
+        auto outfile = tools::system::open_file_for_write(temp_file_name, std::ofstream::binary | std::ofstream::trunc);
         if (!outfile.is_open())
             return false;
 
@@ -61,12 +66,7 @@ bool binary_stream::load_from_file(const std::wstring& _file_name)
     if (!core::tools::system::is_exist(_file_name))
         return false;
 
-#ifdef _WIN32
-    std::ifstream infile(_file_name, std::ifstream::in | std::ifstream::binary |std::ifstream::ate);
-#else
-    std::ifstream infile(tools::from_utf16(_file_name), std::ifstream::in | std::ifstream::binary |std::ifstream::ate);
-#endif
-
+    auto infile = tools::system::open_file_for_read(_file_name, std::ifstream::in | std::ifstream::binary |std::ifstream::ate);
     if (!infile.is_open())
         return false;
 

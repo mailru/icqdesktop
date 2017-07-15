@@ -342,6 +342,11 @@ void coll_stream::reset()
     stream_.reset();
 }
 
+void coll_stream::write(std::istream& _source)
+{
+    stream_.write_stream(_source);
+}
+
 void coll_stream::write(const uint8_t* _buffer, uint32_t _size)
 {
     stream_.write((const char*) _buffer, (uint32_t) _size);

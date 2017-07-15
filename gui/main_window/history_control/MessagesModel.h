@@ -328,7 +328,7 @@ namespace Logic
 
         Logic::MessageKey findFirstKeyAfter(const Logic::MessageKey& _key) const;
         int64_t getLastMessageId() const;
-        bool isHasPending() const;
+        bool hasPending() const;
 
         void setNewKey(const MessageKey& _key);
         void resetNewKey();
@@ -360,26 +360,26 @@ namespace Logic
         void updated(QList<Logic::MessageKey>, QString, unsigned);
         void deleted(QList<Logic::MessageKey>, QString);
         void readByClient(QString _aimid, qint64 _id);
-        void deliveredToServer(QString);
         void messageIdFetched(QString, Logic::MessageKey);
         void pttPlayed(qint64);
         void canFetchMore(QString);
         void indentChanged(Logic::MessageKey, bool);
         void hasAvatarChanged(Logic::MessageKey, bool _hasAvatar);
         void chatEvent(QString aimId);
+        void quote(int64_t quote_id);
 
     private Q_SLOTS:
 
         void messageBuddies(std::shared_ptr<Data::MessageBuddies> _buddies, QString _aimId, Ui::MessagesBuddiesOpt _option, bool _havePending, qint64 _seq, int64_t _last_msgid);
 
         void messagesModified(QString, std::shared_ptr<Data::MessageBuddies>);
-        void dlgState(Data::DlgState);
+        void dlgStates(std::shared_ptr<QList<Data::DlgState>>);
         void fileSharingUploadingResult(QString seq, bool success, QString localPath, QString uri, int contentType, bool isFileTooBig);
 
     public Q_SLOTS:
         void messagesDeletedUpTo(QString, int64_t);
         void setRecvLastMsg(QString _aimId, bool _value);
-        void contactChanged(QString, qint64 _messageId);
+        void contactChanged(QString, qint64 _messageId, qint64 last_read_msg);
 
         void messagesDeleted(QString, QList<int64_t>);
 
@@ -411,9 +411,11 @@ namespace Logic
 
         Logic::MessageKey findFirstKeyAfter(const QString &aimId, const Logic::MessageKey &key) const;
 
-        bool isHasPending(const QString& _aimId) const;
+        bool hasPending(const QString& _aimId) const;
 
         void eraseHistory(const QString& _aimid);
+
+        void emitQuote(int64_t quote_id);
 
     private:
 
@@ -430,7 +432,6 @@ namespace Logic
         MessagesMapIter nextMessage(MessagesMap& _map, MessagesMapIter _iter) const;
 
         void processPendingMessage(InOut Data::MessageBuddies& _msgs, const QString& _aimId, const Ui::MessagesBuddiesOpt _state);
-        void sendDeliveryNotifications(const Data::MessageBuddies& _msgs);
 
         void emitUpdated(const QList<Logic::MessageKey>& _list, const QString& _aimId, unsigned _mode);
         void emitDeleted(const QList<Logic::MessageKey>& _list, const QString& _aimId);

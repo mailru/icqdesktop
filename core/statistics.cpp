@@ -322,7 +322,7 @@ void statistics::send_async()
     if (post_data_vector.empty())
         return;
 
-    auto user_proxy = g_core->get_user_proxy_settings();
+    auto user_proxy = g_core->get_proxy_settings();
 
     auto file_name = file_name_;
     stats_thread_->run_async_function([post_data_vector, user_proxy, file_name]
@@ -407,11 +407,12 @@ std::vector<std::string> statistics::get_post_data() const
         auto delta = time3 - time;
 
         auto version = core::utils::get_user_agent();
+        auto flurryKey = build::is_icq() ? flurry_key : agent_flurry_key;
         std::stringstream data_stream;
 
         data_stream << "{\"a\":{\"af\":" << time3
             <<",\"aa\":1,\"ab\":10,\"ac\":9,\"ae\":\""<< version
-            << "\",\"ad\":\"" << flurry_key
+            << "\",\"ad\":\"" << flurryKey
             << "\",\"ag\":" << time
             << ",\"ah\":" << time1
             << ",\"ak\":1,"

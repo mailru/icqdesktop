@@ -31,6 +31,7 @@
 #include "TextBlock.h"
 
 #include "ComplexMessageItem.h"
+#include "../../../contextMenuEvent.h"
 
 UI_COMPLEX_MESSAGE_NS_BEGIN
 
@@ -55,11 +56,10 @@ ComplexMessageItem::ComplexMessageItem(
     , Time_(-1)
     , Initialized_(false)
     , Layout_(nullptr)
-    , Status_(nullptr)
+    , TimeWidget_(nullptr)
     , MouseRightPressedOverItem_(false)
     , MouseLeftPressedOverAvatar_(false)
     , Menu_(nullptr)
-    , IsChatAdmin_(false)
     , Id_(id)
     , SenderAimid_(senderAimid)
     , SenderFriendly_(senderFriendly)
@@ -72,6 +72,9 @@ ComplexMessageItem::ComplexMessageItem(
     , ShareButton_(nullptr)
     , HoveredBlock_(nullptr)
     , Date_(date)
+    , IsDeliveredToServer_(true)
+    , bQuoteAnimation_(false)
+    , bObserveToSize_(false)
 {
     assert(Id_ >= -1);
     assert(!SenderAimid_.isEmpty());
@@ -106,6 +109,47 @@ QString ComplexMessageItem::formatRecentsText() const
         return QString("warning: invalid message block");
     }
 
+    QString textOnly;
+    unsigned textBlocks = 0, fileSharingBlocks = 0, linkBlocks = 0, otherBlocks = 0;
+    for (auto b : Blocks_)
+    {
+        switch (b->getContentType())
+        {
+            case IItemBlock::Text:
+                if (!b->getTrimmedText().isEmpty())
+                {
+                    textOnly += b->formatRecentsText();
+                    ++textBlocks;
+                }
+                break;
+
+            case IItemBlock::Link:
+                ++linkBlocks;
+                textOnly += b->formatRecentsText();
+                break;
+
+            case IItemBlock::FileSharing:
+                ++fileSharingBlocks;
+                break;
+
+            case IItemBlock::Quote:
+                ++otherBlocks;
+                break;
+
+            case IItemBlock::Other:
+            default:
+                ++otherBlocks;
+                textOnly += b->formatRecentsText();
+                break;
+        }
+    }
+
+    if (fileSharingBlocks && (linkBlocks || otherBlocks || textBlocks) && !textOnly.isEmpty())
+        return textOnly;
+
+    if (linkBlocks && !textOnly.isEmpty())
+        return textOnly;
+
     return Blocks_[0]->formatRecentsText();
 }
 
@@ -127,7 +171,7 @@ QString ComplexMessageItem::getSelectedText(const bool isQuote) const
     text.reserve(1024);
 
     const auto isEmptySelection = (FullSelectionType_ == BlockSelectionType::None);
-    if (isEmptySelection)
+    if (isEmptySelection && !isSelected())
     {
         return text;
     }
@@ -253,6 +297,15 @@ void ComplexMessageItem::onVisibilityChanged(const bool isVisible)
     }
 }
 
+void ComplexMessageItem::onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect)
+{
+    for (auto block : Blocks_)
+    {
+        block->onDistanceToViewportChanged(_widgetAbsGeometry, _viewportVisibilityAbsRect);
+    }
+}
+
+
 void ComplexMessageItem::replaceBlockWithSourceText(IItemBlock *block)
 {
     assert(block);
@@ -287,7 +340,7 @@ void ComplexMessageItem::replaceBlockWithSourceText(IItemBlock *block)
         return;
     }
 
-    auto &existingBlock = *iter;
+    auto& existingBlock = *iter;
     assert(existingBlock);
 
     auto textBlock = new TextBlock(
@@ -302,7 +355,37 @@ void ComplexMessageItem::replaceBlockWithSourceText(IItemBlock *block)
     existingBlock->deleteLater();
     existingBlock = textBlock;
 
-    Status_->setMessageBubbleVisible(isBubbleRequired());
+    Layout_->onBlockSizeChanged();
+}
+
+void ComplexMessageItem::removeBlock(IItemBlock *block)
+{
+    assert(block);
+    assert(!Blocks_.empty());
+
+    const auto isMenuBlockReplaced = (MenuBlock_ == block);
+    if (isMenuBlockReplaced)
+    {
+        cleanupMenu();
+    }
+
+    const auto isHoveredBlockReplaced = (HoveredBlock_ == block);
+    if (isHoveredBlockReplaced)
+    {
+        onHoveredBlockChanged(nullptr);
+    }
+
+    auto iter = std::find(Blocks_.begin(), Blocks_.end(), block);
+
+    if (iter == Blocks_.end())
+    {
+        assert(!"block is missing");
+        return;
+    }
+
+    Blocks_.erase(iter);
+
+    block->deleteLater();
 
     Layout_->onBlockSizeChanged();
 }
@@ -394,11 +477,6 @@ void ComplexMessageItem::selectByPos(const QPoint& from, const QPoint& to)
     }
 }
 
-void ComplexMessageItem::setChatAdminFlag(const bool isChatAdmin)
-{
-    IsChatAdmin_ = isChatAdmin;
-}
-
 void ComplexMessageItem::setHasAvatar(const bool value)
 {
     HistoryControlPageItem::setHasAvatar(value);
@@ -472,15 +550,13 @@ void ComplexMessageItem::setTime(const int32_t time)
 
     Time_ = time;
 
-    assert(!Status_);
-    Status_ = new MessageStatusWidget(this);
+    assert(!TimeWidget_);
+    TimeWidget_ = new MessageTimeWidget(this);
 
-    Status_->setContact(getAimid());
-    Status_->setOutgoing(IsOutgoing_);
-    Status_->setTime(time);
-    Status_->setMessageBubbleVisible(isBubbleRequired());
+    TimeWidget_->setContact(getAimid());
+    TimeWidget_->setTime(time);
 
-    Status_->setVisible(false);
+    TimeWidget_->setVisible(false);
 }
 
 int32_t ComplexMessageItem::getTime() const
@@ -507,11 +583,6 @@ void ComplexMessageItem::updateWith(ComplexMessageItem &update)
     }
 }
 
-bool ComplexMessageItem::isChatAdmin() const
-{
-    return IsChatAdmin_;
-}
-
 void ComplexMessageItem::leaveEvent(QEvent *event)
 {
     event->ignore();
@@ -520,6 +591,7 @@ void ComplexMessageItem::leaveEvent(QEvent *event)
     MouseLeftPressedOverAvatar_ = false;
 
     onHoveredBlockChanged(nullptr);
+    emit leave();
 }
 
 void ComplexMessageItem::mouseMoveEvent(QMouseEvent *event)
@@ -614,9 +686,7 @@ void ComplexMessageItem::paintEvent(QPaintEvent *event)
 
     drawAvatar(p);
 
-    drawBubble(p);
-
-    drawBlocksSeparators(p);
+    drawBubble(p, QuoteAnimation_.quoteColor());
 
     if (Style::isBlocksGridEnabled())
     {
@@ -749,20 +819,24 @@ void ComplexMessageItem::addBlockMenuItems(const QPoint &pos)
     const auto isOpenable = ((flags & IItemBlock::MenuFlagOpenInBrowser) != 0);
     if (isOpenable)
     {
-        Menu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_openbrowser_100.png")), QT_TRANSLATE_NOOP("context_menu", "Open in browser"), makeData("open_in_browser"));
+        Menu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/openbrowser_100.png")), QT_TRANSLATE_NOOP("context_menu", "Open in browser"), makeData("open_in_browser"));
     }
 
     const auto isLinkCopyable = ((flags & IItemBlock::MenuFlagLinkCopyable) != 0);
-    if (isLinkCopyable)
+    if (MenuBlock_->getContentType() != IItemBlock::ContentType::Text && isLinkCopyable)
     {
-        Menu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_link_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy link"), makeData("copy_link"));
+        Menu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/link_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy link"), makeData("copy_link"));
+    }
+    else
+    {
+        Menu_->addActionWithIcon(":/resources/context_menu/copy_100.png", QT_TRANSLATE_NOOP("context_menu", "Copy"), makeData("copy"));
     }
 
     const auto isFileCopyable = ((flags & IItemBlock::MenuFlagFileCopyable) != 0);
     if (isFileCopyable)
     {
-        Menu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_attach_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy file"), makeData("copy_file"));
-        Menu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_download_100.png")), QT_TRANSLATE_NOOP("context_menu", "Save as..."), makeData("save_as"));
+        Menu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/attach_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy file"), makeData("copy_file"));
+        Menu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/download_100.png")), QT_TRANSLATE_NOOP("context_menu", "Save as..."), makeData("save_as"));
     }
 }
 
@@ -787,9 +861,7 @@ void ComplexMessageItem::createSenderControl()
     QColor color;
     Sender_ = new TextEmojiWidget(
         this,
-        Fonts::defaultAppFontFamily(),
-        Fonts::defaultAppFontWeight(),
-        Utils::scale_value(12),
+        Fonts::appFont(Ui::MessageStyle::getSenderFont().pixelSize()),
         color);
 
     updateSenderControlColor();
@@ -843,51 +915,7 @@ void ComplexMessageItem::drawAvatar(QPainter &p)
     p.drawPixmap(avatarRect, *Avatar_);
 }
 
-void ComplexMessageItem::drawBlocksSeparators(QPainter &p)
-{
-    const auto nothingToSeparate = (Blocks_.size() < 2);
-    if (nothingToSeparate)
-    {
-        return;
-    }
-
-    p.save();
-
-    auto iter = Blocks_.begin();
-    auto prevIter = iter++;
-
-    const auto &pen = Style::getBlocksSeparatorPen();
-    p.setPen(pen);
-
-    for (; iter != Blocks_.end(); prevIter = iter++)
-    {
-        const auto block = *iter;
-        assert(block);
-
-        const auto separatorRect = Layout_->getBlockSeparatorRect(block);
-
-        if (separatorRect.isEmpty())
-        {
-            continue;
-        }
-
-        const auto separatorRectCenterY = separatorRect.center().y();
-
-        const QPoint lineFrom(
-            separatorRect.left(),
-            separatorRectCenterY);
-
-        const QPoint lineTo(
-            separatorRect.right(),
-            separatorRectCenterY);
-
-        p.drawLine(lineFrom, lineTo);
-    }
-
-    p.restore();
-}
-
-void ComplexMessageItem::drawBubble(QPainter &p)
+void ComplexMessageItem::drawBubble(QPainter &p, const QColor& quote_color)
 {
     const auto &bubbleRect = Layout_->getBubbleRect();
 
@@ -919,6 +947,9 @@ void ComplexMessageItem::drawBubble(QPainter &p)
     }
 
     p.fillPath(Bubble_, MessageStyle::getBodyBrush(isOutgoing(), false, theme()->get_id()));
+
+    if (quote_color.isValid())
+        p.fillPath(Bubble_, QBrush(quote_color));
 }
 
 QString ComplexMessageItem::getBlocksText(const IItemBlocksVec &items, const bool isSelected, const bool isQuote) const
@@ -944,7 +975,7 @@ QString ComplexMessageItem::getBlocksText(const IItemBlocksVec &items, const boo
         const auto itemText = (
             isSelected ?
                 item->getSelectedText(selectedItemCount > 1) :
-                item->getSourceText());
+                item->getTextForCopy());
 
         if (itemText.isEmpty())
         {
@@ -1023,7 +1054,7 @@ QList<Data::Quote> ComplexMessageItem::getQuotes(bool force) const
     Data::Quote quote;
     for (auto b : Blocks_)
     {
-        auto selectedText = force ? b->getSourceText() : b->getSelectedText();
+        auto selectedText = force ? b->getTextForCopy() : b->getSelectedText();
         if (!selectedText.isEmpty())
         {
             auto q = b->getQuote();
@@ -1051,6 +1082,25 @@ QList<Data::Quote> ComplexMessageItem::getQuotes(bool force) const
                     }
                 }
                 quote.text_ += selectedText;
+
+                switch (b->getContentType())
+                {
+                    case IItemBlock::ContentType::FileSharing:
+                        quote.type_ = Data::Quote::Type::file_sharing;
+                        break;
+                    case IItemBlock::ContentType::Link:
+                        quote.type_ = Data::Quote::Type::link;
+                        break;
+                    case IItemBlock::ContentType::Quote:
+                        quote.type_ = Data::Quote::Type::quote;
+                        break;
+                    case IItemBlock::ContentType::Text:
+                        quote.type_ = Data::Quote::Type::text;
+                        break;
+                    case IItemBlock::ContentType::Other:
+                        quote.type_ = Data::Quote::Type::other;
+                        break;
+                }
             }
         }
     }
@@ -1099,6 +1149,9 @@ void ComplexMessageItem::initializeShareButton()
         this,
         &ComplexMessageItem::onShareButtonClicked);
     assert(success);
+
+    /// install QuoteBlockHover event filter
+    emit eventFilterRequest(ShareButton_);
 }
 
 bool ComplexMessageItem::isBubbleRequired() const
@@ -1112,6 +1165,24 @@ bool ComplexMessageItem::isBubbleRequired() const
       }
 
       return false;
+}
+
+int ComplexMessageItem::getMaxWidth() const
+{
+    int maxWidth = -1;
+
+    for (const auto block : Blocks_)
+    {
+        int blockMaxWidth = block->getMaxWidth();
+
+        if (blockMaxWidth > 0)
+        {
+            if (maxWidth == -1 || maxWidth > blockMaxWidth)
+                maxWidth = blockMaxWidth;
+        }
+    }
+
+    return maxWidth;
 }
 
 bool ComplexMessageItem::isOverAvatar(const QPoint &pos) const
@@ -1161,6 +1232,31 @@ void ComplexMessageItem::loadAvatar()
         false);
 }
 
+void ComplexMessageItem::forwardRoutine()
+{
+    auto quotes = getQuotes(true);
+    if (quotes.size() == 1)
+    {
+        QList<IItemBlock::ContentType> typesInside;
+        for (auto b : Blocks_)
+        {
+            typesInside.push_back(b->getContentType());
+        }
+        if (typesInside.size() == 1 && (typesInside[0] == IItemBlock::ContentType::FileSharing || typesInside[0] == IItemBlock::ContentType::Link))
+        {
+            shareButtonRoutine(quotes[0].text_);
+        }
+        else
+        {
+            emit forward(quotes);
+        }
+    }
+    else
+    {
+        emit forward(quotes);
+    }
+}
+
 void ComplexMessageItem::onCopyMenuItem(ComplexMessageItem::MenuItemType type)
 {
     QString itemText;
@@ -1194,7 +1290,7 @@ void ComplexMessageItem::onCopyMenuItem(ComplexMessageItem::MenuItemType type)
     }
     else if (isForward)
     {
-        emit forward(getQuotes(true));
+        forwardRoutine();
     }
 }
 
@@ -1220,36 +1316,29 @@ bool ComplexMessageItem::onDeveloperMenuItemTriggered(const QString &cmd)
     return false;
 }
 
-void ComplexMessageItem::onShareButtonClicked()
+void ComplexMessageItem::shareButtonRoutine(QString sourceText)
 {
-    assert(HoveredBlock_);
-    if (!HoveredBlock_)
-    {
-        return;
-    }
-
-    const auto sourceText = HoveredBlock_->getSourceText();
     assert(!sourceText.isEmpty());
-
+    
     SelectContactsWidget shareDialog(
-        nullptr,
-        Logic::MembersWidgetRegim::SHARE_LINK,
-        QT_TRANSLATE_NOOP("popup_window", "Share link"),
-        QT_TRANSLATE_NOOP("popup_window", "Copy link and close"),
-        sourceText,
-        Ui::MainPage::instance(),
-        true);
+                                     nullptr,
+                                     Logic::MembersWidgetRegim::SHARE_LINK,
+                                     QT_TRANSLATE_NOOP("popup_window", "Share link"),
+                                     QT_TRANSLATE_NOOP("popup_window", "Copy link and close"),
+                                     sourceText,
+                                     Ui::MainPage::instance(),
+                                     true);
     shareDialog.setSort(false /* isClSorting */);
-
+    
     emit Utils::InterConnector::instance().searchEnd();
-
+    
     const auto action = shareDialog.show();
     if (action != QDialog::Accepted)
     {
         return;
     }
     const auto contact = shareDialog.getSelectedContact();
-
+    
     if (contact != "")
     {
         Logic::getContactListModel()->setCurrent(contact, -1, true);
@@ -1263,6 +1352,16 @@ void ComplexMessageItem::onShareButtonClicked()
     }
 }
 
+void ComplexMessageItem::onShareButtonClicked()
+{
+    assert(HoveredBlock_);
+    if (!HoveredBlock_)
+    {
+        return;
+    }
+    shareButtonRoutine(HoveredBlock_->getSourceText());
+}
+
 void ComplexMessageItem::trackMenu(const QPoint &globalPos)
 {
     cleanupMenu();
@@ -1271,25 +1370,28 @@ void ComplexMessageItem::trackMenu(const QPoint &globalPos)
 
     addBlockMenuItems(mapFromGlobal(globalPos));
 
-    Menu_->addActionWithIcon(":/resources/dialog_copy_100.png", QT_TRANSLATE_NOOP("context_menu", "Copy"), makeData("copy"));
-    Menu_->addActionWithIcon(":/resources/dialog_quote_100.png", QT_TRANSLATE_NOOP("context_menu", "Quote"), makeData("quote"));
-    Menu_->addActionWithIcon(":/resources/dialog_forwardmsg_100.png", QT_TRANSLATE_NOOP("context_menu", "Forward"), makeData("forward"));
-    Menu_->addActionWithIcon(":/resources/dialog_closechat_100.png", QT_TRANSLATE_NOOP("context_menu", "Delete for me"), makeData("delete"));
+    //Menu_->addActionWithIcon(":/resources/context_menu/copy_100.png", QT_TRANSLATE_NOOP("context_menu", "Copy"), makeData("copy"));
+    Menu_->addActionWithIcon(":/resources/context_menu/quote_100.png", QT_TRANSLATE_NOOP("context_menu", "Quote"), makeData("quote"));
+    Menu_->addActionWithIcon(":/resources/context_menu/forwardmsg_100.png", QT_TRANSLATE_NOOP("context_menu", "Forward"), makeData("forward"));
+    Menu_->addActionWithIcon(":/resources/context_menu/closechat_100.png", QT_TRANSLATE_NOOP("context_menu", "Delete for me"), makeData("delete"));
 
     connect(Menu_, &ContextMenu::triggered, this, &ComplexMessageItem::onMenuItemTriggered);
 
-    if (isOutgoing() || isChatAdmin())
+    if (isOutgoing() || Logic::getContactListModel()->isYouAdmin(ChatAimid_))
     {
         Menu_->addActionWithIcon(
-            ":/resources/dialog_closechat_all_100.png",
+            ":/resources/context_menu/closechat_all_100.png",
             QT_TRANSLATE_NOOP("context_menu", "Delete for all"),
             makeData("delete_all"));
     }
 
     if (GetAppConfig().IsContextMenuFeaturesUnlocked())
     {
-        Menu_->addActionWithIcon(":/resources/tabs_settings_100.png", "Copy Message ID", makeData("dev:copy_message_id"));
+        Menu_->addActionWithIcon(":/resources/copy_100.png", "Copy Message ID", makeData("dev:copy_message_id"));
     }
+
+    connect(Menu_, &QMenu::aboutToShow, this, &ComplexMessageItem::contextMenuShow);
+	connect(Menu_, &QMenu::aboutToHide, this, &ComplexMessageItem::contextMenuHide);
 
     Menu_->popup(globalPos);
 }
@@ -1304,7 +1406,7 @@ void ComplexMessageItem::updateSenderControlColor()
     const auto color = (
         theme() ?
             theme()->contact_name_.text_color_ :
-            QColor(0x57, 0x54, 0x4c));
+        MessageStyle::getSenderColor());
 
     Sender_->setColor(color);
 }
@@ -1330,6 +1432,79 @@ void ComplexMessageItem::updateShareButtonGeometry()
     ShareButton_->setVisible(true);
 
     ShareButton_->setGeometry(buttonGeometry);
+}
+
+void ComplexMessageItem::setQuoteSelection()
+{
+	for (auto& val : Blocks_)
+	{
+		val->setQuoteSelection();
+	}
+    QuoteAnimation_.startQuoteAnimation();
+}
+
+void ComplexMessageItem::contextMenuShow()
+{
+    ContextMenuCreateEvent* e = new ContextMenuCreateEvent();
+    QApplication::postEvent(this, e);
+}
+
+void ComplexMessageItem::contextMenuHide()
+{
+    ContextMenuDestroyEvent* e = new ContextMenuDestroyEvent();
+    QApplication::postEvent(this, e);
+}
+
+void ComplexMessageItem::setDeliveredToServer(const bool _isDeliveredToServer, const bool _init)
+{
+    if (!isOutgoing())
+        return;
+
+    if (IsDeliveredToServer_ != _isDeliveredToServer)
+    {
+        IsDeliveredToServer_ = _isDeliveredToServer;
+
+        if (!_isDeliveredToServer)
+        {
+            QGraphicsOpacityEffect* opacityEffect = new QGraphicsOpacityEffect(this);
+            opacityEffect->setOpacity(0.5);
+            setGraphicsEffect(opacityEffect);
+
+            if (!_init)
+                update();
+        }
+        else
+        {
+            auto effect = graphicsEffect();
+            if (effect)
+            {
+                setGraphicsEffect(nullptr);
+                if (!_init)
+                    update();
+            }
+        }
+
+    }
+}
+
+bool ComplexMessageItem::isQuoteAnimation() const
+{
+    return bQuoteAnimation_;
+}
+
+void ComplexMessageItem::setQuoteAnimation()
+{
+    bQuoteAnimation_ = true;
+}
+
+bool ComplexMessageItem::isObserveToSize() const
+{
+    return bObserveToSize_;
+}
+
+void ComplexMessageItem::onObserveToSize()
+{
+    bObserveToSize_ = true;
 }
 
 namespace

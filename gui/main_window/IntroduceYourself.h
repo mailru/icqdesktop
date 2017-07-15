@@ -13,7 +13,6 @@ namespace Ui
 
         private Q_SLOTS:
             void TextChanged();
-            void Skipped();
             void UpdateProfile();
             void RecvResponse(int _error);
             void avatarChanged();

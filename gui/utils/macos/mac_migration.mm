@@ -32,27 +32,108 @@
 #import "SSKeychain.h"
 #import "NSData+Base64.h"
 
-static QString toQString(NSString * src)
+namespace
 {
-    return QString::fromCFString((__bridge CFStringRef)src);
-}
-
-static NSString * fromQString(const QString & src)
-{
-    return (NSString *)CFBridgingRelease(src.toCFString());
-}
-
-
-MacProfile::MacProfile(const QString &identifier, const QString &uin):
-    identifier_(identifier),
-    uin_(uin)
-{
+    static QString toQString(NSString * src)
+    {
+        return QString::fromCFString((__bridge CFStringRef)src);
+    }
     
+    static NSString * fromQString(const QString & src)
+    {
+        return (NSString *)CFBridgingRelease(src.toCFString());
+    }
+    
+    QStringList plistAccounts(QString accountsPath)
+    {
+        QStringList list;
+        
+        NSArray * accounts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:fromQString(accountsPath) error:nil];
+        
+        for (NSString * account in accounts)
+        {
+            list.append(toQString(account));
+        }
+        
+        return list;
+    }
+    
+    bool checkExists(QString path, bool dir)
+    {
+        QFileInfo checkFile(path);
+        
+        if (!checkFile.exists())
+        {
+            return false;
+        }
+        
+        if ((dir && !checkFile.isDir()) ||
+            (!dir && !checkFile.isFile()))
+        {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    bool checkAccountDirectory(QString accountDirectory, QString identifier)
+    {
+        if (!checkExists(accountDirectory, true))
+        {
+            return false;
+        }
+        
+        return MacMigrationManager::profiles2(accountDirectory, identifier).size() > 0;
+    }
+    
+    bool createProtolibProfile(QString protoSettings, QString profileId, QString uin, bool isMain, MacProfilesList & list)
+    {
+        QMPreferences prefs(protoSettings);
+        
+        if (prefs.load())
+        {
+            QString aimsid = prefs.get<QString>("wim.session.aimsid");
+            QString displayId = prefs.get<QString>("wim.session.displayId");
+            QString fetchUrl = prefs.get<QString>("wim.session.fetchUrl");
+            time_t localTimeSkew = prefs.get<int>("wim.localTimeSkew");
+            QString authToken = prefs.get<QString>("wim.session.authToken");
+            QString sessionKey = prefs.get<QString>("wim.session.sessionKey");
+            
+            MacProfile newProfile(MacProfile::Type::ICQ, profileId, uin);
+            
+            newProfile.setName(displayId);
+            newProfile.setToken(authToken);
+            newProfile.setKey(sessionKey);
+            newProfile.setAimsid(aimsid);
+            newProfile.setFetchUrl(fetchUrl);
+            newProfile.setTimeOffset(localTimeSkew);
+            
+            if (isMain)
+            {
+                list.insert(0, newProfile);
+            }
+            else
+            {
+                list.append(newProfile);
+            }
+            
+            return true;
+        }
+        
+        return false;
+    }
+}
+
+MacProfile::MacProfile(const Type &type, const QString &identifier, const QString &uin, const QString &pw):
+    type_(type),
+    identifier_(identifier),
+    uin_(uin),
+    pw_(pw)
+{
 }
 
 MacProfile::~MacProfile()
 {
-    
 }
 
 void MacProfile::setName(const QString &name)
@@ -93,6 +174,11 @@ void MacProfile::setTimeOffset(time_t timeOffset)
 const QString &MacProfile::uin() const
 {
     return uin_;
+}
+
+const QString &MacProfile::pw() const
+{
+    return pw_;
 }
 
 const QString &MacProfile::identifier() const
@@ -148,38 +234,6 @@ MacMigrationManager::~MacMigrationManager()
 {
 }
 
-QStringList plistAccounts(QString accountsPath)
-{
-    QStringList list;
-    
-    NSArray * accounts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:fromQString(accountsPath) error:nil];
-    
-    for (NSString * account in accounts)
-    {
-        list.append(toQString(account));
-    }
-    
-    return list;
-}
-
-bool checkExists(QString path, bool dir)
-{
-    QFileInfo checkFile(path);
-    
-    if (!checkFile.exists())
-    {
-        return false;
-    }
-    
-    if ((dir && !checkFile.isDir()) ||
-        (!dir && !checkFile.isFile()))
-    {
-        return false;
-    }
-    
-    return true;
-}
-
 MacProfilesList MacMigrationManager::profiles1(QString profilesPath, QString generalPath)
 {
     NSData * dataProfiles = [NSData dataWithContentsOfFile:fromQString(profilesPath)];
@@ -207,8 +261,7 @@ MacProfilesList MacMigrationManager::profiles1(QString profilesPath, QString gen
             BOOL isMain = [profile[@"order"] integerValue] == 0;
             NSString * proto = profile[@"protocol"];
 
-            if ([proto isEqualToString:@"wim"] ||
-                [proto isEqualToString:@"phone-icq"])
+            if ([proto isEqualToString:@"wim"] || [proto isEqualToString:@"phone-icq"])
             {
                 QString aimsid;
                 QString displayId;
@@ -218,18 +271,25 @@ MacProfilesList MacMigrationManager::profiles1(QString profilesPath, QString gen
                 QString sessionKey;
                 
                 NSDictionary * params = generals[[NSString stringWithFormat:@"profile_%@", profile[@"key"]]];
-                
                 if (params.count)
                 {
                     aimsid = toQString(params[@"aims-id"]);
                     displayId = toQString(params[@"display-id"]);
+                    if (displayId.isEmpty())
+                    {
+                        displayId = toQString(params[@"nickname"]);
+                    }
+                    if (displayId.isEmpty())
+                    {
+                        displayId = uin;
+                    }
                     fetchUrl = toQString(params[@"fetch-url"]);
                     localTimeSkew = [params[@"time-skew"] intValue];
                 }
                 
                 NSString * keychainAcc = [NSString stringWithFormat:@"%@#%@", account.length?account:profile[@"key"], profile[@"key"]];
                 
-                NSString * keychainPass = [SSKeychain passwordForService:@"ICQ" account:keychainAcc];
+                NSString * keychainPass = [SSKeychain passwordForService:[NSString stringWithUTF8String:(build::is_icq() ? product_name_icq_mac_a : product_name_agent_mac_a)] account:keychainAcc];
                 
                 NSRange delimiter = [keychainPass rangeOfString:@"-"];
                 if (delimiter.location != NSNotFound)
@@ -250,12 +310,12 @@ MacProfilesList MacMigrationManager::profiles1(QString profilesPath, QString gen
                     }
                 }
                 
-                if (authToken.length() == 0 && keychainPass.length > 0)
+                if (authToken.isEmpty() && keychainPass.length > 0)
                 {
                     authToken = toQString(keychainPass);
                 }
                 
-                MacProfile newProfile(profileId, uin);
+                MacProfile newProfile(MacProfile::Type::ICQ, profileId, uin);
 
                 newProfile.setName(displayId);
                 newProfile.setToken(authToken);
@@ -273,47 +333,40 @@ MacProfilesList MacMigrationManager::profiles1(QString profilesPath, QString gen
                     list.append(newProfile);
                 }
             }
-        }        
+            else if ([proto isEqualToString:@"mmp"])
+            {
+                QString displayId;
+                time_t localTimeSkew = 0;
+                
+                NSDictionary * params = generals[[NSString stringWithFormat:@"profile_%@", profile[@"key"]]];
+
+                if (params.count)
+                {
+                    displayId = toQString(params[@"nickname"]);
+                    localTimeSkew = [params[@"time-skew"] intValue];
+                }
+                
+                NSString * keychainAcc = [NSString stringWithFormat:@"%@#%@", account.length?account:profile[@"key"], profile[@"key"]];
+                
+                NSString * keychainPass = [SSKeychain passwordForService:[NSString stringWithUTF8String:(build::is_icq() ? product_name_icq_mac_a : product_name_agent_mac_a)] account:keychainAcc];
+                
+                MacProfile newProfile(MacProfile::Type::Agent, profileId, uin, toQString(keychainPass));
+                newProfile.setName(displayId);
+                newProfile.setTimeOffset(localTimeSkew);
+                
+                if (isMain)
+                {
+                    list.insert(0, newProfile);
+                }
+                else
+                {
+                    list.append(newProfile);
+                }
+            }
+        }
     }
     
     return list;
-}
-
-bool createProtolibProfile(QString protoSettings, QString profileId, QString uin, bool isMain, MacProfilesList & list)
-{
-    QMPreferences prefs(protoSettings);
-    
-    if (prefs.load())
-    {
-        QString aimsid = prefs.get<QString>("wim.session.aimsid");
-        QString displayId = prefs.get<QString>("wim.session.displayId");
-        QString fetchUrl = prefs.get<QString>("wim.session.fetchUrl");
-        time_t localTimeSkew = prefs.get<int>("wim.localTimeSkew");
-        QString authToken = prefs.get<QString>("wim.session.authToken");
-        QString sessionKey = prefs.get<QString>("wim.session.sessionKey");
-        
-        MacProfile newProfile(profileId, uin);
-        
-        newProfile.setName(displayId);
-        newProfile.setToken(authToken);
-        newProfile.setKey(sessionKey);
-        newProfile.setAimsid(aimsid);
-        newProfile.setFetchUrl(fetchUrl);
-        newProfile.setTimeOffset(localTimeSkew);
-        
-        if (isMain)
-        {
-            list.insert(0, newProfile);
-        }
-        else
-        {
-            list.append(newProfile);
-        }
-        
-        return true;
-    }
-    
-    return false;
 }
 
 MacProfilesList MacMigrationManager::profiles2(QString accountDirectory, QString account)
@@ -367,11 +420,18 @@ bool MacMigrationManager::migrateProfile(const MacProfile &profile)
 {
     Ui::get_gui_settings()->set_value<bool>(settings_mac_accounts_migrated, true);
     
-    if (profile.key().length() == 0)
+    if (profile.key().isEmpty())
     {
         Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
         collection.set_value_as_qstring("login", profile.uin());
-        collection.set_value_as_qstring("password", profile.token());
+        if (profile.type() == MacProfile::Type::ICQ)
+        {
+            collection.set_value_as_qstring("password", profile.token());
+        }
+        else if (profile.type() == MacProfile::Type::Agent)
+        {
+            collection.set_value_as_qstring("password", profile.pw());
+        }
         collection.set_value_as_bool("save_auth_data", true);
         collection.set_value_as_bool("is_login", true);
         collection.set_value_as_bool("not_log", true);
@@ -384,12 +444,19 @@ bool MacMigrationManager::migrateProfile(const MacProfile &profile)
 
     json[@"login"] = fromQString(profile.uin());
     json[@"aimid"] = fromQString(profile.uin());
-    json[@"atoken"] = fromQString(profile.token());
-    json[@"sessionkey"] = fromQString(profile.key());
     json[@"timeoffset"] = @(profile.timeOffset());
-    json[@"aimsid"] = fromQString(profile.aimsid());
-    json[@"fetchurl"] = fromQString(profile.fetchUrl());
     json[@"devid"] = @"ic18eTwFBO7vAdt9";
+    if (profile.type() == MacProfile::Type::ICQ)
+    {
+        json[@"atoken"] = fromQString(profile.token());
+        json[@"sessionkey"] = fromQString(profile.key());
+        json[@"aimsid"] = fromQString(profile.aimsid());
+        json[@"fetchurl"] = fromQString(profile.fetchUrl());
+    }
+    else if (profile.type() == MacProfile::Type::Agent)
+    {
+        //
+    }
     
     NSData * data = [NSJSONSerialization dataWithJSONObject:json options:NSJSONWritingPrettyPrinted error:nil];
     
@@ -416,14 +483,10 @@ bool MacMigrationManager::migrateProfile(const MacProfile &profile)
     return false;
 }
 
-bool checkAccountDirectory(QString accountDirectory, QString identifier)
+bool MacMigrationManager::mergeProfiles(const MacProfile &profile1, const MacProfile &profile2)
 {
-    if (!checkExists(accountDirectory, true))
-    {
-        return false;
-    }
-    
-    return MacMigrationManager::profiles2(accountDirectory, identifier).size() > 0;
+    NSLog(@"%s %s", profile1.uin().toStdString().c_str(), profile2.uin().toStdString().c_str());
+    return false;
 }
 
 QString MacMigrationManager::canMigrateAccount()
@@ -469,7 +532,3 @@ QString MacMigrationManager::canMigrateAccount()
     return "";
 }
 
-const MacProfilesList & MacMigrationManager::getProfiles()
-{
-    return profiles_;
-}

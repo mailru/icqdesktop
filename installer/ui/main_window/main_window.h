@@ -15,7 +15,7 @@ namespace installer
         class start_page;
         class progress_page;
         class error_page;
-        class accounts_page;
+        class accounts_page_agent;
 
         class main_window : public QMainWindow
         {
@@ -37,7 +37,7 @@ namespace installer
             start_page* start_page_;
             progress_page* progress_page_;
             error_page* error_page_;
-            accounts_page* accounts_page_;
+            accounts_page_agent* accounts_page_;
 
             void start_installation();
 

@@ -48,6 +48,7 @@ namespace common
                 wmv
             };
 
+            std::string original_;
             std::string url_;
             type type_;
             protocol protocol_;
@@ -55,6 +56,7 @@ namespace common
 
             url();
             url(const std::string& _url, type _type, protocol _protocol, extension _extension);
+            url(const std::string& _original, const std::string& _url, type _type, protocol _protocol, extension _extension);
 
             bool is_filesharing() const;
             bool is_image() const;
@@ -62,6 +64,10 @@ namespace common
             bool is_site() const;
             bool is_email() const;
             bool is_ftp() const;
+            bool has_prtocol() const;
+
+            bool operator==(const url& _right) const;
+            bool operator!=(const url& _right) const;
         };
 
         typedef std::vector<url> url_vector_t;
@@ -80,6 +86,7 @@ namespace common
                 www_3,
                 www_4,
                 compare,
+                compare_safe,
                 delimeter_colon,
                 delimeter_slash1,
                 delimeter_slash2,
@@ -142,6 +149,9 @@ namespace common
 
             bool skipping_chars() const;
 
+            int32_t raw_url_length() const;
+            int32_t tail_size() const;
+
             static url_vector_t parse_urls(const std::string& _source);
 
         private:
@@ -149,7 +159,7 @@ namespace common
 
             bool save_url();
 
-            void compare(const char* _char, states _ok_state, states _fallback_state);
+            void compare(const char* _char, states _ok_state, states _fallback_state, int _safe_position);
             void fallback(char _last_char);
 
             bool is_equal(const char* _text) const;
@@ -186,6 +196,7 @@ namespace common
             int32_t compare_pos_;
             states ok_state_;
             states fallback_state_;
+            int safe_position_;
 
             url::extension extension_;
 
@@ -206,6 +217,10 @@ namespace common
             bool is_utf8_;
 
             url url_;
+
+            bool need_to_check_domain_;
+
+            int32_t tail_size_;
         };
     }
 }
@@ -213,3 +228,5 @@ namespace common
 const char* to_string(common::tools::url::type _value);
 const char* to_string(common::tools::url::protocol _value);
 const char* to_string(common::tools::url::extension _value);
+
+std::ostream& operator<<(std::ostream& _out, const common::tools::url& _url);

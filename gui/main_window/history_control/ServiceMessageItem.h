@@ -24,6 +24,8 @@ namespace Ui
 		bool isNew() const;
         void updateStyle();
 
+		virtual void setQuoteSelection() override;
+
 	private:
 		bool new_;
 		bool overlay_;

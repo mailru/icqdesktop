@@ -87,9 +87,7 @@ namespace Ui
 	{
 		setObjectName("toolbar_Widget");
 
-		auto root_layout = new QHBoxLayout();
-		root_layout->setContentsMargins(0, 0, 0, 0);
-		root_layout->setSpacing(0);
+		auto root_layout = Utils::emptyHLayout();
 		setLayout(root_layout);
 
 		view_area_ = new QScrollArea(this);
@@ -106,18 +104,14 @@ namespace Ui
 		connect(QScroller::scroller(view_area_->viewport()), SIGNAL(stateChanged(QScroller::State)), this, SLOT(touchScrollStateChanged(QScroller::State)), Qt::QueuedConnection);
 
 		button_left_cap_ = new PictureWidget(this, ":/resources/smiles_menu/picker_shadow_left_100.png");
-		button_left_cap_->setFixedHeight(Utils::scale_value(48));
-		button_left_cap_->setFixedWidth(Utils::scale_value(32));
+		button_left_cap_->setFixedSize(Utils::scale_value(32), Utils::scale_value(48));
 		button_right_cap_ = new PictureWidget(this, ":/resources/smiles_menu/picker_shadow_right_100.png");
-		button_right_cap_->setFixedHeight(Utils::scale_value(48));
-		button_right_cap_->setFixedWidth(Utils::scale_value(32));
+		button_right_cap_->setFixedSize(Utils::scale_value(32), Utils::scale_value(48));
 
 		root_layout->addWidget(view_area_);
 		
-		hor_layout_ = new QHBoxLayout();
+		hor_layout_ = Utils::emptyHLayout();
 
-		hor_layout_->setContentsMargins(0, 0, 0, 0);
-		hor_layout_->setSpacing(0);
 		scroll_area_widget->setLayout(hor_layout_);
 
 		QSpacerItem* horizontalSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -178,8 +172,7 @@ namespace Ui
 		button_left_ = new CustomButton(this, ":/resources/smiles_menu/picker_arrow_left_100.png");
 		button_left_->setActiveImage(":/resources/smiles_menu/picker_arrow_left_100.png");
 		button_left_->setFillColor(QColor("#ffffff"));
-		button_left_->setFixedHeight(Utils::scale_value(48));
-		button_left_->setFixedWidth(Utils::scale_value(32));
+		button_left_->setFixedSize(Utils::scale_value(32), Utils::scale_value(48));
 		button_left_->setStyleSheet("border: none;");
 		button_left_->setFocusPolicy(Qt::NoFocus);
 		button_left_->setCursor(QCursor(Qt::PointingHandCursor));
@@ -187,8 +180,7 @@ namespace Ui
 		button_right_ = new CustomButton(this, ":/resources/smiles_menu/picker_arrow_right_100.png");
 		button_right_->setActiveImage(":/resources/smiles_menu/picker_arrow_right_100.png");
 		button_right_->setFillColor(QColor("#ffffff"));
-		button_right_->setFixedHeight(Utils::scale_value(48));
-		button_right_->setFixedWidth(Utils::scale_value(32));
+		button_right_->setFixedSize(Utils::scale_value(32), Utils::scale_value(48));
 		button_right_->setStyleSheet("border: none;");
 		button_right_->setFocusPolicy(Qt::NoFocus);
 		button_right_->setCursor(QCursor(Qt::PointingHandCursor));

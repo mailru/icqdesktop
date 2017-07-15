@@ -6,34 +6,31 @@
 #include "../../controls/TextEmojiWidget.h"
 #include "../../controls/TransparentScrollBar.h"
 #include "../../utils/utils.h"
+#include "../../my_info.h"
 
 using namespace Ui;
 
-void GeneralSettingsWidget::Creator::initNotifications(QWidget* _parent, std::map<std::string, Synchronizator>& _collector)
+void GeneralSettingsWidget::Creator::initNotifications(NotificationSettings* _parent, std::map<std::string, Synchronizator>& _collector)
 {
     auto scrollArea = CreateScrollAreaAndSetTrScrollBar(_parent);
     scrollArea->setWidgetResizable(true);
     Utils::grabTouchWidget(scrollArea->viewport(), true);
 
     auto mainWidget = new QWidget(scrollArea);
-    mainWidget->setGeometry(QRect(0, 0, Utils::scale_value(800), Utils::scale_value(600)));
     Utils::grabTouchWidget(mainWidget);
 
-    auto mainLayout = new QVBoxLayout(mainWidget);
-    mainLayout->setSpacing(0);
+    auto mainLayout = Utils::emptyVLayout(mainWidget);
     mainLayout->setAlignment(Qt::AlignTop);
-    mainLayout->setContentsMargins(Utils::scale_value(48), 0, 0, Utils::scale_value(48));
+    mainLayout->setContentsMargins(Utils::scale_value(36), 0, Utils::scale_value(36), Utils::scale_value(36));
 
     scrollArea->setWidget(mainWidget);
 
-    auto layout = new QHBoxLayout(_parent);
-    layout->setSpacing(0);
-    layout->setContentsMargins(0, 0, 0, 0);
+    auto layout = Utils::emptyHLayout(_parent);
     layout->addWidget(scrollArea);
 
     GeneralCreator::addHeader(scrollArea, mainLayout, QT_TRANSLATE_NOOP("settings_pages", "Notifications"));
     {
-        auto enableSoundsWidgets = GeneralCreator::addSwitcher(
+        _parent->sounds_ = GeneralCreator::addSwitcher(
             &_collector,
             scrollArea,
             mainLayout,
@@ -64,9 +61,9 @@ void GeneralSettingsWidget::Creator::initNotifications(QWidget* _parent, std::ma
             outgoingSoundWidgets.check_->setEnabled(false);
             outgoingSoundWidgets.text_->setEnabled(false);
         }
-        connect(enableSoundsWidgets.check_, &QCheckBox::toggled, scrollArea, [enableSoundsWidgets, outgoingSoundWidgets]()
+        connect(_parent->sounds_.check_, &QCheckBox::toggled, scrollArea, [_parent, outgoingSoundWidgets]()
         {
-            bool c = enableSoundsWidgets.check_->isChecked();
+            bool c = _parent->sounds_.check_->isChecked();
             if (!c)
             {
                 outgoingSoundWidgets.check_->setChecked(false);
@@ -81,7 +78,7 @@ void GeneralSettingsWidget::Creator::initNotifications(QWidget* _parent, std::ma
                 outgoingSoundWidgets.text_->setEnabled(true);
             }
         });
-        GeneralCreator::addSwitcher(
+        auto enable_notification = GeneralCreator::addSwitcher(
             0,
             scrollArea,
             mainLayout,
@@ -93,6 +90,39 @@ void GeneralSettingsWidget::Creator::initNotifications(QWidget* _parent, std::ma
                 get_gui_settings()->set_value<bool>(settings_notify_new_messages, enabled);
             return (enabled ? QT_TRANSLATE_NOOP("settings_pages", "On") : QT_TRANSLATE_NOOP("settings_pages", "Off"));
         });
+        if (Ui::MyInfo()->haveConnectedEmail())
+        {
+            auto enable_mail_notifications = GeneralCreator::addSwitcher(
+                0,
+                scrollArea,
+                mainLayout,
+                QT_TRANSLATE_NOOP("settings_pages", "Show mail notifications"),
+                get_gui_settings()->get_value<bool>(settings_notify_new_mail_messages, true),
+                [](bool enabled) -> QString
+            {
+                if (get_gui_settings()->get_value<bool>(settings_notify_new_mail_messages, true) != enabled)
+                    get_gui_settings()->set_value<bool>(settings_notify_new_mail_messages, enabled);
+                return (enabled ? QT_TRANSLATE_NOOP("settings_pages", "On") : QT_TRANSLATE_NOOP("settings_pages", "Off"));
+            });
+
+            connect(enable_notification.check_, &QCheckBox::toggled, scrollArea, [enable_notification, enable_mail_notifications]()
+            {
+                bool c = enable_notification.check_->isChecked();
+                if (!c)
+                {
+                    enable_mail_notifications.check_->setChecked(false);
+                    enable_mail_notifications.check_->setEnabled(false);
+                    enable_mail_notifications.text_->setEnabled(false);
+                    if (get_gui_settings()->get_value(settings_notify_new_mail_messages, false) != c)
+                        get_gui_settings()->set_value(settings_notify_new_mail_messages, c);
+                }
+                else
+                {
+                    enable_mail_notifications.check_->setEnabled(true);
+                    enable_mail_notifications.text_->setEnabled(true);
+                }
+            });
+        }
     }
 }
 

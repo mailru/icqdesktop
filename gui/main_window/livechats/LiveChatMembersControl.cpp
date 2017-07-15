@@ -9,7 +9,7 @@ namespace Ui
     LiveChatMembersControl::LiveChatMembersControl(QWidget* _parent, std::shared_ptr<Data::ChatInfo> _info, const int _maxCount)
         :   QWidget(_parent),
             maxCount_(_maxCount),
-            color_(Qt::white),
+            color_(QColor("#ffffff")),
             realCount_(_maxCount)
     {
         setFixedHeight(Utils::scale_value(controlHeight));

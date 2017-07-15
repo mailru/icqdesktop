@@ -47,7 +47,7 @@ namespace Logic
 
 	bool ContactItem::is_online() const
 	{
-		return contact_->HaveLastSeen_ && !contact_->LastSeen_.isValid();
+		return contact_->HasLastSeen_ && !contact_->LastSeen_.isValid();
 	}
 
 	bool ContactItem::is_phone() const
@@ -59,6 +59,11 @@ namespace Logic
 	{
 		return contact_->LastSeen_.isValid() && contact_->LastSeen_.daysTo(QDateTime::currentDateTime()) <= 180;
 	}
+
+    bool ContactItem::recently(const QDateTime& _current) const
+    {
+        return contact_->LastSeen_.isValid() && contact_->LastSeen_.daysTo(_current) <= 180;
+    }
 
 	bool ContactItem::is_chat() const
 	{

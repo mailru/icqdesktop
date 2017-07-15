@@ -78,8 +78,6 @@ namespace Ui
                                       int _selected,
                                       int _width,
                                       std::function< void(QString, int, TextEmojiWidget*) > _slot1,
-                                      bool _isCheckable,
-                                      bool _switched,
                                       std::function< QString(bool) > _slot2
                                       );
         

@@ -26,9 +26,10 @@ namespace core
             virtual int32_t init_request(std::shared_ptr<core::http_request_simple> _request) override;
             virtual int32_t parse_response(std::shared_ptr<core::tools::binary_stream> _response) override;
 
-        public:
+        protected:
+            virtual int32_t on_http_client_error() override;
 
-            virtual int32_t execute() override;
+        public:
 
             get_file_meta_info(
                 const wim_packet_params& _params,

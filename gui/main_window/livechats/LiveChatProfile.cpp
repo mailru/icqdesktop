@@ -3,6 +3,7 @@
 
 #include "LiveChatMembersControl.h"
 #include "../contact_list/ContactListModel.h"
+#include "../contact_list/ChatMembersModel.h"
 #include "../../core_dispatcher.h"
 #include "../../controls/ContactAvatarWidget.h"
 #include "../../controls/CommonStyle.h"
@@ -48,7 +49,7 @@ namespace Ui
 
         Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
         collection.set_value_as_qstring("stamp", _stamp);
-        collection.set_value_as_int("limit", membersLimit);
+        collection.set_value_as_int("limit", Logic::ChatMembersModel::get_limit(membersLimit));
 
         seq_ = Ui::GetDispatcher()->post_message_to_core("chats/info/get", collection.get());
 
@@ -83,8 +84,7 @@ namespace Ui
         }
 
         auto liveChatProfileWidget = new LiveChatProfileWidget(nullptr, _info->Name_);
-        liveChatProfileWidget->setFixedHeight(Utils::scale_value(500));
-        liveChatProfileWidget->setFixedWidth(Utils::scale_value(400));
+        liveChatProfileWidget->setFixedSize(Utils::scale_value(400), Utils::scale_value(500));
         liveChatProfileWidget->viewChat(_info);
 
         GeneralDialog containerDialog(liveChatProfileWidget, parent_);
@@ -173,8 +173,7 @@ namespace Ui
         }
 
         auto errorWidget = new LiveChatErrorWidget(nullptr, errorText);
-        errorWidget->setFixedHeight(Utils::scale_value(300));
-        errorWidget->setFixedWidth(Utils::scale_value(400));
+        errorWidget->setFixedSize(Utils::scale_value(400), Utils::scale_value(300));
         errorWidget->show();
 
         GeneralDialog containerDialog(errorWidget, parent_);
@@ -203,8 +202,7 @@ namespace Ui
     {
         setStyleSheet(Utils::LoadStyle(":/main_window/livechats/LiveChats.qss"));
 
-        rootLayout_ = new QVBoxLayout();
-        rootLayout_->setSpacing(0);
+        rootLayout_ = Utils::emptyVLayout();
         rootLayout_->setContentsMargins(Utils::scale_value(horMargins), 0, Utils::scale_value(horMargins), 0);
         rootLayout_->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
 
@@ -251,7 +249,7 @@ namespace Ui
 
         QString nameText = ((_info->Name_.length() > maxNameTextSize) ? (_info->Name_.mid(0, maxNameTextSize) + "...") : _info->Name_);
 
-        name_ = new TextEditEx(this, Fonts::defaultAppFontFamily(), Utils::scale_value(32), CommonStyle::getTextCommonColor(), false, true);
+        name_ = new TextEditEx(this, Fonts::appFontScaled(32), CommonStyle::getTextCommonColor(), false, true);
         connect(name_, SIGNAL(setSize(int, int)), this, SLOT(nameResized(int, int)), Qt::QueuedConnection);
         name_->setPlainText(nameText, false, QTextCharFormat::AlignNormal);
         name_->setAlignment(Qt::AlignHCenter);
@@ -267,7 +265,7 @@ namespace Ui
 
         QString aboutText = ((_info->About_.length() > maxAboutTextSize) ? (_info->About_.mid(0, maxAboutTextSize) + "...") : _info->About_);
 
-        TextEditEx* about = new TextEditEx(this, Fonts::defaultAppFontFamily(), Utils::scale_value(16), QColor(0x69, 0x69, 0x69), false, false);
+        TextEditEx* about = new TextEditEx(this, Fonts::appFontScaled(16), QColor("#767676"), false, false);
         about->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         about->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         about->setFrameStyle(QFrame::NoFrame);
@@ -320,7 +318,7 @@ namespace Ui
 
         if (!location_string.isEmpty())
         {
-            TextEditEx* location = new TextEditEx(this, Fonts::defaultAppFontFamily(), Utils::scale_value(16), QColor(0, 0, 0), false, false);
+            TextEditEx* location = new TextEditEx(this, Fonts::appFontScaled(16), Ui::CommonStyle::getTextCommonColor(), false, false);
             location->setPlainText(location_string, false);
             location->setAlignment(Qt::AlignHCenter);
             location->setFrameStyle(QFrame::NoFrame);
@@ -390,16 +388,13 @@ namespace Ui
 
         setStyleSheet(Utils::LoadStyle(":/main_window/livechats/LiveChats.qss"));
 
-        QVBoxLayout* rootLayout = new QVBoxLayout();
-        rootLayout->setSpacing(0);
+        QVBoxLayout* rootLayout = Utils::emptyVLayout();
         rootLayout->setContentsMargins(Utils::scale_value(horMargins), 0, Utils::scale_value(horMargins), 0);
         rootLayout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
 
-        QHBoxLayout* pictureLayout = new QHBoxLayout();
-        pictureLayout->setContentsMargins(0, 0, 0, 0);
+        QHBoxLayout* pictureLayout = Utils::emptyHLayout();
         PictureWidget* picture = new PictureWidget(this, ":/resources/placeholders/content_illustration_emptylivechat_100.png");
-        picture->setFixedWidth(Utils::scale_value(136));
-        picture->setFixedHeight(Utils::scale_value(216));
+        picture->setFixedSize(Utils::scale_value(136), Utils::scale_value(216));
         pictureLayout->addWidget(picture);
 
         height += picture->height();
@@ -409,8 +404,9 @@ namespace Ui
         rootLayout->addSpacing(Utils::scale_value(26));
         height += Utils::scale_value(26);
 
-        TextEditEx* errorText = new TextEditEx(this, Fonts::defaultAppFontFamily(), Utils::scale_value(16), QColor(0x69, 0x69, 0x69), false, false);
+        TextEditEx* errorText = new TextEditEx(this, Fonts::appFontScaled(16), QColor("#767676"), false, false);
         errorText->setText(errorText_);
+        errorText->setStyleSheet("* { border: none; }");
         errorText->setAlignment(Qt::AlignHCenter);
         height += errorText->adjustHeight(currentWidth);
         rootLayout->addWidget(errorText);

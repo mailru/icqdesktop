@@ -35,7 +35,6 @@ int32_t get_chat_home::init_request(std::shared_ptr<core::http_request_simple> _
     doc.AddMember("clientId", robusto_params_.robusto_client_id_, a);
 
     rapidjson::Value node_params(rapidjson::Type::kObjectType);
-    node_params.AddMember("sn", params_.aimid_, a);
     if (!new_tag_.empty())
         node_params.AddMember("tag", new_tag_, a);
     doc.AddMember("params", node_params, a);

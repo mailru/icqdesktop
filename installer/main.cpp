@@ -15,7 +15,9 @@
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 Q_IMPORT_PLUGIN(QICOPlugin);
 using namespace installer;
-const wchar_t* installer_singlton_mutex_name = L"{5686F5E0-121F-449B-ABB7-B01021D7DE65}";
+const wchar_t* installer_singlton_mutex_name_icq = L"{5686F5E0-121F-449B-ABB7-B01021D7DE65}";
+const wchar_t* installer_singlton_mutex_name_agent = L"{6CE5AF68-83B7-477A-9101-D9F56C5F57B8}";
+const wchar_t* get_installer_singlton_mutex_name() {return build::is_icq() ? installer_singlton_mutex_name_icq : installer_singlton_mutex_name_agent;}
 const wchar_t* old_version_launch_mutex_name = L"MRAICQLAUNCH";
 #endif //_WIN32
 
@@ -32,13 +34,13 @@ int main(int _argc, char* _argv[])
     int res = 0;
 
 #ifdef _WIN32
-    core::dump::crash_handler chandler;
-    chandler.set_product_bundle("icq.dekstop.installer");
+    const wchar_t* product_path = (build::is_icq() ? product_path_icq_w : product_path_agent_w);
+    core::dump::crash_handler chandler("icq.dekstop.installer", ::common::get_user_profile() + L"/" + product_path, false);
     chandler.set_process_exception_handlers();
     chandler.set_thread_exception_handlers();
     chandler.set_is_sending_after_crash(true);
 
-    CHandle mutex(::CreateSemaphore(NULL, 0, 1, installer_singlton_mutex_name));
+    CHandle mutex(::CreateSemaphore(NULL, 0, 1, get_installer_singlton_mutex_name()));
     if (ERROR_ALREADY_EXISTS == ::GetLastError())
         return res;
 #endif //_WIN32
@@ -84,9 +86,9 @@ int main(int _argc, char* _argv[])
             {
                 config.set_uninstall(true);
             }
-            else if (*iter == "-silent")
+            else if (*iter == "-appx")
             {
-                config.set_silent(true);
+                config.set_appx(true);
             }
             else if (*iter == "-update")
             {
@@ -130,7 +132,7 @@ int main(int _argc, char* _argv[])
 
                 wnd.reset(new ui::main_window(ui::main_window_start_page::page_accounts));
 
-                QIcon icon(":/images/appicon.ico");
+                QIcon icon(build::is_icq() ? ":/images/installer_icq_icon.ico" : ":/images/installer_agent_icon.ico");
                 wnd->setWindowIcon(icon);
 
                 wnd->show();
@@ -183,6 +185,8 @@ int main(int _argc, char* _argv[])
         }
         else if (logic::get_install_config().is_update_final())
         {
+            const auto updater_singlton_mutex_name = (build::is_icq() ? updater_singlton_mutex_name_icq : updater_singlton_mutex_name_agent);
+
             CHandle mutex(::CreateSemaphore(NULL, 0, 1, updater_singlton_mutex_name.c_str()));
             if (ERROR_ALREADY_EXISTS == ::GetLastError())
                 return true;
@@ -197,12 +201,23 @@ int main(int _argc, char* _argv[])
         {
             app.setStyleSheet(ui::styles::load_style(":/styles/styles.qss"));
 
-            wnd.reset(new ui::main_window());
+            if (logic::get_install_config().is_appx())
+            {
+                connect_to_events();
 
-            QIcon icon(":/images/appicon.ico");
-            wnd->setWindowIcon(icon);
+                logic::get_worker()->install();
+            }
+            else
+            {
+                wnd.reset(new ui::main_window());
 
-            wnd->show();
+                QIcon icon(build::is_icq() ? ":/images/installer_icq_icon.ico" : ":/images/installer_agent_icon.ico");
+
+                wnd->setWindowIcon(icon);
+
+                wnd->show();
+            }
+            
 
             res = app.exec();
         }

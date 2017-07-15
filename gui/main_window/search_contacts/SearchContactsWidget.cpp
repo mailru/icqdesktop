@@ -22,15 +22,9 @@ namespace Ui
     {
         setStyleSheet(Utils::LoadStyle(":/main_window/search_contacts/search_contacts.qss"));
 
-        rootLayout_->setContentsMargins(Utils::scale_value(48), 0, 0, 0);
+        rootLayout_->setContentsMargins(Utils::scale_value(36), 0, 0, 0);
         rootLayout_->setSpacing(0);
         rootLayout_->setAlignment(Qt::AlignTop);
-
-        QLineEdit* caption = new QLineEdit(this);
-
-        caption->setObjectName("caption");
-        caption->setText(QT_TRANSLATE_NOOP("search_widget","Add contact"));
-        rootLayout_->addWidget(caption);
 
         rootLayout_->addWidget(filtersWidget_);
         filtersWidget_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
@@ -41,7 +35,8 @@ namespace Ui
 
         setLayout(rootLayout_);
 
-        connect(filtersWidget_, SIGNAL(onSearch(search_params)), this, SLOT(onSearch2(search_params)));
+        connect(filtersWidget_, SIGNAL(onSearch(search_params)), this, SLOT(onSearch(search_params)));
+        connect(filtersWidget_, SIGNAL(clicked()), this, SIGNAL(active()), Qt::QueuedConnection);
 
         connect(resultsWidget_, SIGNAL(needMore(int)), this, SLOT(onNeedMoreResults(int)), Qt::QueuedConnection);
         connect(resultsWidget_, SIGNAL(addContact(QString)), this, SLOT(onAddContact(QString)), Qt::QueuedConnection);
@@ -70,7 +65,13 @@ namespace Ui
         return QWidget::paintEvent(_e);
     }
 
-    void SearchContactsWidget::onSearchResult2(gui_coll_helper _coll)
+    void SearchContactsWidget::mouseReleaseEvent(QMouseEvent* _e)
+    {
+        emit active();
+        return QWidget::mouseReleaseEvent(_e);
+    }
+
+    void SearchContactsWidget::onSearchResult(gui_coll_helper _coll)
     {
         filtersWidget_->onSearchResults();
 
@@ -99,8 +100,10 @@ namespace Ui
         resultsWidget_->insertItems(profiles);
     }
 
-    void SearchContactsWidget::onSearch2(search_params _filters)
+    void SearchContactsWidget::onSearch(search_params _filters)
     {
+        emit active();
+
         if (requestInProgress_)
             return;
 
@@ -108,12 +111,12 @@ namespace Ui
 
         noMoreItems_ = false;
 
-        search2(activeFilters_.getKeyword().toStdString(), "", "");
+        search(activeFilters_.getKeyword().toStdString(), "", "");
 
         resultsWidget_->clear();
     }
 
-    void SearchContactsWidget::search2(const std::string& _keyword, const std::string& _phoneNumber, const std::string& _tag)
+    void SearchContactsWidget::search(const std::string& _keyword, const std::string& _phoneNumber, const std::string& _tag)
     {
         Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
         collection.set_value_as_string("keyword", _keyword);
@@ -121,24 +124,27 @@ namespace Ui
         collection.set_value_as_string("tag", _tag);
         requestInProgress_ = true;
         
-        Ui::GetDispatcher()->post_message_to_core("contacts/search2", collection.get(), this, [this](core::icollection* _coll)
+        Ui::GetDispatcher()->post_message_to_core("contacts/search", collection.get(), this, [this](core::icollection* _coll)
         {
             requestInProgress_ = false;
             gui_coll_helper coll(_coll, false);
-            onSearchResult2(coll);
+            onSearchResult(coll);
         });
     }
 
     void SearchContactsWidget::onNeedMoreResults(int)
     {
+        emit active();
+
         if (requestInProgress_ || noMoreItems_)
             return;
 
-        search2("", "", activeFilters_.getNextTag().toStdString());
+        search("", "", activeFilters_.getNextTag().toStdString());
     }
 
     void SearchContactsWidget::onAddContact(QString _contact)
     {
+        emit active();
         std::weak_ptr<bool> wr_ref = ref_;
         Logic::getContactListModel()->addContactToCL(_contact, [this, wr_ref, _contact](bool _res)
         {
@@ -155,17 +161,21 @@ namespace Ui
 
     void SearchContactsWidget::onMsgContact(QString _contact)
     {
+        emit active();
         Logic::getContactListModel()->setCurrent(_contact, -1, true);
     }
 
     void SearchContactsWidget::onCallContact(QString _contact)
     {
+        emit active();
         Logic::getContactListModel()->setCurrent(_contact, -1, true);
         Ui::GetDispatcher()->getVoipController().setStartA(_contact.toUtf8(), false);
+        GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::call_from_search_results);
     }
 
     void SearchContactsWidget::onContactInfo(QString _contact)
     {
+        emit active();
         emit Utils::InterConnector::instance().profileSettingsShow(_contact);
         GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::profile_search_results);
     }

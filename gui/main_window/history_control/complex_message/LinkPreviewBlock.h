@@ -23,7 +23,7 @@ class LinkPreviewBlock final : public GenericBlock
     Q_OBJECT
 
 public:
-    LinkPreviewBlock(ComplexMessageItem *parent, const QString &uri);
+    LinkPreviewBlock(ComplexMessageItem *parent, const QString &uri, const bool _hasLinkInMessage);
 
     virtual ~LinkPreviewBlock() override;
 
@@ -43,6 +43,8 @@ public:
 
     virtual QString getSelectedText(bool isFullSelect = false) const override;
 
+    virtual QString getTextForCopy() const override;
+
     const QString& getSiteName() const;
 
     const QFont& getSiteNameFont() const;
@@ -50,8 +52,6 @@ public:
     int32_t getTitleTextHeight() const;
 
     bool hasActionButton() const;
-
-    virtual bool hasRightStatusPadding() const override;
 
     bool hasTitle() const;
 
@@ -62,6 +62,8 @@ public:
     virtual bool isSelected() const override;
 
     virtual void onVisibilityChanged(const bool isVisible) override;
+
+    virtual void onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect) override;
 
     virtual void selectByPos(const QPoint& from, const QPoint& to, const BlockSelectionType selection) override;
 
@@ -79,8 +81,18 @@ public:
 
     virtual void setTextOpacity(double opacity) override;
 
+    virtual ContentType getContentType() const { return IItemBlock::Link; }
+
+    virtual void connectToHover(Ui::ComplexMessage::QuoteBlockHover* hover) override;
+
+    virtual void setQuoteSelection() override;
+
+    virtual bool isHasLinkInMessage() const override;
+
+    virtual int getMaxWidth() const override;
+
 protected:
-    virtual void drawBlock(QPainter &p) override;
+    virtual void drawBlock(QPainter &p, const QRect& _rect, const QColor& quate_color) override;
 
     virtual void initialize() override;
 
@@ -138,6 +150,10 @@ private:
 
     QSize PreviewSize_;
 
+    QRect previewClippingPathRect_;
+
+    QPainterPath previewClippingPath_;
+
     QPropertyAnimation *PreloadingTickerAnimation_;
 
     int32_t PreloadingTickerValue_;
@@ -174,9 +190,17 @@ private:
 
     int MaxPreviewWidth_;
 
+    const bool hasLinkInMessage_;
+
     void connectSignals(const bool isConnected);
 
-    Ui::TextEditEx* createTextEditControl(const QString &text, const QFont &font);
+    enum class TextOptions
+    {
+        PlainText,
+        ClickableLinks
+    };
+
+    Ui::TextEditEx* createTextEditControl(const QString &text, const QFont &font, TextOptions options);
 
     void drawFavicon(QPainter &p);
 
@@ -185,6 +209,8 @@ private:
     void drawPreview(QPainter &p);
 
     void drawSiteName(QPainter &p);
+
+    QPainterPath evaluateClippingPath(const QRect &imageRect) const;
 
     void initializeActionButton();
 
@@ -197,7 +223,6 @@ private:
     QSize scalePreviewSize(const QSize &size) const;
 
     void updateRequestId();
-
 };
 
 UI_COMPLEX_MESSAGE_NS_END

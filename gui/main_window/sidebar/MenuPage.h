@@ -22,27 +22,6 @@ namespace Ui
     class ActionButton;
     class FocusableListView;
 
-    class AddToChat : public QWidget
-    {
-        Q_OBJECT
-Q_SIGNALS:
-        void clicked();
-    public:
-        AddToChat(QWidget* _parent);
-        void setText(const QString& _text);
-
-    protected:
-        virtual void paintEvent(QPaintEvent*);
-        virtual void mouseReleaseEvent(QMouseEvent *);
-        virtual void enterEvent(QEvent *);
-        virtual void leaveEvent(QEvent *);
-
-    private:
-        QPainter* painter_;
-        QString Text_;
-        bool Hovered_;
-    };
-
     class MenuPage : public SidebarPage
     {
         Q_OBJECT
@@ -95,8 +74,7 @@ Q_SIGNALS:
         void linkToChatClicked(int);
         void ageClicked(int);
         void readOnlyClicked(int);
-        void spam();
-        void remove();
+        void removeClicked();
         void touchScrollStateChanged(QScroller::State);
         void searchClicked();
         void chatRoleChanged(QString);
@@ -151,6 +129,7 @@ Q_SIGNALS:
         QCheckBox* readOnlyCheckBox_;
         CustomButton* ageRestrictions_;
         QCheckBox* ageCheckBox_;
+        ActionButton* addToChat_;
         ActionButton* favoriteButton_;
         ActionButton* copyLink_;
         ActionButton* themesButton_;
@@ -179,8 +158,6 @@ Q_SIGNALS:
         QLabel* allMembersLabel_;
         Logic::ChatMembersModel* chatMembersModel_;
         Logic::ContactListItemDelegate* delegate_;
-        QSpacerItem* bottomSpacer_;
-        AddToChat* addToChat_;
         std::shared_ptr<Data::ChatInfo> info_;
         LabelEx* moreLabel_;
         LabelEx* approveAll_;
@@ -199,7 +176,7 @@ Q_SIGNALS:
         ContactList* cl_;
         SearchWidget* searchWidget_;
         QStackedWidget* stackedWidget_;
-        QVBoxLayout* rootLayot_;
+        QVBoxLayout* rootLayout_;
         QVBoxLayout* nameLayout_;
         int currentTab_;
     };

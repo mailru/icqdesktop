@@ -24,8 +24,6 @@ public:
 
     virtual QString getSelectedText(bool isFullSelect = false) const override;
 
-    virtual bool hasRightStatusPadding() const override;
-
     virtual bool isSelected() const override;
 
     virtual void selectByPos(const QPoint& from, const QPoint& to, const BlockSelectionType selection) override;
@@ -43,7 +41,7 @@ public:
     virtual HistoryControl::StickerInfoSptr getStickerInfo() const override { return Info_; };
 
 protected:
-    virtual void drawBlock(QPainter &p) override;
+    virtual void drawBlock(QPainter &p, const QRect& _rect, const QColor& quate_color) override;
 
     virtual void initialize() override;
 

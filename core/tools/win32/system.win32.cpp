@@ -268,4 +268,40 @@ std::string get_os_version_string()
     return winver;
 }
 
+std::string get_short_file_name(const std::wstring& _file_name)
+{
+    auto length = GetShortPathName(_file_name.c_str(), NULL, 0);
+
+    std::string result;
+    if (length == 0)
+        return result;
+
+    std::vector<wchar_t> wide_buffer(length);
+
+    length = GetShortPathName(_file_name.c_str(), wide_buffer.data(), length);
+    if (length == 0)
+        return result;
+
+    length = WideCharToMultiByte(CP_ACP, 0, wide_buffer.data(), length, NULL, 0, NULL, NULL);
+    if (length == 0)
+        return result;
+
+    std::vector<char> buffer(length);
+
+    length = WideCharToMultiByte(CP_ACP, 0, wide_buffer.data(), length, buffer.data(), length, NULL, NULL);
+    if (length == 0)
+        return result;
+
+    return result.assign(buffer.begin(), buffer.end());
+}
+
+bool is_windows_vista_or_higher()
+{
+    OSVERSIONINFO os_version;
+    ZeroMemory(&os_version, sizeof(OSVERSIONINFO));
+    os_version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&os_version);
+    return os_version.dwMajorVersion >= 6;
+}
+
 CORE_TOOLS_SYSTEM_NS_END

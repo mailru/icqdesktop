@@ -5,6 +5,8 @@
 
 #include "fs_loader_task.h"
 
+enum class loader_errors;
+
 namespace core
 {
     namespace wim
@@ -12,23 +14,21 @@ namespace core
         struct wim_packet_params;
         struct download_progress_handler;
         class web_file_info;
-        enum class loader_errors;
 
         class download_task : public fs_loader_task, public std::enable_shared_from_this<download_task>
         {
-            std::unique_ptr<web_file_info>		info_;
-            std::ofstream						file_stream_;
+            std::unique_ptr<web_file_info> info_;
+            std::ofstream file_stream_;
 
-            std::wstring						files_folder_;
-            std::wstring						previews_folder_;
-            std::wstring						file_name_temp_;
-            std::wstring                        filename_;
+            std::wstring files_folder_;
+            std::wstring previews_folder_;
+            std::wstring file_name_temp_;
+            std::wstring filename_;
 
-            std::shared_ptr<download_progress_handler>	handler_;
+            std::shared_ptr<download_progress_handler> handler_;
 
             std::shared_ptr<web_file_info> make_info();
 
-            bool get_file_id(const std::string& _file_url, std::string& _file_id) const;
             std::wstring get_info_file_name() const;
 
             virtual void resume(loader& _loader) override;
@@ -46,6 +46,8 @@ namespace core
                 const std::wstring& _filename);
 
             virtual ~download_task();
+
+            static bool get_file_id(const std::string& _file_url, std::string& _file_id);
 
             void set_handler(std::shared_ptr<download_progress_handler> _handler);
             std::shared_ptr<download_progress_handler> get_handler();
@@ -71,6 +73,7 @@ namespace core
             loader_errors on_finish();
             int32_t copy_if_needed();
             bool serialize_metainfo();
+            void delete_metainfo_file();
 
         };
 

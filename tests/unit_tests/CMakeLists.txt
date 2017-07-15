@@ -46,7 +46,6 @@ endif()
 
 add_executable(${PROJECT_NAME}
     ${SUBPROJECT_SOURCES} ${SUBPROJECT_HEADERS})
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_range_for)
 
 target_link_libraries(${PROJECT_NAME}
     core

@@ -11,7 +11,7 @@ QPushButton
 
 QPushButton::menu-indicator
 {
-    image: url(:/resources/widgets/content_dropdown_black_open_100.png);
+    image: url(:/resources/basic_elements/arrow_small_a_100.png);
     width: 12dip;
     height: 8dip;
     subcontrol-origin: padding;
@@ -23,11 +23,6 @@ QMenu::item
 	padding-left: 14dip;
 	min-width: 140dip;
 	max-width: 248dip;
-}
-
-QPushButton#logo
-{
-	border-image: url(:/resources/main_window/content_logo_100.png);
 }
 
 QSlider
@@ -47,7 +42,7 @@ QSlider::groove:horizontal
 QSlider::handle:horizontal
 {
     background: transparent;
-    image: url(:/resources/widgets/content_selectbar_100.png);
+    image: url(:/resources/basic_elements/content_selectbar_100.png);
     border: none;
     width: 8dip;
     height: 24dip;

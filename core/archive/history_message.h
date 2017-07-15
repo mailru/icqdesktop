@@ -293,8 +293,8 @@ namespace core
 
             struct
             {
-                StrSet members_;
-                StrSet members_friendly_;
+                str_set members_;
+                str_set members_friendly_;
             } mchat_;
 
             struct

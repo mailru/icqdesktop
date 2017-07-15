@@ -28,7 +28,6 @@ namespace Ui
     private Q_SLOTS:
         void searchStarted();
         void searchChanged(QString);
-        void clearPressed();
         void editEnterPressed();
         void editUpPressed();
         void editDownPressed();
@@ -36,42 +35,28 @@ namespace Ui
         void onEscapePress();
 
     public:
-        SearchWidget(bool _isWithButton, QWidget* _parent = 0, int _offset = 0);
+        SearchWidget(QWidget* _parent = 0, int _add_hor_space = 0, int _add_ver_space = 0);
         ~SearchWidget();
 
         QString getText() const;
         bool isEmpty() const;
         void clearInput();
-        void setShowButton(bool _isShow);
-        void setTransparent(bool _isTransparent);
         void setFocus();
         void clearFocus();
 
-        inline CustomButton *searchIcon() { return searchIcon_; }
-        inline CustomButton *searchEditIcon() { return searchEditIcon_; }
-        void setShortView(bool _isShort);
-        void setSearchEditIconVisible(bool _isShow);
+        bool isActive() const { return active_; }
 
     private:
         void setActive(bool _active);
         LineEditEx* searchEdit_;
         bool active_;
-        bool isShowButton_;
-        bool isTransparent_;
 
-        void paintEvent(QPaintEvent *_e) override;
-        void retranslateUi(QWidget* _searchWidget);
         QVBoxLayout *vMainLayout_;
-        QVBoxLayout *vSearchLayout_;
+        QHBoxLayout *hSearchLayout_;
         QHBoxLayout *hMainLayout;
-        QWidget *horLineWidget_;
-        QWidget *parentWidget_;
+        QWidget *searchWidget_;
         QHBoxLayout *horLineLayout_;
-        CustomButton *searchIcon_;
-        QWidget *horLine_;
-        CustomButton *searchEditIcon_;
-        QMenu* menu_;
-        bool isShortView_;
+        CustomButton *closeIcon_;
         bool isWithButton_;
     };
 }

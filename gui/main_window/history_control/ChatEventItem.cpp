@@ -65,9 +65,8 @@ namespace Ui
 
         TextWidget_ = new TextEditEx(
             this,
-            Fonts::defaultAppFontFamily(),
-            getWidgetFontSize(),
-            QColor("#696969"),
+            Fonts::appFont(getWidgetFontSize()),
+            QColor("#767676"),
             false,
             false
             );
@@ -75,6 +74,7 @@ namespace Ui
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
         TextWidget_->setFrameStyle(QFrame::NoFrame);
+        TextWidget_->setContextMenuPolicy(Qt::NoContextMenu);
         TextWidget_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         TextWidget_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         TextWidget_->setOpenLinks(true);
@@ -215,7 +215,7 @@ namespace Ui
         TextWidget_->document()->setDefaultFont(
             Fonts::appFont(
                 getWidgetFontSize(),
-                Fonts::FontWeight::Semibold));
+                Fonts::FontWeight::Medium));
     }
 
     void ChatEventItem::paintEvent(QPaintEvent*)
@@ -336,6 +336,12 @@ namespace Ui
     qint64 ChatEventItem::getId() const
     {
         return id_;
+    }
+
+    void ChatEventItem::setQuoteSelection()
+    {
+        /// TODO-quote
+        assert(0);
     }
 
     namespace

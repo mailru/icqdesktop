@@ -8,11 +8,10 @@
 
 namespace
 {
-	const wchar_t *EXT_DATA_PREFIX = L"####ext:";
+    const wchar_t* EXT_DATA_PREFIX = L"####ext:";
 }
 
-#define STR_AGENT_CS_MRA_KEY L"Software\\Mail.Ru\\Agent"
-#define CS_MRA_KEY STR_CS_ICQ_MRA_KEY
+
 #define LOGIN_LENGTH		128
 #define PASS_LENGTH			64
 #define CS_MRA_LOGINS L"magent_logins2"
@@ -662,7 +661,7 @@ LOGINRECORDS LOGIN_GetOldLogins(BOOL bVer2, const BLOWFISHKEY& key)
 	LOGINRECORDS aLogins;	//login records list
 
 
-	MAKFC_CString sKey = (MAKFC_CString)CS_MRA_KEY + ((bVer2) ? (MAKFC_CString)_T("\\magent_logins") : (MAKFC_CString)_T("\\mra_logins"));
+	MAKFC_CString sKey = MAKFC_CString(legacy::cs_mra_key) + ((bVer2) ? (MAKFC_CString)_T("\\magent_logins") : (MAKFC_CString)_T("\\mra_logins"));
 	TCHAR szEmail[1024];
 	char szPass[1024];
 	BYTE lpsPass[1024];
@@ -796,7 +795,7 @@ LOGINRECORDS LOGIN_GetLogins2(const BLOWFISHKEY& key)
 {
 	LOGINRECORDS aLogins;	//login records list
 
-	MAKFC_CString sKey = (MAKFC_CString)CS_MRA_KEY + (MAKFC_CString)_T("\\") + CS_MRA_LOGINS;
+	MAKFC_CString sKey = MAKFC_CString(legacy::cs_mra_key) + (MAKFC_CString)_T("\\") + CS_MRA_LOGINS;
 	TCHAR szEmail[1024];
 	BYTE lpsPass[1024];
 	DWORD dwLoginLength = LOGIN_LENGTH + 1;
@@ -860,7 +859,7 @@ LOGINRECORDS LOGIN_GetLogins2(const BLOWFISHKEY& key)
 
 void LOGIN_GetLogins2(MAKFC_CLoginData *login)
 {
-	MAKFC_CString sKey = (MAKFC_CString)CS_MRA_KEY + (MAKFC_CString)_T("\\") + CS_MRA_LOGINS;
+	MAKFC_CString sKey = MAKFC_CString(legacy::cs_mra_key) + (MAKFC_CString)_T("\\") + CS_MRA_LOGINS;
 	TCHAR szEmail[1024];
 	DWORD dwLoginLength = LOGIN_LENGTH + 1;
 
@@ -1044,7 +1043,7 @@ LOGINRECORDS LOGIN_GetLogins(const BLOWFISHKEY& key, BOOL bConvertLogins)
 	
 	//read all logins from old registry branch
 	HKEY hKeysSet = NULL;
-	MAKFC_CString sKey = CS_MRA_KEY _T("\\") CS_MRA_LOGINS3;
+	MAKFC_CString sKey = MAKFC_CString(legacy::cs_mra_key) + _T("\\") + CS_MRA_LOGINS3;
 	if (RegOpenKeyEx(HKEY_CURRENT_USER, sKey, 0, KEY_ALL_ACCESS, &hKeysSet) == ERROR_SUCCESS)
 	{
 		DWORD dwKeys = 0;
@@ -1210,7 +1209,7 @@ LOGINRECORDS LOGIN_GetLoginsAgent(HANDLE hBFFile, BOOL bConvertLogins)
 {
 	LOGINRECORDS aLogins;	//login records list
 
-	MAKFC_CString sKey = (MAKFC_CString)STR_AGENT_CS_MRA_KEY + (MAKFC_CString)_T("\\") + CS_MRA_LOGINS3;
+	MAKFC_CString sKey = MAKFC_CString(legacy::str_cs_agent_mra_key) + (MAKFC_CString)_T("\\") + CS_MRA_LOGINS3;
 	TCHAR szEmail[1024];
 	BYTE lpsPass[1024];
 	DWORD dwLoginLength = LOGIN_LENGTH + 1;
@@ -1296,7 +1295,7 @@ LOGINRECORDS LOGIN_GetLoginsICQ(HANDLE hBFFile, BOOL bConvertLogins)
 {
 	LOGINRECORDS aLogins;	//login records list
 
-	MAKFC_CString sKey = STR_CS_ICQ_MRA_KEY L"\\" CS_MRA_LOGINS3;
+	MAKFC_CString sKey = MAKFC_CString(legacy::str_cs_icq_mra_key) + L"\\" + CS_MRA_LOGINS3;
 	TCHAR szEmail[1024];
 	BYTE lpsPass[1024];
 	DWORD dwLoginLength = LOGIN_LENGTH + 1;
@@ -1404,7 +1403,7 @@ BOOL LOGIN_SetLogins(LOGINRECORDS aLogins, HANDLE hBFFile)
 	}
 
 	//delete branch
-	MAKFC_CString sKey = CS_MRA_KEY L"\\" CS_MRA_LOGINS3;
+	MAKFC_CString sKey = MAKFC_CString(legacy::cs_mra_key) + L"\\" + CS_MRA_LOGINS3;
 	SHDeleteKey(HKEY_CURRENT_USER, sKey);
 	//create empty branch
 	HKEY hKeyLogins = NULL;
@@ -1519,8 +1518,8 @@ LOGINRECORDS::iterator LOGIN_FindLogin(LOGINRECORDS &aLogins, MAKFC_CString sLog
 
 LOGINRECORDS LOGIN_ConvertPasswords(const BLOWFISHKEY& key)
 {
-	MAKFC_CString szKeyOld  = CS_MRA_KEY _T("\\mra_logins");    //logins should be moved from
-	MAKFC_CString szKeyOld2 = CS_MRA_KEY _T("\\magent_logins"); //new login registry branch
+	MAKFC_CString szKeyOld  = MAKFC_CString(legacy::cs_mra_key) + _T("\\mra_logins");    //logins should be moved from
+	MAKFC_CString szKeyOld2 = MAKFC_CString(legacy::cs_mra_key) + _T("\\magent_logins"); //new login registry branch
 
 	LOGINRECORDS aLogins = LOGIN_GetLogins(key, FALSE);
 
@@ -1544,7 +1543,7 @@ ULONG GetMraID()
     DWORD id = 0;
     TCHAR str[150];
 
-    if (makfc_REG_GetValueData(HKEY_CURRENT_USER,CS_MRA_KEY,_T("ID"),(BYTE*)str))
+    if (makfc_REG_GetValueData(HKEY_CURRENT_USER, MAKFC_CString(legacy::cs_mra_key),_T("ID"),(BYTE*)str))
     {
         id = _ttol(str);
     }

@@ -31,7 +31,7 @@ namespace core
         void clear_values();
         
         virtual void set_value(const std::string& _name, const tools::binary_stream& _data);
-        
+
         void serialize(core::coll_helper _collection) const;
         void serialize(tools::binary_stream& _bs) const;
         bool unserialize(tools::binary_stream& _bs);

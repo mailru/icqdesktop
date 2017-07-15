@@ -17,9 +17,6 @@ namespace Data
 
 		BASE = MIN,
 		GROUP,
-		RECENT,
-		ADD_CONTACT,
-        VIEW_ALL_MEMBERS,
         EMPTY_IGNORE_LIST,
         SEARCH_IN_ALL_CHATS,
 
@@ -33,7 +30,7 @@ namespace Data
 			: GroupId_(-1)
 			, Is_chat_(false)
 			, Muted_(false)
-			, HaveLastSeen_(false)
+			, HasLastSeen_(false)
 			, Unreads_(0)
 			, NotAuth_(false)
 			, IsChecked_(false)
@@ -57,7 +54,7 @@ namespace Data
 		QDateTime	LastSeen_;
 		int			GroupId_;
 		bool		Is_chat_;
-		bool		HaveLastSeen_;
+		bool		HasLastSeen_;
 		int			Unreads_;
 		bool		NotAuth_;
 		bool		Muted_;

@@ -1,21 +1,14 @@
 QWidget#MaskPanel
 {
-	min-width: 100dip;
-	max-width: 100dip;
+	min-width: 130dip;
+	max-width: 130dip;
+	margin: 0;
+	padding: 0;
 }
-
-QWidget[MaskPanel="true"]
-{
-	min-width: 100dip;
-	max-width: 100dip;
-
-	background: rgba(0, 0, 0, 0%);
-}
-
 
 QWidget#MaskList
 {
-	background-color: rgba(0, 0, 0, 0%);
+	background-color: transparent;
 	border: none;
 	overflow: hidden;
 	margin: 0;
@@ -24,18 +17,22 @@ QWidget#MaskList
 
 QWidget[orintation="vertical"]
 {
-	min-width: 116dip;
-	max-width: 116dip;
+	min-width: 75dip;
+	max-width: 75dip;
 	min-height: 0;
 	max-height: 10000dip;
+    margin: 0;
+    padding: 0;
 }
 
 QWidget[orintation="horizontal"]
 {
 	min-width: 0;
 	max-width: 10000dip;
-	min-height: 116dip;
-	max-height: 116dip;
+	min-height: 75dip;
+	max-height: 75dip;
+    margin: 0;
+    padding: 0;
 }
 
 

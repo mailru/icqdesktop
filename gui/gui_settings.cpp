@@ -75,7 +75,7 @@ namespace Ui
         if (!get_value_simple_data(_name, data))
             return _defaultValue;
 
-        if (data.size() == 0)
+        if (data.empty())
             return _defaultValue;
 
         if ((data.size() % sizeof(int32_t)) != 0)
@@ -182,5 +182,21 @@ namespace Ui
     const std::string get_account_setting_name(const std::string& _settingName)
     {
         return MyInfo()->aimId().toUtf8().constData() + std::string("/") + _settingName;
+    }
+
+    bool qt_common_settings::get_need_show_promo() const
+    {
+        return need_show_promo_;
+    }
+
+    void qt_common_settings::set_need_show_promo(bool _need_show_promo)
+    {
+        need_show_promo_ = _need_show_promo;
+    }
+
+    qt_common_settings* get_common_settings()
+    {
+        static std::unique_ptr<qt_common_settings> settings(new qt_common_settings());
+        return settings.get();
     }
 }

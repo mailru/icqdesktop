@@ -28,8 +28,10 @@ static Ui::NotificationCenterManager * sharedCenter;
     if (sharedCenter)
     {
         NSString * aimId = notification.userInfo[@"aimId"];
+        NSString * mailId = notification.userInfo[@"mailId"];
         QString str = QString::fromCFString((__bridge CFStringRef)aimId);
-        sharedCenter->Activated(str);
+        QString str2 = QString::fromCFString((__bridge CFStringRef)mailId);
+        sharedCenter->Activated(str, str2);
     }
 }
 
@@ -47,9 +49,14 @@ static Ui::NotificationCenterManager * sharedCenter;
 
 static ICQNotificationDelegate * notificationDelegate = nil;
 
+
+static NSMutableArray* toDisplay_ = nil;
+
 namespace Ui
 {
 	NotificationCenterManager::NotificationCenterManager()
+        : avatarTimer_(new QTimer(this))
+        , displayTimer_(new QTimer(this))
 	{
         sharedCenter = this;
         
@@ -61,6 +68,12 @@ namespace Ui
         [[NSDistributedNotificationCenter defaultCenter] addObserver:notificationDelegate selector: @selector(themeChanged:) name:@"AppleInterfaceThemeChangedNotification" object: NULL];
         
         connect(Logic::GetAvatarStorage(), SIGNAL(avatarChanged(QString)), this, SLOT(avatarChanged(QString)), Qt::QueuedConnection);
+        
+        connect(avatarTimer_, &QTimer::timeout, this, &NotificationCenterManager::avatarTimer);
+        avatarTimer_->start(5000);
+        
+        displayTimer_->setSingleShot(true);
+        connect(displayTimer_, &QTimer::timeout, this, &NotificationCenterManager::displayTimer);
 	}
 
 	NotificationCenterManager::~NotificationCenterManager()
@@ -71,11 +84,18 @@ namespace Ui
         
         [notificationDelegate release];
         notificationDelegate = nil;
+        
+        if (toDisplay_ != nil)
+        {
+            [toDisplay_ release];
+            toDisplay_ = nil;
+        }
 	}
 
 	void NotificationCenterManager::HideNotifications(const QString& aimId)
 	{
-        NSArray * notifications = [[NSUserNotificationCenter defaultUserNotificationCenter] deliveredNotifications];
+        NSUserNotificationCenter* center = [NSUserNotificationCenter defaultUserNotificationCenter];
+        NSArray * notifications = [center deliveredNotifications];
         
         for (NSUserNotification * notif in notifications)
         {
@@ -84,7 +104,7 @@ namespace Ui
             
             if (str == aimId)
             {
-                [[NSUserNotificationCenter defaultUserNotificationCenter] removeDeliveredNotification:notif];
+                [center removeDeliveredNotification:notif];
             }
         }
 	}
@@ -95,6 +115,14 @@ namespace Ui
         {
             QString aimId = QString::fromCFString((__bridge CFStringRef)notification.userInfo[@"aimId"]);
             QString displayName = QString::fromCFString((__bridge CFStringRef)notification.userInfo[@"displayName"]);
+            
+            if (aimId == "mail")
+            {
+                auto i1 = displayName.indexOf('<');
+                auto i2 = displayName.indexOf('>');
+                if (i1 != -1 && i2 != -1)
+                    aimId = displayName.mid(i1 + 1, displayName.length() - i1 - (displayName.length() - i2 + 1));
+            }
             
             Logic::QPixmapSCptr avatar = Logic::GetAvatarStorage()->Get(aimId, displayName, Utils::scale_value(64), !Logic::getContactListModel()->isChat(aimId), isDefault, false);
             
@@ -125,11 +153,11 @@ namespace Ui
         }
     }
 
-	void NotificationCenterManager::DisplayNotification(const QString& aimId, const QString& senderNick, const QString& message)
+	void NotificationCenterManager::DisplayNotification(const QString& aimId, const QString& senderNick, const QString& message, const QString& mailId, const QString& displayName)
 	{
         NSString * aimId_ = (NSString *)CFBridgingRelease(aimId.toCFString());
-        QString displayName = Logic::getContactListModel()->getDisplayName(aimId);
         NSString * displayName_ = (NSString *)CFBridgingRelease(displayName.toCFString());
+        NSString * mailId_ = (NSString *)CFBridgingRelease(mailId.toCFString());
         
         NSUserNotification * notification = [[[NSUserNotification alloc] init] autorelease];
         
@@ -137,7 +165,7 @@ namespace Ui
         notification.subtitle = (NSString *)CFBridgingRelease(senderNick.toCFString());
         notification.informativeText = (NSString *)CFBridgingRelease(message.toCFString());
         
-        NSMutableDictionary * userInfo = [[@{@"aimId": aimId_, @"displayName": displayName_} mutableCopy] autorelease];
+        NSMutableDictionary * userInfo = [[@{@"aimId": aimId_, @"displayName": displayName_, @"mailId" : mailId_} mutableCopy] autorelease];
         
         notification.userInfo = userInfo;
         
@@ -146,6 +174,18 @@ namespace Ui
         
         userInfo[@"isDefault"] = @(isDefault?YES:NO);
         notification.userInfo = userInfo;
+        
+        if (isDefault)
+        {
+            if (toDisplay_ == nil)
+            {
+                toDisplay_ = [[NSMutableArray alloc] init];
+            }
+
+            [toDisplay_ addObject: notification];
+            displayTimer_->start(1000);
+            return;
+        }
         
         [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
         
@@ -156,11 +196,10 @@ namespace Ui
         emit osxThemeChanged();
     }
 
-	void NotificationCenterManager::Activated(const QString& aimId)
+	void NotificationCenterManager::Activated(const QString& aimId, const QString& mailId)
 	{
         Utils::InterConnector::instance().getMainWindow()->closeGallery();
-        Utils::InterConnector::instance().getMainWindow()->closeVideo();
-		emit messageClicked(aimId);
+		emit messageClicked(aimId, mailId);
         HideNotifications(aimId);
 	}
     
@@ -183,28 +222,83 @@ namespace Ui
     
     void NotificationCenterManager::avatarChanged(QString aimId)
     {
-        NSArray * notifications = [[NSUserNotificationCenter defaultUserNotificationCenter] deliveredNotifications];
+        changedAvatars_.insert(aimId);
+        if ([toDisplay_ count] == 0)
+            return;
+        
+        for (NSUserNotification * notif in toDisplay_)
+        {
+            if (QString::fromCFString((__bridge CFStringRef)notif.userInfo[@"aimId"]) != aimId)
+                continue;
+            
+            bool isDefault;
+            updateNotificationAvatar(notif, isDefault);
+            
+            NSMutableDictionary * userInfo = [notif.userInfo.mutableCopy autorelease];
+            
+            userInfo[@"isDefault"] = @(isDefault?YES:NO);
+            
+            notif.userInfo = userInfo;
+            [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notif];
+            [toDisplay_ removeObject: notif];
+        }
+    }
+    
+    void NotificationCenterManager::avatarTimer()
+    {
+        if (changedAvatars_.empty())
+        {
+            return;
+        }
+        
+        NSUserNotificationCenter* center = [NSUserNotificationCenter defaultUserNotificationCenter];
+        NSArray * notifications = [center deliveredNotifications];
         
         for (NSUserNotification * notif in notifications)
         {
-            QString aimId_ = QString::fromCFString((__bridge CFStringRef)notif.userInfo[@"aimId"]);
-            bool isDefault = [notif.userInfo[@"isDefault"] boolValue]?true:false;
-            
-            if (aimId_ == aimId && isDefault)
+            bool isDefault = [notif.userInfo[@"isDefault"] boolValue] ? true : false;
+            if (!isDefault)
             {
-                updateNotificationAvatar(notif, isDefault);
-                
-                NSMutableDictionary * userInfo = [notif.userInfo.mutableCopy autorelease];
-                
-                userInfo[@"isDefault"] = @(isDefault?YES:NO);
-                
-                [[NSUserNotificationCenter defaultUserNotificationCenter] removeDeliveredNotification:notif];
-                
-                notif.userInfo = userInfo;
-                [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notif];
-                
-                break;
+                continue;
             }
+            
+            QString aimId_ = QString::fromCFString((__bridge CFStringRef)notif.userInfo[@"aimId"]);
+            
+            auto iter_avatar = changedAvatars_.find(aimId_);
+            if (iter_avatar == changedAvatars_.end())
+            {
+                continue;
+            }
+            
+            updateNotificationAvatar(notif, isDefault);
+            
+            NSMutableDictionary * userInfo = [notif.userInfo.mutableCopy autorelease];
+            
+            userInfo[@"isDefault"] = @(isDefault?YES:NO);
+            
+            [center removeDeliveredNotification:notif];
+            
+            notif.userInfo = userInfo;
+            [center deliverNotification:notif];
+            
+            changedAvatars_.erase(iter_avatar);
+        }
+        
+        changedAvatars_.clear();
+    }
+    
+    void NotificationCenterManager::displayTimer()
+    {
+        if ([toDisplay_ count] == 0)
+            return;
+        
+        NSUserNotification* notif = [toDisplay_ firstObject];
+        [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification: notif];
+        [toDisplay_ removeObject:notif];
+        
+        if ([toDisplay_ count] != 0)
+        {
+            displayTimer_->start(1000);
         }
     }
 }

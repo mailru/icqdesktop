@@ -239,29 +239,6 @@ namespace core
         {
         }
 
-        void theme::contact_list_item::unserialize(const rapidjson::Value &_node)
-        {
-            auto iter_bg_color = _node.FindMember("BackgroundColor");
-            if (iter_bg_color != _node.MemberEnd() && iter_bg_color->value.IsString())
-                bg_color_ = iter_bg_color->value.GetString();
-
-            auto iter_name_color = _node.FindMember("ContactNameColor");
-            if (iter_name_color != _node.MemberEnd() && iter_name_color->value.IsString())
-                name_color_ = iter_name_color->value.GetString();
-
-            auto iter_message_color = _node.FindMember("MessageColor");
-            if (iter_message_color != _node.MemberEnd() && iter_message_color->value.IsString())
-                message_color_ = iter_message_color->value.GetString();
-
-            auto iter_sender_color = _node.FindMember("SenderNameColor");
-            if (iter_sender_color != _node.MemberEnd() && iter_sender_color->value.IsString())
-                sender_color_ = iter_sender_color->value.GetString();
-
-            auto iter_time_color = _node.FindMember("TimeColor");
-            if (iter_time_color != _node.MemberEnd() && iter_time_color->value.IsString())
-                time_color_ = iter_time_color->value.GetString();
-        }
-
         void theme::bubble::unserialize(const rapidjson::Value& _node)
         {
             auto iter_bgc1 = _node.FindMember("BackgroundColor1");
@@ -272,25 +249,9 @@ namespace core
             if (iter_bgc2 != _node.MemberEnd() && iter_bgc2->value.IsString())
                 bg2_color_ = iter_bgc2->value.GetString();
             
-            auto iter_text_color = _node.FindMember("TextColor");
-            if (iter_text_color != _node.MemberEnd() && iter_text_color->value.IsString())
-                text_color_ = iter_text_color->value.GetString();
-            
             auto iter_time_color = _node.FindMember("TimeColor");
             if (iter_time_color != _node.MemberEnd() && iter_time_color->value.IsString())
                 time_color_ = iter_time_color->value.GetString();
-            
-            auto iter_link_color = _node.FindMember("LinkColor");
-            if (iter_link_color != _node.MemberEnd() && iter_link_color->value.IsString())
-                link_color_ = iter_link_color->value.GetString();
-            
-            auto iter_info_color = _node.FindMember("InfoColor");
-            if (iter_info_color != _node.MemberEnd() && iter_info_color->value.IsString())
-                info_color_ = iter_info_color->value.GetString();
-            
-            auto iter_info_link_color = _node.FindMember("InfoLinkColor");
-            if (iter_info_link_color != _node.MemberEnd() && iter_info_link_color->value.IsString())
-                info_link_color_ = iter_info_link_color->value.GetString();
         }
         
         void theme::date::unserialize(const rapidjson::Value &_node)
@@ -329,18 +290,7 @@ namespace core
             if (iter_text_color != _node.MemberEnd() && iter_text_color->value.IsString())
                 text_color_ = iter_text_color->value.GetString();
         }
-        
-        void theme::new_messages::unserialize(const rapidjson::Value &_node)
-        {
-            auto iter_bg_color = _node.FindMember("BackgroundColor");
-            if (iter_bg_color != _node.MemberEnd() && iter_bg_color->value.IsString())
-                bg_color_ = iter_bg_color->value.GetString();
-            
-            auto iter_text_color = _node.FindMember("TextColor");
-            if (iter_text_color != _node.MemberEnd() && iter_text_color->value.IsString())
-                text_color_ = iter_text_color->value.GetString();
-        }
-        
+                
         void theme::new_messages_plate::unserialize(const rapidjson::Value &_node)
         {
             auto iter_bg_color = _node.FindMember("BackgroundColor");
@@ -351,26 +301,7 @@ namespace core
             if (iter_text_color != _node.MemberEnd() && iter_text_color->value.IsString())
                 text_color_ = iter_text_color->value.GetString();
         }
-        
-        void theme::new_messages_bubble::unserialize(const rapidjson::Value &_node)
-        {
-            auto iter_bg_color = _node.FindMember("BackgroundColor");
-            if (iter_bg_color != _node.MemberEnd() && iter_bg_color->value.IsString())
-                bg_color_ = iter_bg_color->value.GetString();
-            
-            auto iter_text_color = _node.FindMember("TextColor");
-            if (iter_text_color != _node.MemberEnd() && iter_text_color->value.IsString())
-                text_color_ = iter_text_color->value.GetString();
-            
-            auto iter_bg_hover_color = _node.FindMember("BackgroundColorHover");
-            if (iter_bg_hover_color != _node.MemberEnd() && iter_bg_hover_color->value.IsString())
-                bg_hover_color_ = iter_bg_hover_color->value.GetString();
-            
-            auto iter_bg_pressed_color = _node.FindMember("BackgroundColorPressed");
-            if (iter_bg_pressed_color != _node.MemberEnd() && iter_bg_pressed_color->value.IsString())
-                bg_pressed_color_ = iter_bg_pressed_color->value.GetString();
-        }
-        
+                
         void theme::typing::unserialize(const rapidjson::Value &_node)
         {
             auto iter_text_color = _node.FindMember("TextColor");
@@ -457,12 +388,6 @@ namespace core
                     thumb_name_ = iter_thumb->value.GetString();
                 }
             }
-
-            auto iter_contact_list_item = _node.FindMember("ContactListItem");
-            if (iter_contact_list_item != _node.MemberEnd() && iter_contact_list_item->value.IsObject())
-            {
-                contact_list_item_.unserialize(iter_contact_list_item->value);
-            }
             
             auto iter_tile = _node.FindMember("Tile");
             if (iter_tile != _node.MemberEnd() && iter_tile->value.IsString())
@@ -472,17 +397,9 @@ namespace core
             if (iter_typing_color != _node.MemberEnd() && iter_typing_color->value.IsString())
                 typing_color_ = iter_typing_color->value.GetString();
             
-            auto iter_spinner_color = _node.FindMember("SpinnerColor");
-            if (iter_spinner_color != _node.MemberEnd() && iter_spinner_color->value.IsString())
-                spinner_color_ = iter_spinner_color->value.GetString();
-            
             auto iter_tint_color = _node.FindMember("TintColor");
             if (iter_tint_color != _node.MemberEnd() && iter_tint_color->value.IsString())
                 tint_color_ = iter_tint_color->value.GetString();
-            
-            auto iter_edges_color = _node.FindMember("EdgesColor");
-            if (iter_edges_color != _node.MemberEnd() && iter_edges_color->value.IsString())
-                edges_color_ = iter_edges_color->value.GetString();
             
             auto iter_incoming_bubble = _node.FindMember("IncomingBubble");
             if (iter_incoming_bubble != _node.MemberEnd() && iter_incoming_bubble->value.IsObject())
@@ -519,23 +436,11 @@ namespace core
             {
                 contact_name_.unserialize(iter_contact_name->value);
             }
-            
-            auto iter_new_messages = _node.FindMember("NewMessages");
-            if (iter_new_messages != _node.MemberEnd() && iter_new_messages->value.IsObject())
-            {
-                new_messages_.unserialize(iter_new_messages->value);
-            }
-            
+                        
             auto iter_new_messages_plate = _node.FindMember("NewMessagesPlate");
             if (iter_new_messages_plate != _node.MemberEnd() && iter_new_messages_plate->value.IsObject())
             {
                 new_messages_plate_.unserialize(iter_new_messages_plate->value);
-            }
-            
-            auto iter_new_messages_bubble = _node.FindMember("NewMessagesBubble");
-            if (iter_new_messages_bubble != _node.MemberEnd() && iter_new_messages_bubble->value.IsObject())
-            {
-                new_messages_bubble_.unserialize(iter_new_messages_bubble->value);
             }
             
             auto iter_typing = _node.FindMember("Typing");
@@ -777,14 +682,6 @@ namespace core
                     thumb->write((uint8_t*)bs_thumb.read(file_size), file_size);
                     coll_theme.set_value_as_stream("thumb", thumb.get());
                 }
-
-                coll_helper contact_list_item_set(_coll->create_collection(), true); //
-                contact_list_item_set.set_value_as_string("bg_color", (*iter_theme)->contact_list_item_.bg_color_);
-                contact_list_item_set.set_value_as_string("name_color", (*iter_theme)->contact_list_item_.name_color_);
-                contact_list_item_set.set_value_as_string("message_color", (*iter_theme)->contact_list_item_.message_color_);
-                contact_list_item_set.set_value_as_string("sender_color", (*iter_theme)->contact_list_item_.sender_color_);
-                contact_list_item_set.set_value_as_string("time_color", (*iter_theme)->contact_list_item_.time_color_);
-                coll_theme.set_value_as_collection("contact_list_item", contact_list_item_set.get());
                 
                 coll_helper date_set(_coll->create_collection(), true);
                 date_set.set_value_as_string("bg_color", (*iter_theme)->date_.bg_color_);
@@ -794,21 +691,13 @@ namespace core
                 coll_helper incoming_bubble_set(_coll->create_collection(), true);
                 incoming_bubble_set.set_value_as_string("bg1_color", (*iter_theme)->incoming_bubble_.bg1_color_);
                 incoming_bubble_set.set_value_as_string("bg2_color", (*iter_theme)->incoming_bubble_.bg2_color_);
-                incoming_bubble_set.set_value_as_string("text_color", (*iter_theme)->incoming_bubble_.text_color_);
                 incoming_bubble_set.set_value_as_string("time_color", (*iter_theme)->incoming_bubble_.time_color_);
-                incoming_bubble_set.set_value_as_string("info_color", (*iter_theme)->incoming_bubble_.info_color_);
-                incoming_bubble_set.set_value_as_string("link_color", (*iter_theme)->incoming_bubble_.link_color_);
-                incoming_bubble_set.set_value_as_string("info_link_color", (*iter_theme)->incoming_bubble_.info_link_color_);
                 coll_theme.set_value_as_collection("incoming_bubble", incoming_bubble_set.get());
                 
                 coll_helper outgoing_bubble_set(_coll->create_collection(), true);
                 outgoing_bubble_set.set_value_as_string("bg1_color", (*iter_theme)->outgoing_bubble_.bg1_color_);
                 outgoing_bubble_set.set_value_as_string("bg2_color", (*iter_theme)->outgoing_bubble_.bg2_color_);
-                outgoing_bubble_set.set_value_as_string("text_color", (*iter_theme)->outgoing_bubble_.text_color_);
                 outgoing_bubble_set.set_value_as_string("time_color", (*iter_theme)->outgoing_bubble_.time_color_);
-                outgoing_bubble_set.set_value_as_string("info_color", (*iter_theme)->outgoing_bubble_.info_color_);
-                outgoing_bubble_set.set_value_as_string("link_color", (*iter_theme)->outgoing_bubble_.link_color_);
-                outgoing_bubble_set.set_value_as_string("info_link_color", (*iter_theme)->outgoing_bubble_.info_link_color_);
                 coll_theme.set_value_as_collection("outgoing_bubble", outgoing_bubble_set.get());
                 
                 coll_helper preview_stickers_set(_coll->create_collection(), true);
@@ -823,18 +712,6 @@ namespace core
                 coll_helper contact_name_set(_coll->create_collection(), true);
                 contact_name_set.set_value_as_string("text_color", (*iter_theme)->contact_name_.text_color_);
                 coll_theme.set_value_as_collection("contact_name", contact_name_set.get());
-                
-                coll_helper new_messages_set(_coll->create_collection(), true); //
-                new_messages_set.set_value_as_string("bg_color", (*iter_theme)->new_messages_.bg_color_);
-                new_messages_set.set_value_as_string("text_color", (*iter_theme)->new_messages_.text_color_);
-                coll_theme.set_value_as_collection("new_messages", new_messages_set.get());
-                
-                coll_helper new_messages_bubble_set(_coll->create_collection(), true);
-                new_messages_bubble_set.set_value_as_string("bg_color", (*iter_theme)->new_messages_bubble_.bg_color_);
-                new_messages_bubble_set.set_value_as_string("text_color", (*iter_theme)->new_messages_bubble_.text_color_);
-                new_messages_bubble_set.set_value_as_string("bg_hover_color", (*iter_theme)->new_messages_bubble_.bg_hover_color_);
-                new_messages_bubble_set.set_value_as_string("bg_pressed_color", (*iter_theme)->new_messages_bubble_.bg_pressed_color_);
-                coll_theme.set_value_as_collection("new_messages_bubble", new_messages_bubble_set.get());
                 
                 coll_helper new_messages_plate_set(_coll->create_collection(), true);
                 new_messages_plate_set.set_value_as_string("bg_color", (*iter_theme)->new_messages_plate_.bg_color_);

@@ -10,7 +10,6 @@ QLabel#welcome_label
     margin-top: 15dip;
     font-size: 32dip;
     font-family: "%FONT_FAMILY_LIGHT%";
-    color: #282828;
     font-weight: %FONT_WEIGHT_LIGHT%;
 }
 
@@ -20,7 +19,16 @@ QLabel#choose_account_label
     min-height: 45dip;
     max-height: 45dip;
     font-size: 16dip;
-    color: #696969;
+    color: #767676;
+}
+
+QPushButton#choose_account_button
+{
+    background-color: transparent;
+    min-height: 45dip;
+    max-height: 45dip;
+    font-size: 16dip;
+    color: #767676;
 }
 
 QLabel#choose_account_comment_label
@@ -29,18 +37,17 @@ QLabel#choose_account_comment_label
     min-height: 45dip;
     max-height: 45dip;
     font-size: 16dip;
-    color: #696969;
+    color: #767676;
 }
 
 QLabel#label_account_nick
 {
-	color: #282828;
 	font-size: 18dip;
 }
 
 QLabel#label_account_uin
 {
-	color: #696969;
+	color: #767676;
 	font-size: 16dip;
 }
 
@@ -58,7 +65,7 @@ QScrollArea
 
 QWidget#accounts_area_widget
 {
-	background-color: white;
+	background-color: #ffffff;
 }
 
 QWidget#account_widget
@@ -68,5 +75,5 @@ QWidget#account_widget
 
 QWidget#account_widget:hover
 {
-    background-color: #dcdcdc;
+    background-color: #ebebeb;
 }

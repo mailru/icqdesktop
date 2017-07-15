@@ -36,7 +36,7 @@ int32_t set_avatar::init_request(std::shared_ptr<core::http_request_simple> _req
 
     
     auto size = image_.available();
-    _request->set_need_log(false);
+    _request->set_need_log(params_.full_log_);
     _request->set_post_data(image_.read_available(), size, true);
     image_.reset_out();
     _request->set_url(ss_url.str());

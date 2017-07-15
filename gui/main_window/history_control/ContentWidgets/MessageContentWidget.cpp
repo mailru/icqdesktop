@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include "../complex_message/Style.h"
 #include "../../../utils/utils.h"
 
 #include "MessageContentWidget.h"
@@ -9,26 +10,20 @@ namespace HistoryControl
 
 	MessageContentWidget::MessageContentWidget(QWidget *parent, const bool isOutgoing, QString _aimId)
 		: QWidget(parent)
+        , QuoteAnimation_(parent)
         , Initialized_(false)
 		, IsOutgoing_(isOutgoing)
         , CurrentProcessId_(0)
         , Selected_(false)
         , aimId_(_aimId)
 	{
+		QuoteAnimation_.setSemiTransparent();
 	}
 
 	MessageContentWidget::~MessageContentWidget()
 	{
 
 	}
-
-
-    QPoint MessageContentWidget::deliveryStatusOffsetHint(const int32_t statusLineWidth) const
-    {
-        (void)statusLineWidth;
-
-        return QPoint();
-    }
 
     bool MessageContentWidget::canReplace() const
     {
@@ -73,6 +68,9 @@ namespace HistoryControl
             initialize();
         }
     }
+
+    void MessageContentWidget::onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect)
+    {}
 
     QString MessageContentWidget::selectedText() const
     {
@@ -155,12 +153,12 @@ namespace HistoryControl
 		const auto margins = contentsMargins();
 		p.translate(margins.left(), margins.top());
 
-		render(p);
+		render(p, QuoteAnimation_.quoteColor());
 	}
-
 
     void MessageContentWidget::mouseMoveEvent(QMouseEvent *e)
     {
+        using namespace Ui::ComplexMessage;
         const auto isLeftButtonPressed = ((e->buttons() & Qt::LeftButton) != 0);
         if (isLeftButtonPressed)
         {
@@ -169,7 +167,7 @@ namespace HistoryControl
             {
                 mousePos_ = pos;
             }
-            else if (!mousePos_.isNull() && (abs(mousePos_.x() - pos.x()) > Utils::GetDragDistance() || abs(mousePos_.y() - pos.y()) > Utils::GetDragDistance()))
+            else if (!mousePos_.isNull() && (abs(mousePos_.x() - pos.x()) > Style::getDragDistance() || abs(mousePos_.y() - pos.y()) > Style::getDragDistance()))
             {
                 mousePos_ = QPoint();
                 drag();
@@ -183,4 +181,10 @@ namespace HistoryControl
 
         return QWidget::mouseMoveEvent(e);
     }
+
+	void MessageContentWidget::startQuoteAnimation()
+	{
+		QuoteAnimation_.startQuoteAnimation();
+	}
+
 }

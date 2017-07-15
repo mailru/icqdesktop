@@ -36,11 +36,6 @@ int32_t get_file_meta_info::init_request(std::shared_ptr<core::http_request_simp
     return 0;
 }
 
-int32_t get_file_meta_info::execute()
-{
-    return wim_packet::execute();
-}
-
 int32_t get_file_meta_info::parse_response(std::shared_ptr<core::tools::binary_stream> _response)
 {
     if (!_response->available())
@@ -67,7 +62,7 @@ int32_t get_file_meta_info::parse_response(std::shared_ptr<core::tools::binary_s
         if (iter_flist == doc.MemberEnd() || !iter_flist->value.IsArray())
             return wpie_error_parse_response;
 
-        if (iter_flist->value.Size() == 0)
+        if (iter_flist->value.Empty())
             return wpie_error_parse_response;
 
         auto iter_flist0 = iter_flist->value.Begin();
@@ -118,6 +113,14 @@ int32_t get_file_meta_info::parse_response(std::shared_ptr<core::tools::binary_s
     }
 
     return 0;
+}
+
+int32_t get_file_meta_info::on_http_client_error()
+{
+    if (http_code_ == 404)
+        return wpie_error_metainfo_not_found;
+
+    return wpie_client_http_error;
 }
 
 const web_file_info& get_file_meta_info::get_info() const

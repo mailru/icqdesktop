@@ -1,13 +1,13 @@
 #include "stdafx.h"
 
-#include "loader_errors.h"
 #include "loader_handlers.h"
 #include "web_file_info.h"
 #include "../packets/get_gateway.h"
 #include "../packets/send_file.h"
 #include "../../../tools/system.h"
-#include "tasks_runner_slot.h"
 #include "loader.h"
+
+#include "../../../../common.shared/loader_errors.h"
 
 #include "upload_task.h"
 

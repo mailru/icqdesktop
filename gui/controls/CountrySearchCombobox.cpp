@@ -37,13 +37,13 @@ namespace Ui
 		ComboboxView_->setRootIsDecorated(false);
 		ComboboxView_->header()->hide();
         
-        searchGlass_ = new PictureWidget(Edit_, ":/resources/contr_search_100.png");
+        searchGlass_ = new PictureWidget(Edit_, ":/resources/i_search_100.png");
         searchGlass_->setFixedWidth(Utils::scale_value(20));
         searchGlass_->setFixedHeight(Utils::scale_value(20));
         searchGlass_->hide();
         searchGlass_->setAttribute(Qt::WA_TransparentForMouseEvents);
         
-        dropDown_ = new CustomButton(Edit_, ":/resources/widgets/content_dropdown_black_open_100.png");
+        dropDown_ = new CustomButton(Edit_, ":/resources/basic_elements/arrow_small_a_100.png");
         dropDown_->setFixedWidth(Utils::scale_value(20));
         dropDown_->setFixedHeight(Utils::scale_value(20));
         dropDown_->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -73,15 +73,13 @@ namespace Ui
     {
         QWidget::resizeEvent(_e);
 		QRect r = rect();
-        searchGlass_->move(r.x() + Utils::scale_value(2), r.y() + Utils::scale_value(14));
-        dropDown_->move(r.width() - dropDown_->width() - Utils::scale_value(2), r.y() + Utils::scale_value(17));
+        searchGlass_->move(r.x() + Utils::scale_value(4), r.y() + Utils::scale_value(14));
+        dropDown_->move(r.width() - dropDown_->width(), r.y() + Utils::scale_value(16));
     }
 
 	void CountrySearchCombobox::initLayout()
 	{
-		QHBoxLayout* mainLayout = new QHBoxLayout(this);
-		mainLayout->setContentsMargins(0, 0, 0, 0);
-		mainLayout->setSpacing(0);
+		QHBoxLayout* mainLayout = Utils::emptyHLayout(this);
 		mainLayout->addWidget(Edit_);
 		QSpacerItem* editLayoutSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum);
 		mainLayout->addSpacerItem(editLayoutSpacer);

@@ -7,7 +7,7 @@ namespace installer
         class install_config
         {
             bool uninstall_;
-            bool silent_;
+            bool appx_;
             bool uninstalltmp_;
             bool update_;
             bool update_final_;
@@ -22,7 +22,7 @@ namespace installer
             install_config()
                 :
                 uninstall_(false),
-                silent_(false),
+                appx_(false),
                 uninstalltmp_(false),
                 update_(false),
                 update_final_(false),
@@ -35,8 +35,8 @@ namespace installer
 
             bool is_uninstall() const { return uninstall_; }
             void set_uninstall(bool _val) { uninstall_ = _val; }
-            bool is_silent() const { return silent_; }
-            void set_silent(bool _val) { silent_ = _val; }
+            bool is_appx() const { return appx_; }
+            void set_appx(bool _val) { appx_ = _val; }
             bool is_uninstalltmp() const { return uninstalltmp_; }
             void set_uninstalltmp(bool _val) { uninstalltmp_ = _val; }
             bool is_update() const { return update_; }
@@ -63,9 +63,13 @@ namespace installer
         QString get_installed_product_path();
         QString get_product_name();
         QString get_product_display_name();
+        QString get_product_menu_folder();
         QString get_company_name();
         QString get_exported_account_folder();
         QString get_exported_settings_folder();
+
+        const wchar_t* get_crossprocess_mutex_name();
+        const char* get_crossprocess_pipe_name();
         
         const install_config& get_install_config();
         void set_install_config(const install_config& _config);

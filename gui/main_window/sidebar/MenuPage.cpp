@@ -30,46 +30,23 @@
 
 namespace
 {
-    const int top_margin = 8;
+    const int avatar_margin = 8;
     const int avatar_size = 80;
-    const int left_margin = 24;
-    const int right_margin = 28;
-    const int text_margin = 12;
-    const int text_top_margin = -4;
-    const int text_top_spacing = 25;
-    const int button_offset = 28;
-    const int list_buttons_offset = 32;
-    const int button_height = 44;
+    const int BACK_WIDTH = 52;
+    const int BACK_HEIGHT = 48;
+    const int HOR_PADDING = 16;
+    const int NAME_MARGIN = 12;
     const int preload_members = 20;
-    const int item_height = 44;
-    const int members_left_margin = 8;
-    const int min_visible_memebres = 5;
-    const int labels_left_margin = 68;
-    const int labels_bottom_margin = 6;
+    const int ITEM_HEIGHT = 40;
+    const int LEFT_MARGIN = 52;
     const int add_contact_margin = 16;
-    const int back_button_size = 40;
-    const int back_button_spacing = 10;
-    const int left_margin_list = 16;
     const int desc_length = 100;
-    const int more_left_margin = 4;
     const int checkbox_width = 44;
     const int checkbox_height = 24;
-    const int list_left_margin = 10;
-    const int search_margin_right = 26;
-    const int approve_all_margin = 24;
-    const int approve_all_bottom = 24;
-    const int line_vertical_margin = 6;
-    const int privacy_top_offset = 14;
-    const int option_about_right_margin = 24;
-    const int option_about_top_margin = 9;
-    const int checkbox_bottom_margin = 11;
-    const int approved_top_space = 5;
-    const int icon_offset = 42;
-    const int reverse_margin = -5;
-    const int not_member_top_space = 4;
-    const int not_member_bottom_space = 9;
-
-    const static QString transparent_background = "background: transparent;";
+    const int checkbox_bottom_margin = 4;
+    const int not_member_space = 8;
+    const int search_hor_spacing = 4;
+    const int search_ver_spacing = 8;
 
     enum widgets
     {
@@ -97,59 +74,6 @@ namespace
 
 namespace Ui
 {
-    AddToChat::AddToChat(QWidget* _parent)
-        : QWidget(_parent)
-        , painter_(0)
-        , Hovered_(false)
-    {
-    }
-
-    void AddToChat::setText(const QString& _text)
-    {
-        Text_ = _text;
-    }
-
-    void AddToChat::paintEvent(QPaintEvent*)
-    {
-        if (!painter_)
-        {
-            painter_ = new QPainter(this);
-            painter_->setRenderHint(QPainter::Antialiasing);
-        }
-
-        painter_->begin(this);
-        ::ContactList::ViewParams viewParams;
-        ::ContactList::RenderServiceContact(*painter_, false, false
-            , Text_, Data::ContactType::ADD_CONTACT, Utils::scale_value(members_left_margin), viewParams);
-        if (Hovered_)
-        {            
-            QPainter p(this);
-            painter_->fillRect(rect(), Ui::CommonStyle::getContactListHoveredColor());
-        }
-        painter_->end();
-    }
-
-    void AddToChat::mouseReleaseEvent(QMouseEvent* _e)
-    {
-        update();
-        emit clicked();
-        return QWidget::mouseReleaseEvent(_e);
-    }
-
-    void AddToChat::enterEvent(QEvent* e)
-    {
-        Hovered_ = true;
-        update();
-        QWidget::enterEvent(e);
-    }
-
-    void AddToChat::leaveEvent(QEvent* e)
-    {
-        Hovered_ = false;
-        update();
-        QWidget::leaveEvent(e);
-    }
-
     MenuPage::MenuPage(QWidget* parent)
         : SidebarPage(parent)
         , currentTab_(all)
@@ -164,41 +88,40 @@ namespace Ui
         QPainter p(this);
         style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
         QWidget::paintEvent(_e);
-        p.fillRect(rect(), CommonStyle::getFrameTransparency());
-        p.setPen(QPen(QColor("#dadada"), Utils::scale_value(1)));
+        p.fillRect(rect(), CommonStyle::getFrameColor());
+        p.setPen(QPen(QColor("#d7d7d7"), Utils::scale_value(1)));
         p.drawLine(contentsRect().topLeft(), contentsRect().bottomLeft());
     }
 
     void MenuPage::resizeEvent(QResizeEvent *e)
     {
-        mainWidget_->setFixedWidth(e->size().width() - Utils::scale_value(8));
+        mainWidget_->setFixedWidth(e->size().width());
         return SidebarPage::resizeEvent(e);
     }
 
     void MenuPage::updateWidth()
     {
-        name_->adjustHeight(width_ - Utils::scale_value(avatar_size + left_margin + text_margin + right_margin));
-        youAreNotAMember_->adjustHeight(width_ - Utils::scale_value(left_margin + avatar_size / 2 + right_margin));
-        firstLine_->setLineWidth(width_ - Utils::scale_value(left_margin + avatar_size / 2 + right_margin));
-        secondLine_->setLineWidth(width_ - Utils::scale_value(left_margin + avatar_size / 2 + right_margin));
-        thirdLine_->setLineWidth(width_ - Utils::scale_value(left_margin + avatar_size / 2 + right_margin));
-        approveAllLine_->setLineWidth(width_ - Utils::scale_value(left_margin + avatar_size / 2 + right_margin - (labels_left_margin - left_margin)));
-        searchWidget_->setFixedWidth(width_ + Utils::scale_value(search_margin_right));
-        approveAllWidget_->setFixedWidth(width_ + Utils::scale_value(search_margin_right));
-        notificationsButton_->setFixedWidth(width_ - Utils::scale_value(left_margin + right_margin + checkbox_width - button_offset));
-        publicButton_->setFixedWidth(width_ - Utils::scale_value(left_margin + right_margin + checkbox_width - list_buttons_offset));
-        readOnly_->setFixedWidth(width_ - Utils::scale_value(left_margin + right_margin + checkbox_width - list_buttons_offset));
-        ageRestrictions_->setFixedWidth(width_ - Utils::scale_value(left_margin + right_margin + checkbox_width - list_buttons_offset));
-        linkToChat_->setFixedWidth(width_ - Utils::scale_value(left_margin + right_margin + checkbox_width - list_buttons_offset));
-        approvedButton_->setFixedWidth(width_ - Utils::scale_value(left_margin + right_margin + checkbox_width - list_buttons_offset));
+        name_->adjustHeight(width_ - Utils::scale_value(avatar_size + 2 * HOR_PADDING + NAME_MARGIN));
+        youAreNotAMember_->adjustHeight(width_ - Utils::scale_value(2 * HOR_PADDING));
+        firstLine_->setLineWidth(width_);
+        secondLine_->setLineWidth(width_);
+        thirdLine_->setLineWidth(width_);
+        approveAllLine_->setLineWidth(width_);
+        searchWidget_->setFixedWidth(width_);
+        approveAllWidget_->setFixedWidth(width_ + Utils::scale_value(HOR_PADDING));
+        notificationsButton_->setFixedWidth(width_ - Utils::scale_value(HOR_PADDING + checkbox_width));
+        publicButton_->setFixedWidth(width_ - Utils::scale_value(HOR_PADDING + checkbox_width));
+        readOnly_->setFixedWidth(width_ - Utils::scale_value(HOR_PADDING + checkbox_width));
+        ageRestrictions_->setFixedWidth(width_ - Utils::scale_value(HOR_PADDING + checkbox_width));
+        linkToChat_->setFixedWidth(width_ - Utils::scale_value(HOR_PADDING + checkbox_width));
+        approvedButton_->setFixedWidth(width_ - Utils::scale_value(HOR_PADDING + checkbox_width));
         delegate_->setFixedWidth(width_);
-        delegate_->setLeftMargin(Utils::scale_value(members_left_margin));
-        delegate_->setRightMargin(Utils::scale_value(right_margin - more_left_margin));
-        addContact_->setFixedWidth(width_ - Utils::scale_value(left_margin + right_margin));
-        description_->adjustHeight(width_ - Utils::scale_value(avatar_size + left_margin + text_margin + right_margin));
-        allMembersLabel_->setFixedWidth(width_ - Utils::scale_value(labels_left_margin + right_margin - more_left_margin) - allMembersCount_->width());
-        blockLabel_->setFixedWidth(width_ - Utils::scale_value(labels_left_margin + right_margin - more_left_margin) - blockCount_->width());
-        pendingLabel_->setFixedWidth(width_ - Utils::scale_value(labels_left_margin + right_margin - more_left_margin) - pendingCount_->width());
+        delegate_->setRightMargin(Utils::scale_value(HOR_PADDING));
+        addContact_->setFixedWidth(width_ - Utils::scale_value(2 * HOR_PADDING));
+        description_->adjustHeight(width_ - Utils::scale_value(avatar_size + 2 * HOR_PADDING + NAME_MARGIN));
+        allMembersLabel_->setFixedWidth(width_ - Utils::scale_value(LEFT_MARGIN + HOR_PADDING) - allMembersCount_->width());
+        blockLabel_->setFixedWidth(width_ - Utils::scale_value(LEFT_MARGIN + HOR_PADDING) - blockCount_->width());
+        pendingLabel_->setFixedWidth(width_ - Utils::scale_value(LEFT_MARGIN + HOR_PADDING) - pendingCount_->width());
 
         avatarName_->setFixedWidth(width_);
         addToChat_->setFixedWidth(width_);
@@ -247,7 +170,7 @@ namespace Ui
         }
 
         bool isFavorite = Logic::getRecentsModel()->isFavorite(currentAimId_);
-        favoriteButton_->setImage(isFavorite ? ":/resources/sidebar_unfavorite_100.png" : ":/resources/sidebar_favorite_100.png");
+        favoriteButton_->setImage(isFavorite ? ":/resources/i_del_fav_100.png" : ":/resources/i_add_fav_100.png");
         favoriteButton_->setText(isFavorite ? QT_TRANSLATE_NOOP("sidebar", "Remove from favorites") : QT_TRANSLATE_NOOP("sidebar", "Add to favorites"));
 
         bool isMuted = Logic::getContactListModel()->isMuted(currentAimId_);
@@ -293,14 +216,15 @@ namespace Ui
         addContactSpacerTop_->setVisible(isNotAuth);
         spamButton_->setVisible(isNotAuth);
         addToChat_->setVisible(!isIgnored && !notAMember && !isNotAuth);
-        addToChat_->setText(isChat ? QT_TRANSLATE_NOOP("sidebar","Add to chat") : QT_TRANSLATE_NOOP("sidebar", "Create groupchat"));
+        addToChat_->setText(isChat ? QT_TRANSLATE_NOOP("sidebar", "Add to chat") : QT_TRANSLATE_NOOP("sidebar", "Create groupchat"));
         addToChat_->update();
-        thirdLine_->setVisible(!isIgnored);
+        firstLine_->setVisible(!isNotAuth);
+        secondLine_->setVisible(!isNotAuth && !notAMember);
+        thirdLine_->setVisible(!isNotAuth && !isIgnored);
         favoriteButton_->setVisible(!isNotAuth && !notAMember);
         notificationsCheckbox_->setVisible(!isNotAuth && !notAMember);
         notificationsButton_->setVisible(!isNotAuth && !notAMember);
         themesButton_->setVisible(!isNotAuth && !notAMember);
-        secondLine_->setVisible(!isNotAuth && !notAMember);
         searchInChat_->setVisible(!notAMember);
 
         notMemberTopSpacer_->setVisible(notAMember);
@@ -315,24 +239,23 @@ namespace Ui
     {
         stackedWidget_ = new QStackedWidget(this);
         stackedWidget_->setContentsMargins(0, 0, 0, 0);
-        auto layout = emptyVLayout(this);
+        auto layout = Utils::emptyVLayout(this);
         layout->addWidget(stackedWidget_);
         area_ = CreateScrollAreaAndSetTrScrollBar(stackedWidget_);
         stackedWidget_->insertWidget(main, area_);
 
         mainWidget_ = new QWidget(area_);
-        mainWidget_->setStyleSheet(transparent_background);
-
+        mainWidget_->setStyleSheet("background: transparent;");
         area_->setContentsMargins(0, 0, 0, 0);
         area_->setWidget(mainWidget_);
         area_->setWidgetResizable(true);
         area_->setFrameStyle(QFrame::NoFrame);
-        area_->setStyleSheet(transparent_background);
+        area_->setStyleSheet("background: transparent;");
         area_->horizontalScrollBar()->setEnabled(false);
 
         setStyleSheet(Utils::LoadStyle(":/main_window/sidebar/Sidebar.qss"));
-        rootLayot_ = emptyVLayout(mainWidget_);
-        rootLayot_->setAlignment(Qt::AlignTop);
+        rootLayout_ = Utils::emptyVLayout(mainWidget_);
+        rootLayout_->setAlignment(Qt::AlignTop);
 
         initAvatarAndName();
         initAddContactAndSpam();
@@ -350,31 +273,27 @@ namespace Ui
 
     void MenuPage::initAvatarAndName()
     {
-        rootLayot_->addSpacerItem(new QSpacerItem(0, Utils::scale_value(top_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
         {
             avatarName_ = new ClickedWidget(mainWidget_);
             Utils::grabTouchWidget(avatarName_);
             avatarName_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-            auto horLayout = new QHBoxLayout(avatarName_);
-            horLayout->setSpacing(0);
-            horLayout->setContentsMargins(0, Utils::scale_value(top_margin), 0, Utils::scale_value(top_margin));
+            auto horLayout = Utils::emptyHLayout(avatarName_);
+            horLayout->setContentsMargins(Utils::scale_value(HOR_PADDING), Utils::scale_value(avatar_margin), Utils::scale_value(HOR_PADDING), Utils::scale_value(avatar_margin));
             horLayout->setAlignment(Qt::AlignLeft);
-            horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
             {
-                auto vLayout = emptyVLayout();
+                auto vLayout = Utils::emptyVLayout();
                 vLayout->setAlignment(Qt::AlignTop);
                 avatar_ = new ContactAvatarWidget(avatarName_, QString(), QString(), Utils::scale_value(avatar_size), true);
                 avatar_->setAttribute(Qt::WA_TransparentForMouseEvents);
                 vLayout->addWidget(avatar_);
                 horLayout->addLayout(vLayout);
             }
-            horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(text_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
             {
-                nameLayout_ = emptyVLayout();
+                nameLayout_ = Utils::emptyVLayout();
                 nameLayout_->setAlignment(Qt::AlignVCenter);
-                nameLayout_->addSpacerItem(new QSpacerItem(0, Utils::scale_value(text_top_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
-                name_ = new TextEditEx(avatarName_, Fonts::defaultAppFontFamily(), Utils::scale_value(20), Ui::CommonStyle::getTextCommonColor(), false, false);
-                name_->setStyleSheet(transparent_background);
+                nameLayout_->setContentsMargins(Utils::scale_value(NAME_MARGIN), 0, 0, 0);
+                name_ = new TextEditEx(avatarName_, Fonts::appFontScaled(17, Fonts::FontWeight::Medium), Ui::CommonStyle::getTextCommonColor(), false, false);
+                name_->setStyleSheet("background-color: transparent;");
                 name_->setFrameStyle(QFrame::NoFrame);
                 name_->setContentsMargins(0, 0, 0, 0);
                 name_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -383,8 +302,7 @@ namespace Ui
                 name_->setContextMenuPolicy(Qt::NoContextMenu);
                 nameLayout_->addWidget(name_);
 
-                description_ = new TextEditEx(avatarName_, Fonts::defaultAppFontFamily(), Utils::scale_value(15), QColor("#696969"), true, false);
-                description_->setStyleSheet(transparent_background);
+                description_ = new TextEditEx(avatarName_, Fonts::appFontScaled(15), QColor("#767676"), true, false);
                 description_->setFrameStyle(QFrame::NoFrame);
                 description_->setContentsMargins(0, 0, 0, 0);
                 description_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -397,7 +315,7 @@ namespace Ui
                 nameLayout_->addWidget(description_);
 
                 {
-                    auto hLayout = emptyHLayout();
+                    auto hLayout = Utils::emptyHLayout();
                     hLayout->setAlignment(Qt::AlignLeft);
                     moreLabel_ = new LabelEx(mainWidget_);
                     moreLabel_->setFont(Fonts::appFontScaled(14));
@@ -405,7 +323,6 @@ namespace Ui
                     p.setColor(QPalette::Foreground, CommonStyle::getLinkColor());
                     moreLabel_->setPalette(p);
                     moreLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "More"));
-                    moreLabel_->setContentsMargins(Utils::scale_value(more_left_margin), 0, 0, 0);
                     moreLabel_->setCursor(QCursor(Qt::PointingHandCursor));
                     hLayout->addWidget(moreLabel_);
                     nameLayout_->addLayout(hLayout);
@@ -413,9 +330,8 @@ namespace Ui
 
                 horLayout->addLayout(nameLayout_);
             }
-            horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
             avatarName_->setCursor(QCursor(Qt::PointingHandCursor));
-            rootLayot_->addWidget(avatarName_);
+            rootLayout_->addWidget(avatarName_);
         }
     }
 
@@ -424,57 +340,54 @@ namespace Ui
         addContactSpacerTop_ = new QWidget(mainWidget_);
         addContactSpacerTop_->setFixedSize(1, Utils::scale_value(add_contact_margin));
         Utils::grabTouchWidget(addContactSpacerTop_);
-        rootLayot_->addWidget(addContactSpacerTop_);
+        rootLayout_->addWidget(addContactSpacerTop_);
         {
-            auto horLayout = emptyHLayout();
+            auto horLayout = Utils::emptyHLayout();
+            horLayout->setContentsMargins(Utils::scale_value(HOR_PADDING), 0, Utils::scale_value(HOR_PADDING), 0);
             horLayout->setAlignment(Qt::AlignLeft);
-            horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
             addContact_ = new CustomButton(mainWidget_, QString());
             addContact_->setText(QT_TRANSLATE_NOOP("sidebar", "Add contact"));
             addContact_->setAlign(Qt::AlignHCenter);
             addContact_->setCursor(QCursor(Qt::PointingHandCursor));
             Utils::ApplyStyle(addContact_, Ui::CommonStyle::getGreenButtonStyle());
             horLayout->addWidget(addContact_);
-            horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-            rootLayot_->addLayout(horLayout);
+            rootLayout_->addLayout(horLayout);
         }
 
         addContactSpacer_ = new QWidget(mainWidget_);
         addContactSpacer_->setFixedSize(1, Utils::scale_value(add_contact_margin));
         Utils::grabTouchWidget(addContactSpacer_);
-        rootLayot_->addWidget(addContactSpacer_);
+        rootLayout_->addWidget(addContactSpacer_);
 
-        spamButton_ = new ActionButton(mainWidget_, ":/resources/sidebar_spam_100.png", QT_TRANSLATE_NOOP("sidebar", "Report spam"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        spamButton_ = new ActionButton(mainWidget_, ":/resources/i_report_100.png", QT_TRANSLATE_NOOP("sidebar", "Report spam"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         spamButton_->setCursor(QCursor(Qt::PointingHandCursor));
         Utils::grabTouchWidget(spamButton_);
-        rootLayot_->addWidget(spamButton_);
+        rootLayout_->addWidget(spamButton_);
 
-        firstLine_ = new LineWidget(mainWidget_, Utils::scale_value(labels_left_margin), Utils::scale_value(line_vertical_margin), Utils::scale_value(right_margin), Utils::scale_value(line_vertical_margin));
+        firstLine_ = new LineWidget(mainWidget_, 0, 0, 0, 0);
         Utils::grabTouchWidget(firstLine_);
-        rootLayot_->addWidget(firstLine_);
+        rootLayout_->addWidget(firstLine_);
 
         notMemberTopSpacer_ = new QWidget(mainWidget_);
-        notMemberTopSpacer_->setFixedHeight(Utils::scale_value(not_member_top_space));
-        auto horLayout = emptyHLayout();
-        horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(labels_left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-        youAreNotAMember_ = new TextEditEx(mainWidget_, Fonts::defaultAppFontFamily(), Utils::scale_value(15), CommonStyle::getRedLinkColor(), false, false);
+        notMemberTopSpacer_->setFixedHeight(Utils::scale_value(not_member_space));
+        rootLayout_->addWidget(notMemberTopSpacer_);
+        auto horLayout = Utils::emptyHLayout();
+        horLayout->setContentsMargins(Utils::scale_value(HOR_PADDING), 0, Utils::scale_value(HOR_PADDING), 0);
+        youAreNotAMember_ = new TextEditEx(mainWidget_, Fonts::appFontScaled(15), CommonStyle::getRedLinkColor(), false, false);
         youAreNotAMember_->setPlainText(QString());
         QTextCursor cursor = youAreNotAMember_->textCursor();
         QString youAreNotAMemberDescription = QT_TRANSLATE_NOOP("sidebar", "Unfortunatelly, you have been deleted and cannot see the members of this chat or message them.");
         Logic::Text2Doc(youAreNotAMemberDescription, cursor, Logic::Text2DocHtmlMode::Pass, false);
-        youAreNotAMember_->setStyleSheet(transparent_background);
         youAreNotAMember_->setFrameStyle(QFrame::NoFrame);
         youAreNotAMember_->setContentsMargins(0, 0, 0, 0);
         youAreNotAMember_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         youAreNotAMember_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        youAreNotAMember_->setAttribute(Qt::WA_TransparentForMouseEvents);
         youAreNotAMember_->setContextMenuPolicy(Qt::NoContextMenu);
         horLayout->addWidget(youAreNotAMember_);
-        horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-        rootLayot_->addLayout(horLayout);
+        rootLayout_->addLayout(horLayout);
         notMemberBottomSpacer_ = new QWidget(mainWidget_);
-        notMemberBottomSpacer_->setFixedHeight(Utils::scale_value(not_member_bottom_space));
-        rootLayot_->addWidget(notMemberBottomSpacer_);
+        notMemberBottomSpacer_->setFixedHeight(Utils::scale_value(not_member_space));
+        rootLayout_->addWidget(notMemberBottomSpacer_);
         youAreNotAMember_->hide();
         notMemberTopSpacer_->hide();
         notMemberBottomSpacer_->hide();
@@ -482,26 +395,28 @@ namespace Ui
 
     void MenuPage::initFavoriteNotificationsSearchTheme()
     {
-        favoriteButton_ = new ActionButton(mainWidget_, ":/resources/sidebar_favorite_100.png", QString(), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        favoriteButton_ = new ActionButton(mainWidget_, ":/resources/sidebar_favorite_100.png", QString(), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         favoriteButton_->setCursor(QCursor(Qt::PointingHandCursor));
         Utils::grabTouchWidget(favoriteButton_);
-        rootLayot_->addWidget(favoriteButton_);
+        rootLayout_->addWidget(favoriteButton_);
 
-        copyLink_ = new ActionButton(mainWidget_, ":/resources/dialog_link_100.png", QString(), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        copyLink_ = new ActionButton(mainWidget_, ":/resources/i_link_100.png", QString(), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         copyLink_->setCursor(QCursor(Qt::PointingHandCursor));
         copyLink_->setText(QT_TRANSLATE_NOOP("sidebar", "Copy link to chat"));
         Utils::grabTouchWidget(copyLink_);
-        rootLayot_->addWidget(copyLink_);
+        rootLayout_->addWidget(copyLink_);
 
         {
-            auto horLayout = emptyHLayout();
-            notificationsButton_ = new CustomButton(mainWidget_, ":/resources/contr_notifysettings_100.png");
-            notificationsButton_->setOffsets(Utils::scale_value(button_offset), 0);
+            auto horLayout = Utils::emptyHLayout();
+            notificationsButton_ = new CustomButton(mainWidget_, ":/resources/i_notice_100.png");
+            notificationsButton_->setFont(Fonts::appFontScaled(16));
+            notificationsButton_->setOffsets(Utils::scale_value(HOR_PADDING), 0);
             notificationsButton_->setText(QT_TRANSLATE_NOOP("sidebar", "Notifications"));
+            notificationsButton_->setTextColor("#454545");
             notificationsButton_->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
             notificationsButton_->setAlign(Qt::AlignLeft);
             notificationsButton_->setFocusPolicy(Qt::NoFocus);
-            notificationsButton_->setFixedHeight(Utils::scale_value(button_height));
+            notificationsButton_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
             notificationsButton_->adjustSize();
             Utils::grabTouchWidget(notificationsButton_);
             horLayout->addWidget(notificationsButton_);
@@ -510,30 +425,31 @@ namespace Ui
             notificationsCheckbox_->adjustSize();
             notificationsCheckbox_->setCursor(QCursor(Qt::PointingHandCursor));
             notificationsCheckbox_->setFixedSize(Utils::scale_value(checkbox_width), Utils::scale_value(checkbox_height));
+            notificationsCheckbox_->setStyleSheet("outline: none;");
             Utils::grabTouchWidget(notificationsCheckbox_);
             horLayout->addWidget(notificationsCheckbox_);
             horLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
-            rootLayot_->addLayout(horLayout);
+            rootLayout_->addLayout(horLayout);
         }
 
-        searchInChat_ = new ActionButton(mainWidget_, ":/resources/sidebar_search_100.png", QT_TRANSLATE_NOOP("sidebar", "Search for messages"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        searchInChat_ = new ActionButton(mainWidget_, ":/resources/i_search_100.png", QT_TRANSLATE_NOOP("sidebar", "Search for messages"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         searchInChat_->setCursor(QCursor(Qt::PointingHandCursor));
         Utils::grabTouchWidget(searchInChat_);
-        rootLayot_->addWidget(searchInChat_);
+        rootLayout_->addWidget(searchInChat_);
 
-        themesButton_ = new ActionButton(mainWidget_, ":/resources/contr_themes_100.png", QT_TRANSLATE_NOOP("sidebar", "Wallpaper"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        themesButton_ = new ActionButton(mainWidget_, ":/resources/i_wallpaper_100.png", QT_TRANSLATE_NOOP("sidebar", "Wallpaper"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         themesButton_->setCursor(QCursor(Qt::PointingHandCursor));
         Utils::grabTouchWidget(themesButton_);
-        rootLayot_->addWidget(themesButton_);
+        rootLayout_->addWidget(themesButton_);
 
-        privacyButton_ = new ActionButton(mainWidget_, ":/resources/contr_privacy_100.png", QT_TRANSLATE_NOOP("sidebar", "Chat settings"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        privacyButton_ = new ActionButton(mainWidget_, ":/resources/i_settings_100.png", QT_TRANSLATE_NOOP("sidebar", "Chat settings"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         privacyButton_->setCursor(QCursor(Qt::PointingHandCursor));
         Utils::grabTouchWidget(privacyButton_);
-        rootLayot_->addWidget(privacyButton_);
+        rootLayout_->addWidget(privacyButton_);
 
-        secondLine_ = new LineWidget(mainWidget_, Utils::scale_value(labels_left_margin), Utils::scale_value(line_vertical_margin), Utils::scale_value(right_margin), Utils::scale_value(line_vertical_margin));        
+        secondLine_ = new LineWidget(mainWidget_, 0, 0, 0, 0);
         Utils::grabTouchWidget(secondLine_);
-        rootLayot_->addWidget(secondLine_);
+        rootLayout_->addWidget(secondLine_);
     }
 
     void MenuPage::initChatMembers()
@@ -541,141 +457,121 @@ namespace Ui
         chatMembersModel_ = new Logic::ChatMembersModel(mainWidget_);
         chatMembersModel_->setSelectEnabled(false);
         chatMembersModel_->setFlag(Logic::HasMouseOver);
-        getCurrentSearchModel(Logic::DELETE_MEMBERS)->setSelectEnabled(false);
-        delegate_ = new Logic::ContactListItemDelegate(mainWidget_, Logic::DELETE_MEMBERS);
+        getCurrentSearchModel(Logic::MEMBERS_LIST)->setSelectEnabled(false);
+        delegate_ = new Logic::ContactListItemDelegate(mainWidget_, Logic::MEMBERS_LIST);
         {
-            auto horLayout = emptyHLayout();
+            auto horLayout = Utils::emptyHLayout();
             {
-                auto verLayout = emptyVLayout();
-                addToChat_ = new AddToChat(mainWidget_);
-                addToChat_->setFixedHeight(Utils::scale_value(item_height));
+                auto verLayout = Utils::emptyVLayout();
+                addToChat_ = new ActionButton(mainWidget_, ":/resources/i_add_100.png", QT_TRANSLATE_NOOP("sidebar", "Add to chat"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
+                addToChat_->setColor("#579e1c");
+                addToChat_->setFont(Fonts::appFontScaled(16, Fonts::FontWeight::Medium));
+                addToChat_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
                 addToChat_->setCursor(QCursor(Qt::PointingHandCursor));
                 Utils::grabTouchWidget(addToChat_);
                 verLayout->addWidget(addToChat_);
                 verLayout->setAlignment(Qt::AlignLeft);
                 {
-                    QFont f = Fonts::appFontScaled(16);
-                    QPalette p;
-                    p.setColor(QPalette::Foreground, Ui::CommonStyle::getTextCommonColor());
-
                     admins_ = new ClickedWidget(mainWidget_);
-                    admins_->setFixedHeight(Utils::scale_value(button_height));
+                    admins_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
                     admins_->setCursor(QCursor(Qt::PointingHandCursor));
-                    auto horLayout2 = emptyHLayout(admins_);
-                    horLayout2->addSpacerItem(new QSpacerItem(Utils::scale_value(labels_left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+                    auto horLayout2 = Utils::emptyHLayout(admins_);
+                    horLayout2->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, Utils::scale_value(HOR_PADDING), 0);
                     auto adminsLabel = new QLabel(admins_);
-                    adminsLabel->setFont(f);
-                    adminsLabel->setPalette(p);
+                    adminsLabel->setObjectName("mainLabel");
                     adminsLabel->setText(QT_TRANSLATE_NOOP("sidebar", "Admins"));
-                    adminsLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
                     horLayout2->addWidget(adminsLabel);
-                    horLayout2->addSpacerItem(new QSpacerItem(QWIDGETSIZE_MAX, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                     verLayout->addWidget(admins_);
                     Utils::grabTouchWidget(admins_);
 
                     allMembers_ = new ClickedWidget(mainWidget_);
                     allMembers_->setCursor(QCursor(Qt::PointingHandCursor));
-                    allMembers_->setFixedHeight(Utils::scale_value(button_height));
-                    auto horLayout3 = emptyHLayout(allMembers_);
-                    horLayout3->addSpacerItem(new QSpacerItem(Utils::scale_value(labels_left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+                    allMembers_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
+                    auto horLayout3 = Utils::emptyHLayout(allMembers_);
+                    horLayout3->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, Utils::scale_value(HOR_PADDING), 0);
                     allMembersLabel_ = new QLabel(allMembers_);
-                    allMembersLabel_->setFont(f);
-                    allMembersLabel_->setPalette(p);
+                    allMembersLabel_->setObjectName("mainLabel");
                     allMembersLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Members"));
-                    allMembersLabel_->setAttribute(Qt::WA_TransparentForMouseEvents);
                     horLayout3->addWidget(allMembersLabel_);
                     allMembersCount_ = new QLabel(allMembers_);
-                    allMembersCount_->setPalette(p);
-                    allMembersCount_->setFont(f);
-                    allMembersCount_->setAttribute(Qt::WA_TransparentForMouseEvents);
+                    allMembersCount_->setObjectName("mainLabel");
+                    allMembersCount_->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
                     horLayout3->addWidget(allMembersCount_);
-                    horLayout3->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                    horLayout3->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                     Utils::grabTouchWidget(allMembers_);
                     verLayout->addWidget(allMembers_);
 
                     pendingList_ = new ClickedWidget(mainWidget_);
                     pendingList_->setCursor(QCursor(Qt::PointingHandCursor));
-                    pendingList_->setFixedHeight(Utils::scale_value(button_height));
-                    auto horLayout5 = emptyHLayout(pendingList_);
-                    horLayout5->addSpacerItem(new QSpacerItem(Utils::scale_value(labels_left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+                    pendingList_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
+                    auto horLayout5 = Utils::emptyHLayout(pendingList_);
+                    horLayout5->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, Utils::scale_value(HOR_PADDING), 0);
                     pendingLabel_ = new QLabel(pendingList_);
-                    pendingLabel_->setFont(f);
-                    pendingLabel_->setPalette(p);
+                    pendingLabel_->setObjectName("mainLabel");
                     pendingLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Waiting for approval"));
-                    pendingLabel_->setAttribute(Qt::WA_TransparentForMouseEvents);
                     horLayout5->addWidget(pendingLabel_);
                     pendingCount_ = new QLabel(pendingList_);
-                    pendingCount_->setPalette(p);
-                    pendingCount_->setFont(f);
-                    pendingCount_->setAttribute(Qt::WA_TransparentForMouseEvents);
+                    pendingCount_->setObjectName("mainLabel");
+                    pendingCount_->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
                     horLayout5->addWidget(pendingCount_);
-                    horLayout5->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                    horLayout5->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                     Utils::grabTouchWidget(pendingList_);
                     verLayout->addWidget(pendingList_);
 
                     blockList_ = new ClickedWidget(mainWidget_);
                     blockList_->setCursor(QCursor(Qt::PointingHandCursor));
-                    blockList_->setFixedHeight(Utils::scale_value(button_height));
-                    auto horLayout4 = emptyHLayout(blockList_);
-                    horLayout4->addSpacerItem(new QSpacerItem(Utils::scale_value(labels_left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
+                    blockList_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
+                    auto horLayout4 = Utils::emptyHLayout(blockList_);
+                    horLayout4->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, Utils::scale_value(HOR_PADDING), 0);
                     blockLabel_ = new QLabel(blockList_);
-                    blockLabel_->setFont(f);
-                    blockLabel_->setPalette(p);
+                    blockLabel_->setObjectName("mainLabel");
                     blockLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Blocked people"));
-                    blockLabel_->setAttribute(Qt::WA_TransparentForMouseEvents);
                     horLayout4->addWidget(blockLabel_);
                     blockCount_ = new QLabel(blockList_);
-                    blockCount_->setPalette(p);
-                    blockCount_->setFont(f);
-                    blockCount_->setAttribute(Qt::WA_TransparentForMouseEvents);
+                    blockCount_->setObjectName("mainLabel");
+                    blockCount_->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
                     horLayout4->addWidget(blockCount_);
-                    horLayout4->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                    horLayout4->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                     Utils::grabTouchWidget(blockList_);
                     verLayout->addWidget(blockList_);
                 }
                 horLayout->addLayout(verLayout);
             }
-            rootLayot_->addLayout(horLayout);
+            rootLayout_->addLayout(horLayout);
         }
 
-        thirdLine_ = new LineWidget(mainWidget_, Utils::scale_value(labels_left_margin), Utils::scale_value(line_vertical_margin), Utils::scale_value(right_margin), Utils::scale_value(line_vertical_margin));
+        thirdLine_ = new LineWidget(mainWidget_, 0, 0, 0, 0);
         Utils::grabTouchWidget(thirdLine_);
-        rootLayot_->addWidget(thirdLine_);
+        rootLayout_->addWidget(thirdLine_);
     }
 
     void MenuPage::initEraseIgnoreDelete()
     {
-        eraseHistoryButton_ = new ActionButton(mainWidget_, ":/resources/sidebar_closechat_100.png", QT_TRANSLATE_NOOP("sidebar", "Clear history"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        eraseHistoryButton_ = new ActionButton(mainWidget_, ":/resources/i_history_100.png", QT_TRANSLATE_NOOP("sidebar", "Clear history"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         eraseHistoryButton_->setCursor(QCursor(Qt::PointingHandCursor));
         Utils::grabTouchWidget(eraseHistoryButton_);
-        rootLayot_->addWidget(eraseHistoryButton_);
+        rootLayout_->addWidget(eraseHistoryButton_);
 
-        ignoreButton_ = new ActionButton(mainWidget_, ":/resources/sidebar_ignore_100.png", QT_TRANSLATE_NOOP("sidebar", "Ignore"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        ignoreButton_ = new ActionButton(mainWidget_, ":/resources/i_ignore_100.png", QT_TRANSLATE_NOOP("sidebar", "Ignore"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         ignoreButton_->setCursor(QCursor(Qt::PointingHandCursor));
         Utils::grabTouchWidget(ignoreButton_);
-        rootLayot_->addWidget(ignoreButton_);
+        rootLayout_->addWidget(ignoreButton_);
 
-        quitAndDeleteButton_ = new ActionButton(mainWidget_, ":/resources/contr_signout_100.png", QT_TRANSLATE_NOOP("sidebar", "Leave and delete"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        quitAndDeleteButton_ = new ActionButton(mainWidget_, ":/resources/i_delete_100.png", QT_TRANSLATE_NOOP("sidebar", "Leave and delete"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         quitAndDeleteButton_->setCursor(QCursor(Qt::PointingHandCursor));
+        quitAndDeleteButton_->setColor("#e83b3f");
         Utils::grabTouchWidget(quitAndDeleteButton_);
-        rootLayot_->addWidget(quitAndDeleteButton_);
+        rootLayout_->addWidget(quitAndDeleteButton_);
 
-        spamButtonAuth_ = new ActionButton(mainWidget_, ":/resources/sidebar_spam_100.png", QT_TRANSLATE_NOOP("sidebar", "Report spam"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        spamButtonAuth_ = new ActionButton(mainWidget_, ":/resources/i_report_100.png", QT_TRANSLATE_NOOP("sidebar", "Report spam"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         spamButtonAuth_->setCursor(QCursor(Qt::PointingHandCursor));
         Utils::grabTouchWidget(spamButtonAuth_);
-        rootLayot_->addWidget(spamButtonAuth_);
+        rootLayout_->addWidget(spamButtonAuth_);
 
-        deleteButton_ = new ActionButton(mainWidget_, ":/resources/sidebar_delete_100.png", QT_TRANSLATE_NOOP("sidebar", "Delete"), Utils::scale_value(button_height), 0, Utils::scale_value(button_offset));
+        deleteButton_ = new ActionButton(mainWidget_, ":/resources/i_delete_100.png", QT_TRANSLATE_NOOP("sidebar", "Delete"), Utils::scale_value(ITEM_HEIGHT), 0, Utils::scale_value(HOR_PADDING));
         deleteButton_->setCursor(QCursor(Qt::PointingHandCursor));
+        deleteButton_->setColor("#e83b3f");
         Utils::grabTouchWidget(deleteButton_);
-        rootLayot_->addWidget(deleteButton_);
+        rootLayout_->addWidget(deleteButton_);
 
-        bottomSpacer_ = new QSpacerItem(0, QWIDGETSIZE_MAX, QSizePolicy::Preferred, QSizePolicy::Expanding);
-        rootLayot_->addSpacerItem(bottomSpacer_);
-        rootLayot_->addSpacerItem(new QSpacerItem(0, Utils::scale_value(labels_bottom_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
+        rootLayout_->addSpacerItem(new QSpacerItem(0, QWIDGETSIZE_MAX, QSizePolicy::Preferred, QSizePolicy::Expanding));
 
     }
 
@@ -683,46 +579,45 @@ namespace Ui
     {
         listWidget_ = new QWidget(stackedWidget_);
         stackedWidget_->insertWidget(list, listWidget_);
-        auto vLayout = emptyVLayout(listWidget_);
+        auto vLayout = Utils::emptyVLayout(listWidget_);
         vLayout->setAlignment(Qt::AlignTop);
-        vLayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(add_contact_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
         {
-            auto horLayout = emptyHLayout();
-            horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(left_margin), 0, QSizePolicy::Fixed, QSizePolicy::Fixed));
-            backButton_ = new CustomButton(listWidget_, ":/resources/contr_back_100.png");
-            backButton_->setHoverImage(":/resources/contr_back_100_hover.png");
-            backButton_->setActiveImage(":/resources/contr_back_100_active.png");
-            backButton_->setFixedSize(Utils::scale_value(back_button_size), Utils::scale_value(back_button_size));
+            backButton_ = new CustomButton(listWidget_, ":/resources/basic_elements/contr_basic_back_100.png");
+            backButton_->setFixedSize(QSize(Utils::scale_value(BACK_WIDTH), Utils::scale_value(BACK_HEIGHT)));
+            backButton_->setStyleSheet("background: transparent; border-style: none;");
             backButton_->setCursor(QCursor(Qt::PointingHandCursor));
-            horLayout->addWidget(backButton_);
-            horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(back_button_spacing), 0, QSizePolicy::Fixed, QSizePolicy::Fixed));
+            backButton_->setOffsets(Utils::scale_value(HOR_PADDING), 0);
+            backButton_->setAlign(Qt::AlignLeft);
+            auto topWidget = new QWidget(listWidget_);
+            auto hLayout = Utils::emptyHLayout(topWidget);
+            hLayout->setContentsMargins(0, 0, Utils::scale_value(HOR_PADDING + BACK_WIDTH), 0);
+            hLayout->addWidget(backButton_);
             listLabel_ = new QLabel(listWidget_);
-            listLabel_->setFont(Fonts::appFontScaled(20));
-            QPalette p;
-            p.setColor(QPalette::Foreground, Ui::CommonStyle::getTextCommonColor());
-            listLabel_->setPalette(p);
-            listLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Members"));
-            horLayout->addWidget(listLabel_);
-            horLayout->addSpacerItem(new QSpacerItem(1, 0, QSizePolicy::Expanding));
-            vLayout->addLayout(horLayout);
+            Utils::grabTouchWidget(listLabel_);
+            listLabel_->setObjectName("titleLabel");
+            listLabel_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            hLayout->addWidget(listLabel_);
+            vLayout->addWidget(topWidget);
 
             privacyWidget_ = new QWidget(listWidget_);
-            auto privacyLayout = emptyVLayout(privacyWidget_);
-            privacyLayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(privacy_top_offset), QSizePolicy::Preferred, QSizePolicy::Fixed));
+            auto privacyLayout = Utils::emptyVLayout(privacyWidget_);
             {
-                auto vlayout = emptyVLayout();
+                auto vlayout = Utils::emptyVLayout();
+                vlayout->setContentsMargins(0, 0, 0, Utils::scale_value(checkbox_bottom_margin));
                 vlayout->setAlignment(Qt::AlignTop);
-                auto horLayout = emptyHLayout();
+                auto horLayout = Utils::emptyHLayout();
+                horLayout->setContentsMargins(Utils::scale_value(HOR_PADDING), 0, Utils::scale_value(HOR_PADDING), 0);
                 horLayout->setAlignment(Qt::AlignTop);
-                linkToChat_ = new CustomButton(listWidget_, ":/resources/sidebar_joinbylink_100.png");
-                linkToChat_->setOffsets(Utils::scale_value(list_buttons_offset), 0);
-                linkToChat_->setText(QT_TRANSLATE_NOOP("sidebar", "Link to chat"));
+                linkToChat_ = new CustomButton(listWidget_, ":/resources/livechat_joinbylink_100.png");
+                linkToChat_->setFont(Fonts::appFontScaled(16));
+                linkToChat_->setTextColor("#454545");
+                linkToChat_->setText(QT_TRANSLATE_NOOP("groupchats", "Link to chat"));
                 linkToChat_->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
                 linkToChat_->setAlign(Qt::AlignLeft);
                 linkToChat_->setFocusPolicy(Qt::NoFocus);
-                linkToChat_->setFixedHeight(Utils::scale_value(button_height));
+                linkToChat_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
                 linkToChat_->adjustSize();
-                Utils::ApplyStyle(linkToChat_, QString("padding-left: %1dip").arg(list_buttons_offset + icon_offset));
+                Utils::ApplyStyle(linkToChat_, QString("padding-left: %1dip;").arg(LEFT_MARGIN - HOR_PADDING));
                 horLayout->addWidget(linkToChat_);
 
                 linkToChatCheckBox_ = new QCheckBox(listWidget_);
@@ -731,45 +626,35 @@ namespace Ui
                 linkToChatCheckBox_->setCursor(QCursor(Qt::PointingHandCursor));
                 linkToChatCheckBox_->setFixedSize(Utils::scale_value(checkbox_width), Utils::scale_value(checkbox_height));
                 horLayout->addWidget(linkToChatCheckBox_);
-                horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                horLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
 
-                auto hLayout = emptyHLayout();
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(list_buttons_offset + icon_offset), 0, QSizePolicy::Fixed));
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 linkToChatAbout_ = new LabelEx(listWidget_);
-                linkToChatAbout_->setFont(Fonts::appFontScaled(13));
-                QPalette p;
-                p.setBrush(QPalette::Foreground, QColor("#696969"));
-                linkToChatAbout_->setPalette(p);
-                linkToChatAbout_->setText(QT_TRANSLATE_NOOP("sidebar", "Ability to join chat by link"));
+                linkToChatAbout_->setObjectName("labelExplanation");
+                linkToChatAbout_->setText(QT_TRANSLATE_NOOP("groupchats", "Ability to join chat by link"));
                 linkToChatAbout_->setWordWrap(true);
                 hLayout->addWidget(linkToChatAbout_);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(option_about_right_margin), 0, QSizePolicy::Fixed));
-                hLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                 vlayout->addLayout(horLayout);
-                vlayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(reverse_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
                 vlayout->addLayout(hLayout);
                 privacyLayout->addLayout(vlayout);
             }
-
-            linkBottomSpace_ = new QWidget(listWidget_);
-            linkBottomSpace_->setFixedHeight(Utils::scale_value(checkbox_bottom_margin));
-            privacyLayout->addWidget(linkBottomSpace_);
-
             {
-                auto vlayout = emptyVLayout();
+                auto vlayout = Utils::emptyVLayout();
+                vlayout->setContentsMargins(0, 0, 0, Utils::scale_value(checkbox_bottom_margin));
                 vlayout->setAlignment(Qt::AlignTop);
-                auto horLayout = emptyHLayout();
+                auto horLayout = Utils::emptyHLayout();
                 horLayout->setAlignment(Qt::AlignTop);
-                publicButton_ = new CustomButton(listWidget_, ":/resources/sidebar_public_100.png");
-                publicButton_->setOffsets(Utils::scale_value(list_buttons_offset), 0);
-                publicButton_->setText(QT_TRANSLATE_NOOP("sidebar", "Public chat"));
+                horLayout->setContentsMargins(Utils::scale_value(HOR_PADDING), 0, Utils::scale_value(HOR_PADDING), 0);
+                publicButton_ = new CustomButton(listWidget_, ":/resources/livechat_public_100.png");
+                publicButton_->setFont(Fonts::appFontScaled(16));
+                publicButton_->setTextColor("#454545");
+                publicButton_->setText(QT_TRANSLATE_NOOP("groupchats", "Public chat"));
                 publicButton_->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
                 publicButton_->setAlign(Qt::AlignLeft);
                 publicButton_->setFocusPolicy(Qt::NoFocus);
-                publicButton_->setFixedHeight(Utils::scale_value(button_height));
+                publicButton_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
                 publicButton_->adjustSize();
-                Utils::ApplyStyle(publicButton_, QString("padding-left: %1dip").arg(list_buttons_offset + icon_offset));
+                Utils::ApplyStyle(publicButton_, QString("padding-left: %1dip;").arg(LEFT_MARGIN - HOR_PADDING));
                 horLayout->addWidget(publicButton_);
 
                 publicCheckBox_ = new QCheckBox(listWidget_);
@@ -778,45 +663,35 @@ namespace Ui
                 publicCheckBox_->setCursor(QCursor(Qt::PointingHandCursor));
                 publicCheckBox_->setFixedSize(Utils::scale_value(checkbox_width), Utils::scale_value(checkbox_height));
                 horLayout->addWidget(publicCheckBox_);
-                horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                horLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
-                
-                auto hLayout = emptyHLayout();
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(list_buttons_offset + icon_offset), 0, QSizePolicy::Fixed));
+
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 publicAbout_ = new LabelEx(listWidget_);
-                publicAbout_->setFont(Fonts::appFontScaled(13));
-                QPalette p;
-                p.setBrush(QPalette::Foreground, QColor("#696969"));
-                publicAbout_->setPalette(p);
-                publicAbout_->setText(QT_TRANSLATE_NOOP("sidebar", "Chat will be visible to everyone"));
+                publicAbout_->setObjectName("labelExplanation");
+                publicAbout_->setText(QT_TRANSLATE_NOOP("groupchats", "Chat will be visible to everyone"));
                 publicAbout_->setWordWrap(true);
                 hLayout->addWidget(publicAbout_);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(option_about_right_margin), 0, QSizePolicy::Fixed));
-                hLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                 vlayout->addLayout(horLayout);
-                vlayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(reverse_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
                 vlayout->addLayout(hLayout);
                 privacyLayout->addLayout(vlayout);
             }
-
-            publicBottomSpace_ = new QWidget(listWidget_);
-            publicBottomSpace_->setFixedHeight(Utils::scale_value(checkbox_bottom_margin));
-            privacyLayout->addWidget(publicBottomSpace_);
-
             {
-                auto vlayout = emptyVLayout();
+                auto vlayout = Utils::emptyVLayout();
+                vlayout->setContentsMargins(0, 0, 0, Utils::scale_value(checkbox_bottom_margin));
                 vlayout->setAlignment(Qt::AlignTop);
-                auto horLayout = emptyHLayout();
+                auto horLayout = Utils::emptyHLayout();
                 horLayout->setAlignment(Qt::AlignTop);
-                readOnly_ = new CustomButton(listWidget_, ":/resources/sidebar_readonly_100.png");
-                readOnly_->setOffsets(Utils::scale_value(list_buttons_offset), 0);
-                readOnly_->setText(QT_TRANSLATE_NOOP("sidebar", "Read only"));
+                horLayout->setContentsMargins(Utils::scale_value(HOR_PADDING), 0, Utils::scale_value(HOR_PADDING), 0);
+                readOnly_ = new CustomButton(listWidget_, ":/resources/livechat_readonly_100.png");
+                readOnly_->setFont(Fonts::appFontScaled(16));
+                readOnly_->setTextColor("#454545");
+                readOnly_->setText(QT_TRANSLATE_NOOP("groupchats", "Read only"));
                 readOnly_->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
                 readOnly_->setAlign(Qt::AlignLeft);
                 readOnly_->setFocusPolicy(Qt::NoFocus);
-                readOnly_->setFixedHeight(Utils::scale_value(button_height));
+                readOnly_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
                 readOnly_->adjustSize();
-                Utils::ApplyStyle(readOnly_, QString("padding-left: %1dip").arg(list_buttons_offset + icon_offset));
+                Utils::ApplyStyle(readOnly_, QString("padding-left: %1dip;").arg(LEFT_MARGIN - HOR_PADDING));
                 horLayout->addWidget(readOnly_);
 
                 readOnlyCheckBox_ = new QCheckBox(listWidget_);
@@ -825,114 +700,90 @@ namespace Ui
                 readOnlyCheckBox_->setCursor(QCursor(Qt::PointingHandCursor));
                 readOnlyCheckBox_->setFixedSize(Utils::scale_value(checkbox_width), Utils::scale_value(checkbox_height));
                 horLayout->addWidget(readOnlyCheckBox_);
-                horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                horLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
 
-                auto hLayout = emptyHLayout();
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(list_buttons_offset + icon_offset), 0, QSizePolicy::Fixed));
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 readOnlyAbout_ = new LabelEx(listWidget_);
-                readOnlyAbout_->setFont(Fonts::appFontScaled(13));
-                QPalette p;
-                p.setBrush(QPalette::Foreground, QColor("#696969"));
-                readOnlyAbout_->setPalette(p);
-                readOnlyAbout_->setText(QT_TRANSLATE_NOOP("sidebar", "New members can read, approved by admin members can send"));
+                readOnlyAbout_->setObjectName("labelExplanation");
+                readOnlyAbout_->setText(QT_TRANSLATE_NOOP("groupchats", "New members can read, approved by admin members can send"));
                 readOnlyAbout_->setWordWrap(true);
                 hLayout->addWidget(readOnlyAbout_);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(option_about_right_margin), 0, QSizePolicy::Fixed));
-                hLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                 vlayout->addLayout(horLayout);
-                vlayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(reverse_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
                 vlayout->addLayout(hLayout);
                 privacyLayout->addLayout(vlayout);
             }
-
-            readOnlyBottomSpace_ = new QWidget(listWidget_);
-            readOnlyBottomSpace_->setFixedHeight(Utils::scale_value(checkbox_bottom_margin));
-            privacyLayout->addWidget(readOnlyBottomSpace_);
-
             {
-                auto vlayout = emptyVLayout();
+                auto vlayout = Utils::emptyVLayout();
+                vlayout->setContentsMargins(0, 0, 0, Utils::scale_value(checkbox_bottom_margin));
                 vlayout->setAlignment(Qt::AlignTop);
-                auto horLayout = emptyHLayout();
-                approvedButton_ = new CustomButton(listWidget_, ":/resources/sidebar_approve_100.png");
-                approvedButton_->setOffsets(Utils::scale_value(list_buttons_offset), 0);
-                approvedButton_->setText(QT_TRANSLATE_NOOP("sidebar", "Join with Approval"));
+                auto horLayout = Utils::emptyHLayout();
+                horLayout->setAlignment(Qt::AlignTop);
+                horLayout->setContentsMargins(Utils::scale_value(HOR_PADDING), 0, Utils::scale_value(HOR_PADDING), 0);
+                approvedButton_ = new CustomButton(listWidget_, ":/resources/livechat_approve_100.png");
+                approvedButton_->setFont(Fonts::appFontScaled(16));
+                approvedButton_->setTextColor("#454545");
+                approvedButton_->setText(QT_TRANSLATE_NOOP("groupchats", "Join with Approval"));
                 approvedButton_->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
                 approvedButton_->setAlign(Qt::AlignLeft);
                 approvedButton_->setFocusPolicy(Qt::NoFocus);
-                approvedButton_->setFixedHeight(Utils::scale_value(button_height));
+                approvedButton_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
                 approvedButton_->adjustSize();
-                Utils::ApplyStyle(approvedButton_, QString("padding-left: %1dip").arg(list_buttons_offset + icon_offset));
+                Utils::ApplyStyle(approvedButton_, QString("padding-left: %1dip;").arg(LEFT_MARGIN - HOR_PADDING));
                 horLayout->addWidget(approvedButton_);
+
                 approvedCheckBox_ = new QCheckBox(listWidget_);
                 approvedCheckBox_->setObjectName("greenSwitcher");
                 approvedCheckBox_->adjustSize();
                 approvedCheckBox_->setCursor(QCursor(Qt::PointingHandCursor));
                 approvedCheckBox_->setFixedSize(Utils::scale_value(checkbox_width), Utils::scale_value(checkbox_height));
                 horLayout->addWidget(approvedCheckBox_);
-                horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                horLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
 
-                auto hLayout = emptyHLayout();
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(list_buttons_offset + icon_offset), 0, QSizePolicy::Fixed));
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 approvalAbout_ = new LabelEx(listWidget_);
                 approvalAbout_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-                approvalAbout_->setFont(Fonts::appFontScaled(13));
-                QPalette p;
-                p.setBrush(QPalette::Foreground, QColor("#696969"));
-                approvalAbout_->setPalette(p);
-                approvalAbout_->setText(QT_TRANSLATE_NOOP("sidebar", "Admin approval required to join"));
+                approvalAbout_->setObjectName("labelExplanation");
+                approvalAbout_->setText(QT_TRANSLATE_NOOP("groupchats", "Admin approval required to join"));
                 approvalAbout_->setWordWrap(true);
                 hLayout->addWidget(approvalAbout_);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(option_about_right_margin), 0, QSizePolicy::Fixed));
-                hLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                 vlayout->addLayout(horLayout);
-                vlayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(reverse_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
                 vlayout->addLayout(hLayout);
                 privacyLayout->addLayout(vlayout);
             }
-
-            approvedBottomSpace_ = new QWidget(listWidget_);
-            approvedBottomSpace_->setFixedHeight(Utils::scale_value(checkbox_bottom_margin));
-            privacyLayout->addWidget(approvedBottomSpace_);
-
             {
-                auto vlayout = emptyVLayout();
+                auto vlayout = Utils::emptyVLayout();
+                vlayout->setContentsMargins(0, 0, 0, Utils::scale_value(checkbox_bottom_margin));
                 vlayout->setAlignment(Qt::AlignTop);
-                auto horLayout = emptyHLayout();
-                ageRestrictions_ = new CustomButton(listWidget_, ":/resources/sidebar_agegate_100.png");
-                ageRestrictions_->setOffsets(Utils::scale_value(list_buttons_offset), 0);
-                ageRestrictions_->setText(QT_TRANSLATE_NOOP("sidebar", "Age restriction"));
+                auto horLayout = Utils::emptyHLayout();
+                horLayout->setAlignment(Qt::AlignTop);
+                horLayout->setContentsMargins(Utils::scale_value(HOR_PADDING), 0, Utils::scale_value(HOR_PADDING), 0);
+                ageRestrictions_ = new CustomButton(listWidget_, ":/resources/livechat_agegate_100.png");
+                ageRestrictions_->setFont(Fonts::appFontScaled(16));
+                ageRestrictions_->setTextColor("#454545");
+                ageRestrictions_->setText(QT_TRANSLATE_NOOP("groupchats", "Age restriction"));
                 ageRestrictions_->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
                 ageRestrictions_->setAlign(Qt::AlignLeft);
                 ageRestrictions_->setFocusPolicy(Qt::NoFocus);
-                ageRestrictions_->setFixedHeight(Utils::scale_value(button_height));
+                ageRestrictions_->setFixedHeight(Utils::scale_value(ITEM_HEIGHT));
                 ageRestrictions_->adjustSize();
-                Utils::ApplyStyle(ageRestrictions_, QString("padding-left: %1dip").arg(list_buttons_offset + icon_offset));
+                Utils::ApplyStyle(ageRestrictions_, QString("padding-left: %1dip;").arg(LEFT_MARGIN - HOR_PADDING));
                 horLayout->addWidget(ageRestrictions_);
+
                 ageCheckBox_ = new QCheckBox(listWidget_);
                 ageCheckBox_->setObjectName("greenSwitcher");
                 ageCheckBox_->adjustSize();
                 ageCheckBox_->setCursor(QCursor(Qt::PointingHandCursor));
                 ageCheckBox_->setFixedSize(Utils::scale_value(checkbox_width), Utils::scale_value(checkbox_height));
                 horLayout->addWidget(ageCheckBox_);
-                horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(right_margin), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
-                horLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
 
-                auto hLayout = emptyHLayout();
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(list_buttons_offset + icon_offset), 0, QSizePolicy::Fixed));
+                auto hLayout = Utils::emptyHLayout();
+                hLayout->setContentsMargins(Utils::scale_value(LEFT_MARGIN), 0, 0, 0);
                 ageAbout_ = new LabelEx(listWidget_);
-                ageAbout_->setFont(Fonts::appFontScaled(13));
-                QPalette p;
-                p.setBrush(QPalette::Foreground, QColor("#696969"));
-                ageAbout_->setPalette(p);
-                ageAbout_->setText(QT_TRANSLATE_NOOP("sidebar", "Members must be of legal age to join"));
+                ageAbout_->setObjectName("labelExplanation");
+                ageAbout_->setText(QT_TRANSLATE_NOOP("groupchats", "Members must be of legal age to join"));
                 ageAbout_->setWordWrap(true);
                 hLayout->addWidget(ageAbout_);
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(option_about_right_margin), 0, QSizePolicy::Fixed));
-                hLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                 vlayout->addLayout(horLayout);
-                vlayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(reverse_margin), QSizePolicy::Preferred, QSizePolicy::Fixed));
                 vlayout->addLayout(hLayout);
                 privacyLayout->addLayout(vlayout);
             }
@@ -940,32 +791,31 @@ namespace Ui
             vLayout->addWidget(privacyWidget_);
 
             contactListWidget_ = new QWidget(listWidget_);
-            auto contactListLayout = emptyVLayout(contactListWidget_);
+            auto contactListLayout = Utils::emptyVLayout(contactListWidget_);
             {
-                auto hLayout = emptyHLayout();
-                hLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(list_left_margin), 0, QSizePolicy::Fixed));
-                searchWidget_ = new SearchWidget(false, listWidget_);
+                auto hLayout = Utils::emptyHLayout();
+                searchWidget_ = new SearchWidget(listWidget_, Utils::scale_value(search_hor_spacing));
                 searchWidget_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-                searchWidget_->setShowButton(false);
-                searchWidget_->setTransparent(true);
                 hLayout->addWidget(searchWidget_);
                 hLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred));
                 contactListLayout->addLayout(hLayout);
+                contactListLayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(search_ver_spacing), QSizePolicy::Preferred, QSizePolicy::Fixed));
             }
-            cl_ = new Ui::ContactList(listWidget_, Logic::DELETE_MEMBERS, chatMembersModel_);
+            cl_ = new Ui::ContactList(listWidget_, Logic::MEMBERS_LIST, chatMembersModel_);
             cl_->changeTab(SEARCH);
             cl_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
             cl_->setContentsMargins(0, 0, 0, 0);
             cl_->setClDelegate(delegate_);
-            cl_->setTransparent(true);
             contactListLayout->addWidget(cl_);
             vLayout->addWidget(contactListWidget_);
             {
                 approveAllWidget_ = new QWidget(listWidget_);
-                auto verLayout = emptyVLayout(approveAllWidget_);
-                approveAllLine_ = new LineWidget(listWidget_, Utils::scale_value(left_margin), Utils::scale_value(line_vertical_margin), Utils::scale_value(right_margin), Utils::scale_value(line_vertical_margin));
+                auto verLayout = Utils::emptyVLayout(approveAllWidget_);
+                verLayout->setContentsMargins(0, 0, 0, Utils::scale_value(HOR_PADDING));
+                approveAllLine_ = new LineWidget(listWidget_, 0, 0, 0, 0);
                 verLayout->addWidget(approveAllLine_);
-                auto hlayout = emptyHLayout();
+                auto hlayout = Utils::emptyHLayout();
+                hlayout->setContentsMargins(0, 0, Utils::scale_value(2 * HOR_PADDING), 0);
                 hlayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding));
                 approveAll_ = new LabelEx(listWidget_);
                 approveAll_->setFont(Fonts::appFontScaled(16));
@@ -975,9 +825,7 @@ namespace Ui
                 approveAll_->setText(QT_TRANSLATE_NOOP("sidebar", "Approve All"));
                 approveAll_->setCursor(QCursor(Qt::PointingHandCursor));
                 hlayout->addWidget(approveAll_);
-                hlayout->addSpacerItem(new QSpacerItem(Utils::scale_value(search_margin_right + approve_all_margin), 0, QSizePolicy::Fixed));
                 verLayout->addLayout(hlayout);
-                verLayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(approve_all_bottom), QSizePolicy::Preferred, QSizePolicy::Fixed));
             }
             vLayout->addWidget(approveAllWidget_);
         }
@@ -1001,8 +849,8 @@ namespace Ui
         connect(addToChat_, SIGNAL(clicked()), this, SLOT(addToChatClicked()), Qt::QueuedConnection);
         connect(addContact_, SIGNAL(clicked()), this, SLOT(addContactClicked()), Qt::QueuedConnection);
         connect(spamButton_, SIGNAL(clicked()), this, SLOT(spamClicked()), Qt::QueuedConnection);
-        connect(spamButtonAuth_, SIGNAL(clicked()), this, SLOT(spam()), Qt::QueuedConnection);
-        connect(deleteButton_, SIGNAL(clicked()), this, SLOT(remove()), Qt::QueuedConnection);
+        connect(spamButtonAuth_, SIGNAL(clicked()), this, SLOT(spamClicked()), Qt::QueuedConnection);
+        connect(deleteButton_, SIGNAL(clicked()), this, SLOT(removeClicked()), Qt::QueuedConnection);
 
         connect(avatarName_, SIGNAL(clicked()), this, SLOT(avatarClicked()), Qt::QueuedConnection);
 
@@ -1024,7 +872,7 @@ namespace Ui
         connect(searchWidget_, SIGNAL(enterPressed()), cl_, SLOT(searchResult()), Qt::QueuedConnection);
         connect(searchWidget_, SIGNAL(upPressed()), cl_, SLOT(searchUpPressed()), Qt::QueuedConnection);
         connect(searchWidget_, SIGNAL(downPressed()), cl_, SLOT(searchDownPressed()), Qt::QueuedConnection);
-        connect(searchWidget_, SIGNAL(search(QString)), Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS), SLOT(searchPatternChanged(QString)), Qt::QueuedConnection);
+        connect(searchWidget_, SIGNAL(search(QString)), Logic::getCurrentSearchModel(Logic::MEMBERS_LIST), SLOT(searchPatternChanged(QString)), Qt::QueuedConnection);
         connect(moreLabel_, SIGNAL(clicked()), this, SLOT(moreClicked()), Qt::QueuedConnection);
         connect(admins_, SIGNAL(clicked()), this, SLOT(adminsClicked()), Qt::QueuedConnection);
         connect(blockList_, SIGNAL(clicked()), this, SLOT(blockedClicked()), Qt::QueuedConnection);
@@ -1225,7 +1073,7 @@ namespace Ui
         {
         case all:
             chatMembersModel_->loadAllMembers();
-            Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS)->searchPatternChanged("");
+            Logic::getCurrentSearchModel(Logic::MEMBERS_LIST)->searchPatternChanged("");
             if (Logic::getContactListModel()->isChat(currentAimId_))
                 delegate_->setRegim(
                 (chatMembersModel_->isAdmin() || chatMembersModel_->isModer()) ?
@@ -1243,9 +1091,9 @@ namespace Ui
 
         case block:
             chatMembersModel_->loadBlocked();
-            Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS)->searchPatternChanged("");
+            Logic::getCurrentSearchModel(Logic::MEMBERS_LIST)->searchPatternChanged("");
             if (chatMembersModel_->isAdmin() || chatMembersModel_->isModer())
-                delegate_->setRegim(Logic::DELETE_MEMBERS);
+                delegate_->setRegim(Logic::MEMBERS_LIST);
             else
                 delegate_->setRegim(Logic::CONTACT_LIST);
             listLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Blocked people"));
@@ -1258,9 +1106,9 @@ namespace Ui
 
         case admins:
             chatMembersModel_->adminsOnly();
-            Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS)->searchPatternChanged("");
+            Logic::getCurrentSearchModel(Logic::MEMBERS_LIST)->searchPatternChanged("");
             if (chatMembersModel_->isAdmin())
-                delegate_->setRegim(Logic::DELETE_MEMBERS);
+                delegate_->setRegim(Logic::MEMBERS_LIST);
             else
                 delegate_->setRegim(Logic::CONTACT_LIST);
             listLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Admins"));
@@ -1273,7 +1121,7 @@ namespace Ui
 
         case pending:
             chatMembersModel_->loadPending();
-            Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS)->searchPatternChanged("");
+            Logic::getCurrentSearchModel(Logic::MEMBERS_LIST)->searchPatternChanged("");
             delegate_->setRegim(Logic::PENDING_MEMBERS);
             listLabel_->setText(QT_TRANSLATE_NOOP("sidebar", "Waiting for approval"));
             currentTab_ = pending;
@@ -1317,7 +1165,7 @@ namespace Ui
         if (global_cursor_pos.x() > width_)
             return;
 
-        auto minXofDeleteImage = ::ContactList::GetXOfRemoveImg(false, true, width_);
+        auto minXofDeleteImage = ::ContactList::GetXOfRemoveImg(width_);
         auto minXOfApprove = minXofDeleteImage - Utils::scale_value(48);
         bool advMenu = (chatMembersModel_->isAdmin() || chatMembersModel_->isModer() || (info_ && info_->Controlled_ == false));
 
@@ -1334,12 +1182,12 @@ namespace Ui
                 {
                     if (cont->Role_ == "moder")
                         menu->addActionWithIcon(
-                            QIcon(Utils::parse_image_name(":/resources/dialog_removeking_100.png")),
+                            QIcon(Utils::parse_image_name(":/resources/context_menu/removeking_100.png")),
                             QT_TRANSLATE_NOOP("sidebar", "Revoke admin role"),
                             makeData("revoke_admin", aimId));
                     else
                         menu->addActionWithIcon(
-                            QIcon(Utils::parse_image_name(":/resources/dialog_king_100.png")),
+                            QIcon(Utils::parse_image_name(":/resources/context_menu/king_100.png")),
                             QT_TRANSLATE_NOOP("sidebar", "Make admin"),
                             makeData("make_admin", aimId));
                 }
@@ -1348,37 +1196,37 @@ namespace Ui
                 {
                     if (cont->Role_ == "member")
                         menu->addActionWithIcon(
-                        QIcon(Utils::parse_image_name(":/resources/dialog_onlyread_100.png")),
+                        QIcon(Utils::parse_image_name(":/resources/context_menu/onlyread_100.png")),
                         QT_TRANSLATE_NOOP("sidebar", "Ban to write"),
                         makeData("readonly", aimId));
                     else if (cont->Role_ == "readonly")
                         menu->addActionWithIcon(
-                        QIcon(Utils::parse_image_name(":/resources/dialog_onlyread_off_100.png")),
+                        QIcon(Utils::parse_image_name(":/resources/context_menu/onlyread_off_100.png")),
                         QT_TRANSLATE_NOOP("sidebar", "Allow to write"),
                         makeData("revoke_readonly", aimId));
                 }
 
                 if ((cont->Role_ != "admin" && cont->Role_ != "moder") || myInfo)
                     menu->addActionWithIcon(
-                        QIcon(Utils::parse_image_name(":/resources/dialog_delete_100.png")),
+                        QIcon(Utils::parse_image_name(":/resources/context_menu/delete_100.png")),
                         QT_TRANSLATE_NOOP("sidebar", "Delete from chat"),
                         makeData("remove", aimId));
 
                 if (!myInfo)
                     menu->addActionWithIcon(
-                        QIcon(Utils::parse_image_name(":/resources/dialog_profile_100.png")),
+                        QIcon(Utils::parse_image_name(":/resources/context_menu/profile_100.png")),
                         QT_TRANSLATE_NOOP("sidebar", "Profile"),
                         makeData("profile", aimId));
 
                 if (cont->Role_ != "admin" && cont->Role_ != "moder")
                     menu->addActionWithIcon(
-                        QIcon(Utils::parse_image_name(":/resources/dialog_block_100.png")),
+                        QIcon(Utils::parse_image_name(":/resources/context_menu/block_100.png")),
                         QT_TRANSLATE_NOOP("sidebar", "Block"),
                         makeData("block", aimId));
 
                 if (!myInfo)
                     menu->addActionWithIcon(
-                        QIcon(Utils::parse_image_name(":/resources/dialog_spam_100.png")),
+                        QIcon(Utils::parse_image_name(":/resources/context_menu/spam_100.png")),
                         QT_TRANSLATE_NOOP("sidebar", "Report spam"),
                         makeData("spam", aimId));
 
@@ -1400,7 +1248,7 @@ namespace Ui
             }
             else
             {
-                deleteMemberDialog(chatMembersModel_, aimId, Logic::DELETE_MEMBERS, this);
+                deleteMemberDialog(chatMembersModel_, aimId, Logic::MEMBERS_LIST, this);
             }
         }
         else if (currentTab_ == pending &&
@@ -1479,7 +1327,7 @@ namespace Ui
 
         if (command == "remove")
         {
-            deleteMemberDialog(chatMembersModel_, aimId, Logic::DELETE_MEMBERS, this);
+            deleteMemberDialog(chatMembersModel_, aimId, Logic::MEMBERS_LIST, this);
         }
 
         if (command == "profile")
@@ -1492,7 +1340,7 @@ namespace Ui
             if (Logic::getContactListModel()->blockAndSpamContact(aimId))
             {
                 Logic::getContactListModel()->removeContactFromCL(aimId);
-                GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::spam_sidebar);
+                GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::spam_members_list);
             }
         }
 
@@ -1529,7 +1377,7 @@ namespace Ui
 
     void MenuPage::searchEnd()
     {
-        Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS)->searchPatternChanged("");
+        Logic::getCurrentSearchModel(Logic::MEMBERS_LIST)->searchPatternChanged("");
     }
 
     void MenuPage::backButtonClicked()
@@ -1613,16 +1461,7 @@ namespace Ui
         }
     }
 
-    void MenuPage::spam()
-    {
-        if (Logic::getContactListModel()->blockAndSpamContact(currentAimId_))
-        {
-            Logic::getContactListModel()->removeContactFromCL(currentAimId_);
-            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::spam_profile_page);
-        }
-    }
-
-    void MenuPage::remove()
+    void MenuPage::removeClicked()
     {
         auto confirmed = Utils::GetConfirmationWithTwoButtons(
             QT_TRANSLATE_NOOP("popup_window", "Cancel"),
@@ -1634,7 +1473,7 @@ namespace Ui
         {
             Logic::getContactListModel()->removeContactFromCL(currentAimId_);
             GetDispatcher()->getVoipController().setDecline(currentAimId_.toUtf8().data(), false);
-            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::delete_profile_page);
+            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::delete_sidebar);
         }
     }
 
@@ -1720,7 +1559,7 @@ namespace Ui
                 }
 
                 if (Logic::getContactListModel()->isChat(currentAimId_))
-                    delegate_->setRegim((chatMembersModel_->isAdmin() || chatMembersModel_->isModer()) ? Logic::ADMIN_MEMBERS : (info_->Controlled_ == false ? Logic::DELETE_MEMBERS : Logic::CONTACT_LIST));
+                    delegate_->setRegim((chatMembersModel_->isAdmin() || chatMembersModel_->isModer()) ? Logic::ADMIN_MEMBERS : (info_->Controlled_ == false ? Logic::MEMBERS_LIST : Logic::CONTACT_LIST));
                 else
                     delegate_->setRegim(Logic::CONTACT_LIST);
             }
@@ -1734,10 +1573,12 @@ namespace Ui
                 publicCheckBox_->blockSignals(false);
                 publicCheckBox_->setEnabled(info_->Live_);
                 QPalette p;
-                p.setBrush(QPalette::Foreground, QColor(info_->Live_ ? "#696969" : "#787878"));
-                p.setColor(QPalette::ButtonText, QColor(info_->Live_ ? "#696969" : "#787878"));
+                p.setBrush(QPalette::Foreground, QColor(info_->Live_ ? "#767676" : "#999999"));
+                p.setColor(QPalette::ButtonText, QColor(info_->Live_ ? "#767676" : "#999999"));
                 publicAbout_->setPalette(p);
-                Utils::ApplyStyle(publicButton_, QString("padding-left: %1dip; color: %2;").arg(list_buttons_offset + icon_offset).arg(info_->Live_ ? "#000000" : "#787878"));
+                Utils::ApplyStyle(publicButton_, QString("padding-left: %1dip; color: %2;")
+                    .arg(LEFT_MARGIN - HOR_PADDING)
+                    .arg(info_->Live_ ? Utils::rgbaStringFromColor(CommonStyle::getTextCommonColor()) : "#999999"));
 
                 linkToChatCheckBox_->blockSignals(true);
                 linkToChatCheckBox_->setChecked(info_->Live_);
@@ -1756,7 +1597,9 @@ namespace Ui
                 ageCheckBox_->blockSignals(false);
                 ageCheckBox_->setEnabled(info_->Live_);
                 ageAbout_->setPalette(p);
-                Utils::ApplyStyle(ageRestrictions_, QString("padding-left: %1dip; color: %2;").arg(list_buttons_offset + icon_offset).arg(info_->Live_ ? "#000000" : "#787878"));
+                Utils::ApplyStyle(ageRestrictions_, QString("padding-left: %1dip; color: %2;")
+                    .arg(LEFT_MARGIN - HOR_PADDING)
+                    .arg(info_->Live_ ? Utils::rgbaStringFromColor(CommonStyle::getTextCommonColor()) : "#999999"));
             }
 
             if (info_->Live_)
@@ -1765,7 +1608,7 @@ namespace Ui
                 if (QApplication::clipboard()->text() == link)
                     copyLink_->setLink(QT_TRANSLATE_NOOP("sidebar", "link copied"), CommonStyle::getLinkColor());
                 else
-                    copyLink_->setLink(link, QColor(0x97, 0x97, 0x97));
+                    copyLink_->setLink(link, QColor("#999999"));
             }
 
             if (currentTab_ == admins)
@@ -1775,18 +1618,18 @@ namespace Ui
 
             emit updateMembers();
             updateWidth();
-            Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS)->searchPatternChanged("");
+            Logic::getCurrentSearchModel(Logic::MEMBERS_LIST)->searchPatternChanged("");
         }
     }
 
     void MenuPage::chatBlocked(QList<Data::ChatMemberInfo>)
     {
-        Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS)->searchPatternChanged("");
+        Logic::getCurrentSearchModel(Logic::MEMBERS_LIST)->searchPatternChanged("");
     }
 
     void MenuPage::chatPending(QList<Data::ChatMemberInfo> info)
     {
-        Logic::getCurrentSearchModel(Logic::DELETE_MEMBERS)->searchPatternChanged("");
+        Logic::getCurrentSearchModel(Logic::MEMBERS_LIST)->searchPatternChanged("");
         approveAll_->setText(QT_TRANSLATE_NOOP("sidebar", "Approve All (") + QVariant(info.size()).toString() + ")");
     }
 

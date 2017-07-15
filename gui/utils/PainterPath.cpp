@@ -37,8 +37,11 @@ namespace Utils
 
         const auto borderDiameter = (borderRadius * 2);
 
-        const auto bottomMinusBorder = (rect.bottom() - borderDiameter);
-        const auto rightMinusBorder = (rect.right() - borderDiameter);
+        const auto x2 = rect.left() + rect.width();
+        const auto y2 = rect.top() + rect.height();
+
+        const auto bottomMinusBorder = (y2 - borderDiameter);
+        const auto rightMinusBorder = (x2 - borderDiameter);
 
         assert(bottomMinusBorder >= 0);
         assert(rightMinusBorder >= 0);
@@ -78,7 +81,7 @@ namespace Utils
         else
         {
             x = rect.left();
-            y = rect.bottom();
+            y = y2;
             clipPath.lineTo(x, y);
         }
 
@@ -88,7 +91,7 @@ namespace Utils
         if (isRightBottomRoundingEnabled)
         {
             x = rightMinusBorder;
-            y = rect.bottom();
+            y = y2;
             clipPath.lineTo(x, y);
 
             y -= borderDiameter;
@@ -96,8 +99,8 @@ namespace Utils
         }
         else
         {
-            x = rect.right();
-            y = rect.bottom();
+            x = x2;
+            y = y2;
             clipPath.lineTo(x, y);
         }
 
@@ -106,7 +109,7 @@ namespace Utils
         const auto isRightTopRoundingEnabled = ((flags & RenderBubble_RightTopRounded) != 0);
         if (isRightTopRoundingEnabled)
         {
-            x = rect.right();
+            x = x2;
             y = (rect.top() + borderDiameter);
             clipPath.lineTo(x, y);
 
@@ -116,7 +119,7 @@ namespace Utils
         }
         else
         {
-            x = rect.right();
+            x = x2;
             y = rect.top();
 
             clipPath.lineTo(x, y);

@@ -12,17 +12,14 @@ Ui::CustomButton::CustomButton(QWidget* _parent, const QString& _imageName)
     auto px = QPixmap(Utils::parse_image_name(_imageName));
     if (!px.isNull())
     {
-        pixmapDefault_ = platform::is_apple() ?
-            px.scaled(
-                Utils::scale_value(px.width()),
-                Utils::scale_value(px.width()),
-                Qt::KeepAspectRatio,
-                Qt::SmoothTransformation
-            ) : px;
+        pixmapDefault_ = px;
         pixmapToDraw_ = pixmapDefault_;
     }
     setFlat(true);
-    setStyleSheet("QPushButton:pressed { background-color: transparent; }");
+    QString stylesheet = "QPushButton:pressed { background-color: transparent; } "
+                         "QPushButton:focus { border: none; outline: none; }";
+    setStyleSheet(stylesheet);
+
 };
 
 Ui::CustomButton::CustomButton(QWidget* _parent, const QPixmap& _pixmap) : QPushButton(_parent)
@@ -226,6 +223,18 @@ void Ui::CustomButton::setFillColor(QColor _color)
 {
 	fillColor_ = _color;
 	update();
+}
+
+void Ui::CustomButton::setTextColor(const QString& _color)
+{
+    QString stylesheet = QString(
+        "QPushButton { color: %1 } "
+        "QPushButton:pressed { background-color: transparent; }"
+        "QPushButton:focus { border: none; outline: none; }"
+        ).arg(_color);
+
+    setStyleSheet(stylesheet);
+    setStyle(QApplication::style());
 }
 
 QSize Ui::CustomButton::sizeHint() const

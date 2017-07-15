@@ -14,7 +14,6 @@
 #include "../utils.h"
 #include "../archive/contact_archive.h"
 #include "../archive/history_message.h"
-#include "search_contacts_params.h"
 #include "../statistics.h"
 #include "../themes/themes.h"
 #include "../proxy_settings.h"
@@ -22,6 +21,17 @@
 #include "../configuration/app_config.h"
 
 using namespace core;
+
+voip_manager::BitmapDescription get_bitmap_from_stream(core::istream* stream, int w, int h)
+{
+    voip_manager::BitmapDescription res;
+    res.size = stream->size();
+    res.data = (void*)stream->read(stream->size());
+    res.w = w;
+    res.h = h;
+
+    return res;
+}
 
 im_container::im_container(std::shared_ptr<voip_manager::VoipManager> voip_manager)
     :   voip_manager_(voip_manager),
@@ -59,14 +69,14 @@ im_container::im_container(std::shared_ptr<voip_manager::VoipManager> voip_manag
     REGISTER_IM_MESSAGE("voip_call", on_voip_call_message);
     REGISTER_IM_MESSAGE("files/upload", on_upload_file_sharing);
     REGISTER_IM_MESSAGE("files/upload/abort", on_abort_file_sharing_uploading);
+    REGISTER_IM_MESSAGE("files/download/preview_size", on_get_file_sharing_preview_size);
+    REGISTER_IM_MESSAGE("files/download/metainfo", on_download_file_sharing_metainfo);
     REGISTER_IM_MESSAGE("files/download", on_download_file);
     REGISTER_IM_MESSAGE("files/download/abort", on_abort_file_downloading);
-    REGISTER_IM_MESSAGE("files/request_direct_uri", on_request_file_direct_uri);
     REGISTER_IM_MESSAGE("image/download", on_download_image);
     REGISTER_IM_MESSAGE("image/download/cancel", on_cancel_image_downloading);
     REGISTER_IM_MESSAGE("link_metainfo/download", on_download_link_preview);
     REGISTER_IM_MESSAGE("download/raise_priority", on_download_raise_priority);
-    REGISTER_IM_MESSAGE("download/raise_contact_tasks_priority", on_download_raise_contact_tasks_priority);
     REGISTER_IM_MESSAGE("stickers/meta/get", on_get_stickers_meta);
     REGISTER_IM_MESSAGE("stickers/sticker/get", on_get_sticker);
     REGISTER_IM_MESSAGE("chats/info/get", on_get_chat_info);
@@ -75,7 +85,6 @@ im_container::im_container(std::shared_ptr<voip_manager::VoipManager> voip_manag
     REGISTER_IM_MESSAGE("chats/home/get", on_get_chat_home);
     REGISTER_IM_MESSAGE("chats/pending/resolve", on_resolve_pending);
     REGISTER_IM_MESSAGE("contacts/search", on_search_contacts);
-    REGISTER_IM_MESSAGE("contacts/search2", on_search_contacts2);
     REGISTER_IM_MESSAGE("contacts/profile/get", on_profile);
     REGISTER_IM_MESSAGE("contacts/add", on_add_contact);
     REGISTER_IM_MESSAGE("contacts/remove", on_remove_contact);
@@ -83,6 +92,7 @@ im_container::im_container(std::shared_ptr<voip_manager::VoipManager> voip_manag
     REGISTER_IM_MESSAGE("contacts/block", on_spam_contact);
     REGISTER_IM_MESSAGE("contacts/ignore", on_ignore_contact);
     REGISTER_IM_MESSAGE("contacts/get_ignore", on_get_ignore_contacts);
+    REGISTER_IM_MESSAGE("contact/switched", on_contact_switched);
     REGISTER_IM_MESSAGE("dlg_state/hide", on_hide_dlg_state);
     REGISTER_IM_MESSAGE("remove_members", on_remove_members);
     REGISTER_IM_MESSAGE("add_members", on_add_members);
@@ -119,11 +129,16 @@ im_container::im_container(std::shared_ptr<voip_manager::VoipManager> voip_manag
     REGISTER_IM_MESSAGE("close_promo", on_close_promo);
     REGISTER_IM_MESSAGE("phoneinfo", on_phoneinfo);
     REGISTER_IM_MESSAGE("snap/mark_as_read", on_snap_read);
+    REGISTER_IM_MESSAGE("snap/delete", on_delete_read);
     REGISTER_IM_MESSAGE("snap/get_metainfo", on_snap_download_metainfo);
     REGISTER_IM_MESSAGE("masks/get_id_list", on_get_mask_id_list);
     REGISTER_IM_MESSAGE("masks/preview/get", on_get_mask_preview);
     REGISTER_IM_MESSAGE("masks/model/get", on_get_mask_model);
     REGISTER_IM_MESSAGE("masks/get", on_get_mask);
+    REGISTER_IM_MESSAGE("mrim/get_key", on_mrim_get_key);
+    REGISTER_IM_MESSAGE("snaps/refresh", on_snaps_refresh);
+    REGISTER_IM_MESSAGE("snaps/refresh_user_snaps", on_refresh_user_snaps);
+    REGISTER_IM_MESSAGE("snaps/remove_from_cache", on_remove_from_snaps_storage);
 }
 
 
@@ -247,67 +262,69 @@ void core::im_container::on_voip_call_message(int64_t _seq, coll_helper& _params
             im->on_voip_call_start(contact, call_type == "video", mode == "attach");
         };
     } else if (type == "voip_add_window") {
-        voip_manager::WindowParams windowParams;
+        voip_manager::WindowParams windowParams = {};
         windowParams.hwnd = (void*)(uintptr_t)_params.get_value_as_int64("handle");
         windowParams.isPrimary = _params.get_value_as_bool("mode");
         windowParams.isSystem  = _params.get_value_as_bool("system_mode");
         windowParams.scale     = (float)_params.get_value_as_double("scale");
 
-        windowParams.watermark.bitmap.data = NULL;
-        windowParams.watermark.bitmap.size = 0;
-        windowParams.watermark.bitmap.w    = 0;
-        windowParams.watermark.bitmap.h    = 0;
+        std::vector<core::istream*> steramsForFree;
 
-        windowParams.cameraStatus.bitmap.data = NULL;
-        windowParams.cameraStatus.bitmap.size = 0;
-        windowParams.cameraStatus.bitmap.w    = 0;
-        windowParams.cameraStatus.bitmap.h    = 0;
+        // Function to get bitmap from params.
+        auto getBitmapDescription = [&_params, &steramsForFree](const std::string& prefix, voip_manager::BitmapDescription& outBitmap) -> bool {
+            bool res = false;
+            if (_params.is_value_exist(prefix.c_str())) {
+                core::istream* statusStream = _params.get_value_as_stream(prefix.c_str());
+                const auto h = _params.get_value_as_int((prefix + "_height").c_str());
+                const auto w = _params.get_value_as_int((prefix + "_width").c_str());
+                assert(statusStream);
+                if (statusStream) {
+                    const auto stream_size = statusStream->size();
+                    assert(stream_size);
+                    if (stream_size > 0 && h > 0 && w > 0) {
+                        outBitmap = get_bitmap_from_stream(statusStream, w, h);
+                        res = true;
+                    }
 
-        core::istream* statusStream = NULL;
-        if (_params.is_value_exist("camera_status")) {
-            statusStream = _params.get_value_as_stream("camera_status");
-            const auto h = _params.get_value_as_int   ("camera_status_height");
-            const auto w = _params.get_value_as_int   ("camera_status_width");
-            assert(statusStream);
-            if (statusStream) {
-                const auto stream_size = statusStream->size();
-                assert(stream_size);
-                if (stream_size > 0 && h > 0 && w > 0) {
-                    windowParams.cameraStatus.hwnd = windowParams.hwnd;
-                    windowParams.cameraStatus.bitmap.data = (void*)statusStream->read(statusStream->size());
-                    windowParams.cameraStatus.bitmap.size = stream_size;
-                    windowParams.cameraStatus.bitmap.w = w;
-                    windowParams.cameraStatus.bitmap.h = h;
+                    steramsForFree.push_back(statusStream);
                 }
             }
+
+            return res;
+        };
+
+        if (getBitmapDescription("camera_status", windowParams.cameraStatus.bitmap))
+        {
+            windowParams.cameraStatus.hwnd = windowParams.hwnd;
         }
 
-        core::istream* stream = NULL;
-        if (_params.is_value_exist("watermark")) {
-            stream = _params.get_value_as_stream("watermark");
-            const auto h = _params.get_value_as_int   ("watermark_height");
-            const auto w = _params.get_value_as_int   ("watermark_width");
-            assert(stream);
-            if (stream) {
-                const auto stream_size = stream->size();
-                assert(stream_size);
-                if (stream_size > 0 && h > 0 && w > 0) {
-                    windowParams.watermark.hwnd = windowParams.hwnd;
-                    windowParams.watermark.bitmap.data = (void*)stream->read(stream->size());
-                    windowParams.watermark.bitmap.size = stream_size;
-                    windowParams.watermark.bitmap.w = w;
-                    windowParams.watermark.bitmap.h = h;
-                }
-            }
+        if (getBitmapDescription("calling", windowParams.calling.bitmap))
+        {
+            windowParams.calling.hwnd = windowParams.hwnd;
         }
+
+        if (getBitmapDescription("watermark", windowParams.watermark.bitmap))
+        {
+            windowParams.watermark.hwnd = windowParams.hwnd;
+        }
+
+        std::string buttonsParams[] = { "normalButton" , "disabledButton", "pressedButton" , "highlightedButton" };
+        voip_manager::BitmapDescription* buttons[] = {&windowParams.normalButton, &windowParams.disabledButton, 
+            &windowParams.pressedButton,  &windowParams.highlightedButton};
+
+        for (int i = 0; i < sizeof(buttonsParams) / sizeof(buttonsParams[0]); i ++)
+        {
+            getBitmapDescription(buttonsParams[i], *buttons[i]);
+        }
+
         im->on_voip_add_window(windowParams);
-        if (stream) {
-            stream->reset();
-        }
-        if (statusStream) {
-            statusStream->reset();
-        }
 
+        for (auto stream : steramsForFree)
+        {
+            if (stream) {
+                stream->reset();
+            }
+        }
     } else if (type == "voip_remove_window") {
         void* hwnd = (void*)(uintptr_t)_params.get_value_as_int64("handle");
         im->on_voip_remove_window(hwnd);
@@ -393,6 +410,13 @@ void core::im_container::on_voip_call_message(int64_t _seq, coll_helper& _params
     {
         im->on_voip_init_mask_engine();
     }
+    else if (type == "voip_window_set_conference_layout")
+    {
+        void* hwnd = (void*)(uintptr_t)_params.get_value_as_int64("handle");
+        const int vol = _params.get_value_as_int("layout");
+
+        im->on_voip_window_set_conference_layout(hwnd, (voip_manager::ConferenceLayout)vol);
+    }
 	else 
 	{
         assert(false);
@@ -461,6 +485,7 @@ void core::im_container::on_voip_avatar_msg(std::shared_ptr<base_im> im, coll_he
     __load_avatar("sign_header_",         &base_im::on_voip_user_update_avatar_text_header);
     __load_avatar("loc_camera_offline_",  &base_im::on_voip_user_update_avatar_camera_off);
     __load_avatar("loc_camera_disabled_", &base_im::on_voip_user_update_avatar_no_camera);
+    __load_avatar("background_",          &base_im::on_voip_user_update_avatar_background);
 }
 
 void im_container::on_get_archive_images(int64_t _seq, coll_helper& _params)
@@ -493,7 +518,12 @@ void im_container::on_get_archive_index(int64_t _seq, coll_helper& _params)
     if (!im)
         return;
 
-    im->get_archive_index(_seq, _params.get_value_as_string("contact"), -1, -1);
+	auto last_message_catcher = [](int64_t id)
+	{
+		assert(0);
+	};
+
+    im->get_archive_index(_seq, _params.get_value_as_string("contact"), -1, -1, last_message_catcher);
 }
 
 
@@ -521,13 +551,29 @@ void im_container::on_get_archive_messages(int64_t _seq, coll_helper& _params)
     if (!im)
         return;
 
+	std::string contact = _params.get_value_as_string("contact");
+	int64_t last_read_msg = _params.get_value_as_int64("last_read_msg");
+
+	auto last_message_catcher = [last_read_msg, contact](int64_t id)
+	{
+		if (last_read_msg == id)
+		{
+			coll_helper cl_coll(g_core->create_collection(), true);
+
+			cl_coll.set<std::string>("contact", contact);
+			cl_coll.set<int64_t>("last_read_msg", last_read_msg);
+			g_core->post_message_to_gui("history_update", 0, cl_coll.get());
+		}
+	};
+
     im->get_archive_messages(
         _seq,
         _params.get_value_as_string("contact"),
         _params.get_value_as_int64("from"),
-        _params.get_value_as_int64("count"),
-        _params.get_value_as_bool("to_older"),
-        _params.get_value_as_bool("need_prefetch"));
+        _params.get_value_as_int64("count_early"),
+        _params.get_value_as_int64("count_later"),
+        _params.get_value_as_bool("need_prefetch"),
+		last_message_catcher);
 }
 
 void core::im_container::on_message_typing(int64_t _seq, coll_helper& _params)
@@ -550,6 +596,11 @@ void core::im_container::on_send_message(int64_t _seq, coll_helper& _params)
     if (_params->is_value_exist("message"))
         message = _params.get_value_as_string("message");
 
+    if (core::configuration::get_app_config().is_crash_enabled_ && message == "!crash")
+    {
+        throw new std::runtime_error("artificial crash");
+    }
+    
     bool is_sms = false;
     if (_params->is_value_exist("is_sms"))
     {
@@ -593,11 +644,6 @@ void core::im_container::on_send_message(int64_t _seq, coll_helper& _params)
         type,
         "",
         quotes);
-
-    if (core::configuration::get_app_config().is_crash_enabled_ && message == "!crash")
-    {
-        throw new std::exception();
-    }
 }
 
 void core::im_container::on_feedback(int64_t _seq, coll_helper& _params)
@@ -612,21 +658,21 @@ void core::im_container::on_feedback(int64_t _seq, coll_helper& _params)
 
     url = _params.get_value_as_string("url");
 
-    fields.insert(std::make_pair("fb.screen_resolution", _params.get_value_as_string("fb.screen_resolution")));
-    fields.insert(std::make_pair("fb.referrer", _params.get_value_as_string("fb.referrer")));
-    fields.insert(std::make_pair("fb.question.3004", _params.get_value_as_string("fb.question.3004")));
-    fields.insert(std::make_pair("fb.question.159", _params.get_value_as_string("fb.question.159")));
-    fields.insert(std::make_pair("fb.question.178", _params.get_value_as_string("fb.question.178")));
-    fields.insert(std::make_pair("fb.question.3005", _params.get_value_as_string("fb.question.3005")));
-    fields.insert(std::make_pair("fb.user_name", _params.get_value_as_string("fb.user_name")));
-    fields.insert(std::make_pair("fb.message", _params.get_value_as_string("fb.message")));
-    fields.insert(std::make_pair("fb.communication_email", _params.get_value_as_string("fb.communication_email")));
-    fields.insert(std::make_pair("Lang", _params.get_value_as_string("Lang")));
+    fields.insert(std::make_pair("fb.screen_resolution", _params.get_value_as_string("screen_resolution")));
+    fields.insert(std::make_pair("fb.referrer", _params.get_value_as_string("referrer")));
+    fields.insert(std::make_pair((build::is_icq() ? "fb.question.3004" : "fb.question.7780"), _params.get_value_as_string("version")));
+    fields.insert(std::make_pair("fb.question.159", _params.get_value_as_string("os_version")));
+    fields.insert(std::make_pair("fb.question.178", _params.get_value_as_string("build_type")));
+    fields.insert(std::make_pair((build::is_icq() ? "fb.question.3005" : "fb.question.7782"), _params.get_value_as_string("platform")));
+    fields.insert(std::make_pair("fb.user_name", _params.get_value_as_string("user_name")));
+    fields.insert(std::make_pair("fb.message", _params.get_value_as_string("message")));
+    fields.insert(std::make_pair("fb.communication_email", _params.get_value_as_string("communication_email")));
+    fields.insert(std::make_pair("Lang", _params.get_value_as_string("language")));
     fields.insert(std::make_pair("attachements_count", _params.get_value_as_string("attachements_count")));
 
-    if (_params.is_value_exist("fb.attachement"))
+    if (_params.is_value_exist("attachement"))
     {
-        core::iarray* array = _params.get_value_as_array("fb.attachement");
+        core::iarray* array = _params.get_value_as_array("attachement");
         for (auto i = 0; i < array->size(); ++i)
         {
             files.push_back(array->get_at(i)->get_as_string());
@@ -726,6 +772,17 @@ void core::im_container::on_modify_chat(int64_t _seq, coll_helper& _params)
         _params.get_value_as_string("aimid"), _params.get_value_as_string("m_chat_name"));
 }
 
+void core::im_container::on_mrim_get_key(int64_t _seq, coll_helper& _params)
+{
+    auto im = get_im(_params);
+    if (!im)
+        return;
+
+    im->get_mrim_key(
+        _seq,
+        _params.get_value_as_string("email"));
+}
+
 void core::im_container::on_login_by_password(int64_t _seq, coll_helper& _params)
 {
     login_info info;
@@ -813,8 +870,25 @@ void core::im_container::on_snap_read(int64_t _seq, coll_helper& _params)
     assert(snap_id > 0);
 
     const auto mark_prev_snaps_read = _params.get<bool>("mark_prev_snaps_read");
+    const auto refresh_storage = _params.get<bool>("refresh_storage");
 
-    im->read_snap(snap_id, contact_aimid, mark_prev_snaps_read);
+    im->read_snap(snap_id, contact_aimid, mark_prev_snaps_read, refresh_storage);
+}
+
+void core::im_container::on_delete_read(int64_t _seq, coll_helper& _params)
+{
+    assert(_seq > 0);
+
+    auto im = get_im(_params);
+    if (!im)
+    {
+        return;
+    }
+
+    const auto snap_id = _params.get<uint64_t>("snap_id");
+    assert(snap_id > 0);
+
+    im->delete_snap(snap_id);
 }
 
 void core::im_container::on_snap_download_metainfo(int64_t _seq, coll_helper& _params)
@@ -831,8 +905,9 @@ void core::im_container::on_snap_download_metainfo(int64_t _seq, coll_helper& _p
     assert(!ttl_id.empty());
 
     const auto contact_aimid = _params.get<std::string>("contact");
+    bool raise_priority = _params.get<bool>("raise", false);
 
-    im->download_snap_metainfo(_seq, contact_aimid, ttl_id);
+    im->download_snap_metainfo(_seq, contact_aimid, ttl_id, raise_priority);
 }
 
 void core::im_container::on_connect_after_migration(int64_t _seq, coll_helper& _params)
@@ -888,13 +963,17 @@ void core::im_container::on_logout(int64_t _seq, coll_helper& _params)
     }
 }
 
-void core::im_container::logout()
+void core::im_container::logout(const bool _is_auth_error)
 {
     assert(!ims_.empty());
     if (ims_.empty())
         return;
 
-    g_core->post_message_to_gui("need_login", 0, nullptr);
+    coll_helper coll(g_core->create_collection(), true);
+
+    coll.set_value_as_bool("is_auth_error", _is_auth_error);
+
+    g_core->post_message_to_gui("need_login", 0, coll.get());
 
     ims_.clear();
 }
@@ -1064,19 +1143,27 @@ void core::im_container::on_history_search(int64_t _seq, coll_helper& _params)
         return;
 
     std::vector<std::vector<std::string>> searchSymbolsPatterns;
-    core::iarray* searchSymbolsArray = _params.get_value_as_array("symbols_array");
-    for (auto i = 0; i < searchSymbolsArray->size(); ++i)
+    std::string pattern;
+    if (_params.is_value_exist("symbols_array"))
     {
-        std::vector<std::string> patternForSymbol;
-        core::coll_helper symbol_value(searchSymbolsArray->get_at(i)->get_as_collection(), false);
-
-        auto symbols_patterns = symbol_value.get_value_as_array("symbols_patterns");
-        for (auto i = 0; i < symbols_patterns->size(); ++i)
+        core::iarray* searchSymbolsArray = _params.get_value_as_array("symbols_array");
+        for (auto i = 0; i < searchSymbolsArray->size(); ++i)
         {
-            core::coll_helper value(symbols_patterns->get_at(i)->get_as_collection(), false);
-            patternForSymbol.push_back(value.get_value_as_string("symbol_pattern"));
+            std::vector<std::string> patternForSymbol;
+            core::coll_helper symbol_value(searchSymbolsArray->get_at(i)->get_as_collection(), false);
+
+            auto symbols_patterns = symbol_value.get_value_as_array("symbols_patterns");
+            for (auto i = 0; i < symbols_patterns->size(); ++i)
+            {
+                core::coll_helper value(symbols_patterns->get_at(i)->get_as_collection(), false);
+                patternForSymbol.push_back(value.get_value_as_string("symbol_pattern"));
+            }
+            searchSymbolsPatterns.push_back(patternForSymbol);
         }
-        searchSymbolsPatterns.push_back(patternForSymbol);
+    }
+    else
+    {
+        pattern = _params.get_value_as_string("init_pattern");
     }
 
     for (auto symbol_iter = searchSymbolsPatterns.begin(); symbol_iter != searchSymbolsPatterns.end(); ++symbol_iter)
@@ -1085,12 +1172,12 @@ void core::im_container::on_history_search(int64_t _seq, coll_helper& _params)
             *iter = ::core::tools::system::to_upper(*iter);
     }
 
-    im->history_search_in_cl(searchSymbolsPatterns, _seq, _params.get_value_as_uint("fixed_patterns_count"));
+    im->history_search_in_cl(searchSymbolsPatterns, _seq, _params.get_value_as_uint("fixed_patterns_count"), pattern);
 
     if (!_params.get_value_as_bool("search_in_history"))
         return;
 
-    if (searchSymbolsPatterns.size() != 0) // && searchSymbolsPatterns.size() > 2)
+    if (!searchSymbolsPatterns.empty() || !pattern.empty()) // && searchSymbolsPatterns.size() > 2)
     {
         im->setup_search_params(_seq);
 
@@ -1187,6 +1274,28 @@ void im_container::on_abort_file_sharing_uploading(int64_t _seq, coll_helper& _p
         _params.get_value_as_string("process_seq"));
 }
 
+void im_container::on_get_file_sharing_preview_size(int64_t _seq, coll_helper& _params)
+{
+    auto im = get_im(_params);
+    if (!im)
+        return;
+
+    im->get_file_sharing_preview_size(
+        _seq,
+        _params.get<std::string>("url"));
+}
+
+void im_container::on_download_file_sharing_metainfo(int64_t _seq, coll_helper& _params)
+{
+    auto im = get_im(_params);
+    if (!im)
+        return;
+
+    im->download_file_sharing_metainfo(
+        _seq,
+        _params.get<std::string>("url"));
+}
+
 void im_container::on_download_file(int64_t _seq, coll_helper& _params)
 {
     auto im = get_im(_params);
@@ -1197,20 +1306,10 @@ void im_container::on_download_file(int64_t _seq, coll_helper& _params)
         _seq,
         _params.get<std::string>("contact"),
         _params.get<std::string>("url"),
+        _params.get<bool>("force_request_metainfo"),
+        _params.get<std::string>("filename"),
         _params.get<std::string>("download_dir"),
-        _params.is_value_exist("filename") ? _params.get<std::string>("filename") : std::string(),
-        _params.get<file_sharing_function>("function"));
-}
-
-void im_container::on_request_file_direct_uri(int64_t _seq, coll_helper& _params)
-{
-    auto im = get_im(_params);
-    if (!im)
-        return;
-
-    im->request_file_direct_uri(
-        _seq,
-        _params.get<std::string>("url"));
+        _params.get<bool>("raise", false));
 }
 
 void im_container::on_download_image(int64_t _seq, coll_helper& _params)
@@ -1226,18 +1325,19 @@ void im_container::on_download_image(int64_t _seq, coll_helper& _params)
         _params.get<std::string>("destination", ""),
         _params.get<bool>("is_preview"),
         _params.get<int32_t>("preview_width", 0),
-        _params.get<int32_t>("preview_height", 0));
+        _params.get<int32_t>("preview_height", 0),
+        _params.get<bool>("raise", false));
 }
 
-void im_container::on_cancel_image_downloading(int64_t _seq, coll_helper& _params)
+void im_container::on_cancel_image_downloading(int64_t /*_seq*/, coll_helper& _params)
 {
     auto im = get_im(_params);
     if (!im)
         return;
 
-    const auto download_seq = _params.get<int64_t>("download_seq");
+    const auto url = _params.get<std::string>("url");
 
-    im->cancel_loader_task(download_seq);
+    im->cancel_loader_task(url);
 }
 
 void im_container::on_download_link_preview(int64_t _seq, coll_helper& _params)
@@ -1254,15 +1354,15 @@ void im_container::on_download_link_preview(int64_t _seq, coll_helper& _params)
         _params.get<int32_t>("preview_height", 0));
 }
 
-void im_container::on_abort_file_downloading(int64_t _seq, coll_helper& _params)
+void im_container::on_abort_file_downloading(int64_t /*_seq*/, coll_helper& _params)
 {
     auto im = get_im(_params);
     if (!im)
         return;
 
-    im->abort_file_sharing_download(
-        _seq,
-        _params.get_value_as_int64("process_seq"));
+    const auto url = _params.get_value_as_string("url");
+
+    im->abort_file_sharing_download(url);
 }
 
 void im_container::on_download_raise_priority(int64_t _seq, coll_helper& _params)
@@ -1277,7 +1377,7 @@ void im_container::on_download_raise_priority(int64_t _seq, coll_helper& _params
     im->raise_download_priority(proc_id);
 }
 
-void im_container::on_download_raise_contact_tasks_priority(int64_t _seq, coll_helper& _params)
+void im_container::on_contact_switched(int64_t _seq, coll_helper& _params)
 {
     auto im = get_im(_params);
     if (!im)
@@ -1285,7 +1385,7 @@ void im_container::on_download_raise_contact_tasks_priority(int64_t _seq, coll_h
 
     const auto contact_aimid = _params.get<std::string>("contact");
 
-    im->raise_contact_downloads_priority(contact_aimid);
+    im->contact_switched(contact_aimid);
 }
 
 void im_container::on_get_stickers_meta(int64_t _seq, coll_helper& _params)
@@ -1402,22 +1502,10 @@ void im_container::on_resolve_pending(int64_t _seq, coll_helper& _params)
 
 void im_container::on_search_contacts(int64_t _seq, coll_helper& _params)
 {
-    core::search_params filters;
-    filters.unserialize(_params);
-
     auto im = get_im(_params);
     if (!im)
         return;
-
-    im->search_contacts(_seq, filters);
-}
-
-void im_container::on_search_contacts2(int64_t _seq, coll_helper& _params)
-{
-    auto im = get_im(_params);
-    if (!im)
-        return;
-    im->search_contacts2(_seq, _params.get_value_as_string("keyword"), _params.get_value_as_string("phonenumber"), _params.get_value_as_string("tag"));
+    im->search_contacts(_seq, _params.get_value_as_string("keyword"), _params.get_value_as_string("phonenumber"), _params.get_value_as_string("tag"));
 }
 
 void im_container::on_profile(int64_t _seq, coll_helper& _params)
@@ -1737,11 +1825,8 @@ void core::im_container::on_set_chat_member_role(int64_t _seq, coll_helper& _par
 
 void core::im_container::on_close_promo(int64_t _seq, coll_helper& _params)
 {
-    for (const auto& im : ims_)
-    {
-        im->set_show_promo_in_auth(false);
-        im->save_auth_to_export([im](){ im->start_after_close_promo(); });
-    }
+    g_core->set_need_show_promo(false);
+    on_connect_after_migration(_seq, _params);
 }
 
 void im_container::on_get_mask_id_list(int64_t _seq, coll_helper& _params)
@@ -1780,4 +1865,40 @@ void im_container::on_get_mask(int64_t _seq, coll_helper& _params)
         return;
 
     im->get_mask(_seq, _params.get_value_as_string("mask_id"));
+}
+
+void im_container::on_snaps_refresh(int64_t _seq, coll_helper& _params)
+{
+    auto im = get_im(_params);
+    if (!im)
+        return;
+
+    im->refresh_snaps_storage();
+}
+
+void im_container::on_refresh_user_snaps(int64_t _seq, coll_helper& _params)
+{
+    auto im = get_im(_params);
+    if (!im)
+        return;
+
+    im->refresh_user_snaps(_params.get_value_as_string("aimid"));
+}
+
+void im_container::on_remove_from_snaps_storage(int64_t _seq, coll_helper& _params)
+{
+    auto im = get_im(_params);
+    if (!im)
+        return;
+
+    im->remove_from_snaps_storage(_params.get_value_as_string("aimid"));
+}
+
+bool im_container::has_valid_login() const
+{
+    auto im = get_im_by_id(0);
+    if (!im)
+        return false;
+
+    return im->has_valid_login();
 }

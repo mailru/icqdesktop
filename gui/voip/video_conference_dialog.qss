@@ -1,0 +1,26 @@
+QPushButton[Full_view="false"]
+{
+    left: 0;
+    margin-top:  4dip;
+    margin-left: 0dip;
+    min-width:  8dip;
+    max-width:  8dip;
+    min-height: 8dip;
+    max-height: 8dip;
+    border: 0;
+    border-image: url(:/resources/basic_elements/arrow_small_up_green_100.png);
+}
+
+
+QPushButton[Full_view="true"]
+{
+    left: 0;
+    margin-top:  4dip;
+    margin-left: 0dip;
+    min-width:  8dip;
+    max-width:  8dip;
+    min-height: 8dip;
+    max-height: 8dip;
+    border: 0;
+    border-image: url(:/resources/basic_elements/arrow_small_green_100.png);
+}

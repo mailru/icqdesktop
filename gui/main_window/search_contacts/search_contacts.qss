@@ -1,16 +1,15 @@
 Ui--SearchContactsWidget
 {
-	background-color: white;
+	background-color: #ffffff;
 	border-style: none;
 }
 
 
 QLineEdit#caption
 {
-	font-family: "%FONT_FAMILY_LIGHT%";
-	font-size: 32dip;
-	font-weight: %FONT_WEIGHT_LIGHT%;
-	color: #282828;
+	font-family: "%FONT_FAMILY_MEDIUM%";
+	font-size: 20dip;
+	font-weight: %FONT_WEIGHT_MEDIUM%;
 	margin: 0;
 	padding: 0;
 	max-height: 56dip;
@@ -32,7 +31,7 @@ Ui--ComboButton
 {
 	font-size: 14dip;
 	color: #579e1c;
-	background-color: white;
+	background: transparent;
 	padding: 0;
 	border: none;
 	max-height: 40dip;
@@ -45,26 +44,26 @@ QCheckBox#online_check
 {
 	font-size: 14dip;
 	color: #579e1c;
-	background-color: white;
+	background: transparent;
 	max-height: 40dip;
 	min-height: 40dip;
 }
 
 Ui--SearchResults
 {
-	background-color: white;
+	background: transparent;
 	border: none;
 }
 
 QScrollArea#results_scroll_area
 {
-	background-color: white;
+	background: transparent;
 	border: none;
 }
 
 QWidget#results_scroll_area_widget
 {
-	background-color: white;
+	background: transparent;
 	border: none;
 }
 
@@ -85,7 +84,7 @@ Ui--TextEmojiWidget#contact_info
 
 QPushButton#add_contact_button
 {
-	border-image: url(:/resources/cl_addcontact_100.png);
+	border-image: url(:/resources/basic_elements/cl_addcontact_100.png);
 	max-width: 32dip;
 	min-width: 32dip;
 	max-height: 32dip;
@@ -97,12 +96,7 @@ QPushButton#add_contact_button
 
 QPushButton#add_contact_button:hover
 {
-	border-image: url(:/resources/cl_addcontact_100_hover.png);
-}
-
-QPushButton#add_contact_button:hover:pressed
-{
-	border-image: url(:/resources/cl_addcontact_100_active.png);
+	border-image: url(:/resources/basic_elements/cl_addcontact_100_hover.png);
 }
 
 QPushButton#call_contact_button
@@ -122,11 +116,6 @@ QPushButton#call_contact_button:hover
 	border-image: url(:/resources/contr_call_mini_100_hover.png);
 }
 
-QPushButton#call_contact_button:hover:pressed
-{
-	border-image: url(:/resources/contr_call_mini_100_active.png);
-}
-
 QPushButton#msg_contact_button
 {
 	border-image: url(:/resources/contr_writemsg_mini_100.png);
@@ -144,12 +133,6 @@ QPushButton#msg_contact_button:hover
 	border-image: url(:/resources/contr_writemsg_mini_100_hover.png);
 }
 
-QPushButton#msg_contact_button:hover:pressed
-{
-	border-image: url(:/resources/contr_writemsg_mini_100_active.png);
-}
-
-
 Ui--NoResultsWidget
 {
 	
@@ -158,5 +141,4 @@ Ui--NoResultsWidget
 QWidget#no_result_label
 {
 	font-size: 18dip;
-	color: #282828;	
 }

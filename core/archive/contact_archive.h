@@ -18,8 +18,8 @@ namespace core
         class image_cache;
         class image_data;
 
-        typedef std::list<image_data>                               image_list;
-        typedef std::vector<std::shared_ptr<history_message>>		history_block;
+        typedef std::list<image_data> image_list;
+        typedef std::vector<std::shared_ptr<history_message>> history_block;
         typedef std::shared_ptr<history_block>                      history_block_sptr;
         typedef std::list<int64_t>									msgids_list;
         typedef std::list<message_header>							headers_list;
@@ -49,13 +49,14 @@ namespace core
                 get_all,
                 skip_patches_and_deleted
             };
-            void get_messages(int64_t _from, int64_t _count, history_block& _messages, get_message_policy policy, bool _to_older) const;
-            void get_messages_index(int64_t _from, int64_t _count, headers_list& _headers, bool _to_older) const;
+            void get_messages(int64_t _from, int64_t _count_early, int64_t _count_later, history_block& _messages, get_message_policy policy) const;
+            void get_messages_index(int64_t _from, int64_t _count_early, int64_t _count_later, headers_list& _headers) const;
             bool get_messages_buddies(std::shared_ptr<archive::msgids_list> _ids, std::shared_ptr<history_block> _messages) const;
             static bool get_history_file(const std::wstring& _file_name, core::tools::binary_stream& _data
                 , std::shared_ptr<int64_t> _offset, std::shared_ptr<int64_t> _remaining_size, int64_t& _cur_index, std::shared_ptr<int64_t> _mode);
 
             bool get_next_hole(int64_t _from, archive_hole& _hole, int64_t _depth);
+            int64_t validate_hole_request(const archive_hole& _hole, const int32_t _count);
 
             const dlg_state& get_dlg_state() const;
             void set_dlg_state(const dlg_state& _state, Out dlg_state_changes& _changes);
@@ -79,8 +80,11 @@ namespace core
 
         };
 
-        std::wstring version_db_filename(const std::wstring &filename);
-
+        std::wstring db_filename();
+        std::wstring index_filename();
+        std::wstring dlg_state_filename();
+        std::wstring image_cache_filename();
+        std::wstring cache_filename();
     }
 }
 

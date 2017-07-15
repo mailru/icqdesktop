@@ -68,21 +68,6 @@
     #define _countof(array) (sizeof(array) / sizeof(array[0]))
 #endif
 
-namespace core
-{
-	typedef std::map<std::string, std::string> Str2StrMap;
-
-	typedef std::set<int32_t> IntSet;
-
-	typedef std::set<std::string> StrSet;
-
-    typedef std::vector<std::string> string_vector_t;
-
-    typedef std::shared_ptr<string_vector_t> string_vector_sptr_t;
-
-    typedef std::atomic<bool> atomic_bool;
-}
-
 namespace logutils
 {
 

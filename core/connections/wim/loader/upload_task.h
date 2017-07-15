@@ -2,13 +2,14 @@
 
 #include "fs_loader_task.h"
 
+enum class loader_errors;
+
 namespace core
 {
     namespace wim
     {
         struct upload_progress_handler;
         class web_file_info;
-        enum class loader_errors;
 
         class upload_task : public fs_loader_task, public std::enable_shared_from_this<upload_task>
         {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solution.h"
+
 #ifdef __linux__
 #include <QtWidgets/qapplication.h>
 #include <QtCore/qfile.h>

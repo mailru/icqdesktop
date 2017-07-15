@@ -14,7 +14,8 @@ namespace common_crash_sender
 {
     const std::string& get_hockeyapp_url()
     {
-        static std::string hockeyapp_url = "https://rink.hockeyapp.net/api/2/apps/" + hockey_app_id_installer + "/crashes/upload";
+        auto app_id = build::is_agent() ? agent_installer_hockey_app_id : hockey_app_id_installer;
+        static std::string hockeyapp_url = "https://rink.hockeyapp.net/api/2/apps/" + app_id + "/crashes/upload";
         return hockeyapp_url;
     }
 

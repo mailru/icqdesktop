@@ -4,7 +4,7 @@
 #include "GeneralDialog.h"
 #include "TextEmojiWidget.h"
 #include "TextEditEx.h"
-#include "SemitransparentWindow.h"
+#include "SemitransparentWindowAnimated.h"
 #include "../fonts.h"
 #include "../gui_settings.h"
 #include "../main_window/MainWindow.h"
@@ -14,6 +14,7 @@
 namespace
 {
     const QString SHARE_BOTTOM_PANEL_COLOR = "background: #ebebeb;";
+    const int DURATION = 200;
 }
 
 namespace Ui
@@ -21,7 +22,7 @@ namespace Ui
     GeneralDialog::GeneralDialog(QWidget* _mainWidget, QWidget* _parent, bool _ignoreKeyPressEvents/* = false*/)
         : QDialog(nullptr)
         , mainWidget_(_mainWidget)
-        , semiWindow_(new SemitransparentWindow(_parent))
+        , semiWindow_(new SemitransparentWindowAnimated(_parent, DURATION))
         , nextButton_(nullptr)
         , labelHost_(nullptr)
         , headHost_(nullptr)
@@ -37,15 +38,13 @@ namespace Ui
         setParent(semiWindow_);
         setFocus();
 
-        auto mainLayout = new QVBoxLayout(this);
-        mainLayout->setMargin(0);
-        mainLayout->setSpacing(0);
+        semiWindow_->hide();
+
+        auto mainLayout = Utils::emptyVLayout(this);
         auto mainHost = new QWidget(this);
         mainHost->setObjectName("mainHost");
 
-        auto globalLayout = new QVBoxLayout(mainHost);
-        globalLayout->setMargin(0);
-        globalLayout->setSpacing(0);
+        auto globalLayout = Utils::emptyVLayout(mainHost);
 
         headHost_ = new QWidget(mainHost);
         headHost_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -80,10 +79,7 @@ namespace Ui
         bottomWidget_->setVisible(false);
         globalLayout->addWidget(bottomWidget_);
 
-        QPalette pal(palette());
-        pal.setColor(QPalette::Background, Qt::white);
-        mainHost->setAutoFillBackground(true);
-        mainHost->setPalette(pal);
+        setStyleSheet("background-color: #ffffff;");
 
         setWindowFlags(Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint | Qt::WindowSystemMenuHint);
         setSizePolicy(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Minimum);
@@ -97,7 +93,7 @@ namespace Ui
 
     void GeneralDialog::reject()
     {
-        semiWindow_->setVisible(false);
+        semiWindow_->hide();
         QDialog::reject();
     }
 
@@ -125,18 +121,17 @@ namespace Ui
         bottomLabel_->setContentsMargins(0, 0, 0, 0);
 
         const auto qss = QString(
-            "font: %1px \"%2\"; color: %6;"
-            "padding-bottom: %3; margin: 0 %4 %5 %4;"
+            "color: %4;"
+            "padding-bottom: %1; margin: 0 %2 %3 %2;"
             "border-bottom: 1px solid #c0c0c0"
         )
-            .arg(Utils::scale_value(16))
-            .arg(Fonts::defaultAppFontQssName())
             .arg(Utils::scale_value(14))
             .arg(Utils::scale_value(16))
             .arg(Utils::scale_value(16))
             .arg(Utils::rgbaStringFromColor(Ui::CommonStyle::getTextCommonColor()));
 
         bottomLabel_->setFixedWidth(mainWidget_->width());
+        bottomLabel_->setFont(Fonts::appFontScaled(16));
         bottomLabel_->setStyleSheet(qss);
 
         const auto fontMetrics = bottomLabel_->fontMetrics();
@@ -153,17 +148,15 @@ namespace Ui
 
     void GeneralDialog::addLabel(const QString& _text)
     {
-        TextEmojiWidget *label = nullptr; // ????
-
         labelHost_->setVisible(true);
-        auto hostLayout = new QHBoxLayout(labelHost_);
-        hostLayout->setContentsMargins(Utils::scale_value(24), 0, Utils::scale_value(24), 0);
-        hostLayout->setSpacing(0);
+        auto hostLayout = Utils::emptyHLayout(labelHost_);
+        int horMargin = Utils::scale_value(24);
+        hostLayout->setContentsMargins(horMargin, 0, horMargin, 0);
         hostLayout->setAlignment(Qt::AlignLeft);
         labelHost_->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Preferred);
         {
             auto nameText = _text;
-            auto name_ = new TextEditEx(labelHost_, Fonts::defaultAppFontFamily(), Utils::scale_value(24), CommonStyle::getTextCommonColor(), false, true);
+            auto name_ = new TextEditEx(labelHost_, Fonts::appFontScaled(20), CommonStyle::getTextCommonColor(), false, true);
             name_->setPlainText(nameText, false, QTextCharFormat::AlignNormal);
             name_->setAlignment(Qt::AlignLeft);
             name_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -173,22 +166,15 @@ namespace Ui
             name_->setContextMenuPolicy(Qt::NoContextMenu);
             hostLayout->addWidget(name_);
         }
-
-        QWidget::connect(label, &TextEmojiWidget::setSize, [this](int, int dh)
-        {
-            setFixedHeight(height() + dh);
-        });
     }
 
     void GeneralDialog::addText(QString _messageText, int _upperMarginPx)
     {
         textHost_->setVisible(true);
-        auto textLayout = new QVBoxLayout(textHost_);
-        textLayout->setSpacing(0);
-        textLayout->setMargin(0);
+        auto textLayout = Utils::emptyVLayout(textHost_);
 
-        auto label = new Ui::TextEditEx(textHost_, Fonts::defaultAppFontFamily(), Utils::scale_value(15), QColor(0x69, 0x69, 0x69), true, true);
-        label->setFixedHeight(Utils::scale_value(15));
+        auto label = new Ui::TextEditEx(textHost_, Fonts::appFontScaled(15), QColor("#767676"), true, true);
+        label->setFixedHeight(Utils::scale_value(16));
         label->setContentsMargins(0, 0, 0, 0);
         label->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
         label->setPlaceholderText("");
@@ -232,14 +218,9 @@ namespace Ui
 
             QObject::connect(nextButton_, &QPushButton::clicked, this, &GeneralDialog::accept, Qt::QueuedConnection);
 
-            auto button_layout = new QVBoxLayout(bottomWidget_);
-
-            button_layout->setContentsMargins(0, 0, 0, 0);
-            button_layout->setSpacing(0);
+            auto button_layout = Utils::emptyVLayout(bottomWidget_);
             button_layout->setAlignment(Qt::AlignHCenter);
-
             button_layout->addWidget(nextButton_);
-
             bottomLayout->addItem(button_layout);
         }
 
@@ -249,10 +230,9 @@ namespace Ui
     void GeneralDialog::addButtonsPair(QString _buttonTextLeft, QString _buttonTextRight, int _marginPx, int _buttonBetweenPx, bool _rejectable, bool _acceptable)
     {
         bottomWidget_->setVisible(true);
-        auto bottomLayout = new QHBoxLayout(bottomWidget_);
+        auto bottomLayout = Utils::emptyHLayout(bottomWidget_);
 
         bottomLayout->setContentsMargins(_marginPx, _marginPx, _marginPx, _marginPx);
-        bottomLayout->setSpacing(0);
         bottomLayout->setAlignment(Qt::AlignCenter | Qt::AlignBottom);
         bottomWidget_->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Preferred);
         {
@@ -299,9 +279,7 @@ namespace Ui
     void GeneralDialog::addHead()
     {
         headHost_->setVisible(true);
-        auto hostLayout = new QHBoxLayout(headHost_);
-        hostLayout->setContentsMargins(0, 0, 0, 0);
-        hostLayout->setSpacing(0);
+        auto hostLayout = Utils::emptyHLayout(headHost_);
         hostLayout->setAlignment(Qt::AlignRight);
         headHost_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
         {
@@ -336,11 +314,12 @@ namespace Ui
         }
         x_ = _x;
         y_ = _y;
+        semiWindow_->Show();
         show();
         auto result = (exec() == QDialog::Accepted);
         close();
         if (platform::is_apple())
-            ((QMainWindow *)Utils::InterConnector::instance().getMainWindow())->activateWindow();
+            semiWindow_->parentWidget()->activateWindow();
         return result;
     }
 
@@ -371,10 +350,9 @@ namespace Ui
             return bottomWidget_->layout();
         }
 
-        auto bottomLayout = new QVBoxLayout(bottomWidget_);
+        auto bottomLayout = Utils::emptyVLayout(bottomWidget_);
 
         bottomLayout->setContentsMargins(0, _buttonMarginPx, 0, _buttonMarginPx);
-        bottomLayout->setSpacing(0);
         bottomLayout->setAlignment(Qt::AlignBottom);
 
         return bottomLayout;
@@ -384,13 +362,24 @@ namespace Ui
     {
         if (_x == -1 && _y == -1)
         {
-            auto corner = parentWidget()->geometry().center();//Utils::GetMainWindowCenter();
-            auto size = this->sizeHint();
-            this->move(corner.x() - size.width() / 2, corner.y() - size.height() / 2);
+            QRect r;
+            if (semiWindow_->isMainWindow())
+            {
+                auto mainWindow = Utils::InterConnector::instance().getMainWindow();
+                int titleHeight = mainWindow->getTitleHeight();
+                r = QRect(0, 0, mainWindow->width(), mainWindow->height() - titleHeight);
+            }
+            else
+            {
+                r = parentWidget()->geometry();
+            }
+            auto corner = r.center();
+            auto size = sizeHint();
+            move(corner.x() - size.width() / 2, corner.y() - size.height() / 2);
         }
         else
         {
-            this->move(_x, _y);
+            move(_x, _y);
         }
     }
 
@@ -455,6 +444,10 @@ namespace Ui
     void GeneralDialog::resizeEvent(QResizeEvent *_event)
     {
         QDialog::resizeEvent(_event);
+        if (semiWindow_)
+        {
+            semiWindow_->updateSize();
+        }        
         if (keepCenter_)
         {
             moveToPosition(x_, y_);
@@ -472,14 +465,12 @@ namespace Ui
         errorHost_->setContentsMargins(0, 0, 0, 0);
         errorHost_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
 
-        auto textLayout = new QVBoxLayout(errorHost_);
-        textLayout->setSpacing(0);
-        textLayout->setMargin(0);
+        auto textLayout = Utils::emptyVLayout(errorHost_);
 
         auto upperSpacer = new QSpacerItem(0, Utils::scale_value(16), QSizePolicy::Minimum);
         textLayout->addSpacerItem(upperSpacer);
 
-        QString backgroundStyle = "background: #30FF0000; ";
+        QString backgroundStyle = "background: #fbdbd9; ";
         QString labelStyle = "QWidget { "+backgroundStyle+"border: none; padding-left: 24dip; padding-right: 24dip; padding-top: 0dip; padding-bottom: 0dip; }";
 
         auto upperSpacerRedUp = new QLabel();
@@ -487,7 +478,7 @@ namespace Ui
         Utils::ApplyStyle(upperSpacerRedUp, backgroundStyle);
         textLayout->addWidget(upperSpacerRedUp);
 
-        auto errorLabel = new Ui::TextEditEx(errorHost_, Fonts::defaultAppFontFamily(), Utils::scale_value(16), QColor(0xFF, 0, 0), true, true);
+        auto errorLabel = new Ui::TextEditEx(errorHost_, Fonts::appFontScaled(16), Ui::CommonStyle::getRedLinkColor(), true, true);
         errorLabel->setContentsMargins(0, 0, 0, 0);
         errorLabel->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
         errorLabel->setPlaceholderText("");
@@ -499,7 +490,7 @@ namespace Ui
         errorLabel->setText(QT_TRANSLATE_NOOP("popup_window", "Unfortunately, an error occurred:"));
         textLayout->addWidget(errorLabel);
 
-        auto errorText = new Ui::TextEditEx(errorHost_, Fonts::defaultAppFontFamily(), Utils::scale_value(16), QColor(0, 0, 0), true, true);
+        auto errorText = new Ui::TextEditEx(errorHost_, Fonts::appFontScaled(16), Ui::CommonStyle::getTextCommonColor(), true, true);
         errorText->setContentsMargins(0, 0, 0, 0);
         errorText->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
         errorText->setPlaceholderText("");
@@ -531,5 +522,18 @@ namespace Ui
     {
         nextButton_->setEnabled(!rightButtonDisableOnClicked_);
         emit rightButtonClicked();
+    }
+
+    void GeneralDialog::updateSize()
+    {
+        if (semiWindow_)
+        {
+            semiWindow_->updateSize();
+        }
+        if (keepCenter_)
+        {
+            moveToPosition(x_, y_);
+        }
+        setFixedSize(sizeHint());
     }
 }

@@ -71,7 +71,6 @@ add_library(${PROJECT_NAME} STATIC
     ${COMMON_SOURCES} ${COMMON_HEADERS}
     ${MINIZIP_SOURCES} ${MINIZIP_HEADERS}
     ${PCH_BIN})
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_range_for)
 
 
 # --------------------------  copy voip  -------------------------

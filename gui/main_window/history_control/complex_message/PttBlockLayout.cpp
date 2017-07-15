@@ -11,23 +11,6 @@
 
 UI_COMPLEX_MESSAGE_NS_BEGIN
 
-namespace
-{
-    int32_t getBubbleWidthMax();
-
-    int32_t getCtrlButtonMarginLeft();
-
-    int32_t getCtrlButtonMarginTop();
-
-    int32_t getDecodedTextHorPadding();
-
-    int32_t getDecodedTextVertPadding();
-
-    int32_t getTextButtonMarginRight();
-
-    int32_t getTextButtonMarginTop();
-}
-
 PttBlockLayout::PttBlockLayout()
 {
 
@@ -41,16 +24,16 @@ QSize PttBlockLayout::setBlockGeometryInternal(const QRect &geometry)
 {
     auto &pttBlock = *blockWidget<PttBlock>();
 
-    const auto bubbleWidth = std::min(geometry.width(), getBubbleWidthMax());
+    const auto bubbleWidth = std::min(geometry.width(), Style::getBlockMaxWidth());
 
     const auto textSize = setDecodedTextHorGeometry(pttBlock, bubbleWidth);
 
-    QSize bubbleSize(bubbleWidth, Style::getPttBubbleHeaderHeight());
+    QSize bubbleSize(bubbleWidth, Style::Ptt::getPttBubbleHeight());
 
     const auto hasVisisbleDecodedText = (!textSize.isEmpty() && !pttBlock.isDecodedTextCollapsed());
     if (hasVisisbleDecodedText)
     {
-        bubbleSize.rheight() += (getDecodedTextVertPadding() * 2);
+        bubbleSize.rheight() += (Style::Ptt::getDecodedTextVertPadding() * 2);
         bubbleSize.rheight() += textSize.height();
     }
 
@@ -73,8 +56,8 @@ QRect PttBlockLayout::setCtrlButtonGeometry(PttBlock &pttBlock, const QRect &bub
     assert(!bubbleGeometry.isEmpty());
 
     const QPoint btnPos(
-        getCtrlButtonMarginLeft(),
-        getCtrlButtonMarginTop());
+        Style::Ptt::getCtrlButtonMarginLeft(),
+        Style::Ptt::getCtrlButtonMarginTop());
 
     const QRect btnRect(btnPos, pttBlock.getCtrlButtonSize());
 
@@ -93,7 +76,7 @@ QSize PttBlockLayout::setDecodedTextHorGeometry(PttBlock &pttBlock, const int32_
     }
 
     auto textWidth = bubbleWidth;
-    textWidth -= (getDecodedTextHorPadding() * 2);
+    textWidth -= (Style::Ptt::getDecodedTextHorPadding() * 2);
 
     const auto textHeight = pttBlock.setDecodedTextWidth(textWidth);
 
@@ -105,12 +88,12 @@ void PttBlockLayout::setDecodedTextGeometry(PttBlock &_pttBlock, const QRect &_c
     assert(!_contentRect.isEmpty());
     assert(!_textSize.isEmpty());
 
-    const QPoint textPos(getDecodedTextHorPadding(), 0);
+    const QPoint textPos(Style::Ptt::getDecodedTextHorPadding(), 0);
 
     QRect textRect(textPos, _textSize);
 
     auto textBottomY = (_contentRect.bottom() + 1);
-    textBottomY -= getDecodedTextVertPadding();
+    textBottomY -= Style::Ptt::getDecodedTextVertPadding();
     textRect.moveBottom(textBottomY);
 
     _pttBlock.setDecodedTextGeometry(textRect);
@@ -125,10 +108,10 @@ QRect PttBlockLayout::setTextButtonGeometry(PttBlock &pttBlock, const QRect &bub
     auto buttonX = (bubbleGeometry.right() + 1);
     buttonX -= buttonSize.width();
 
-    const auto rightMargin = getTextButtonMarginRight();
+    const auto rightMargin = Style::Ptt::getTextButtonMarginRight();
     buttonX -= rightMargin;
 
-    const auto topMargin = getTextButtonMarginTop();
+    const auto topMargin = Style::Ptt::getTextButtonMarginTop();
 
     const auto buttonY = topMargin;
 
@@ -145,12 +128,6 @@ QRect PttBlockLayout::getAuthorAvatarRect() const
 {
     assert(!"method is not expected to be called");
     return QRect();
-}
-
-int32_t PttBlockLayout::getAuthorAvatarSize() const
-{
-    assert(!"method is not expected to be called");
-    return -1;
 }
 
 QRect PttBlockLayout::getAuthorNickRect() const
@@ -179,24 +156,12 @@ const QRect& PttBlockLayout::getTextButtonRect() const
 
 int32_t PttBlockLayout::getDecodedTextSeparatorY() const
 {
-    return Style::getPttBubbleHeaderHeight();
-}
-
-QFont PttBlockLayout::getFilenameFont() const
-{
-    static QFont empty;
-    return empty;
+    return Style::Ptt::getPttBubbleHeight();
 }
 
 const QRect& PttBlockLayout::getFilenameRect() const
 {
     static QRect empty;
-    return empty;
-}
-
-QFont PttBlockLayout::getFileSizeFont() const
-{
-    static QFont empty;
     return empty;
 }
 
@@ -206,54 +171,10 @@ QRect PttBlockLayout::getFileSizeRect() const
     return empty;
 }
 
-QFont PttBlockLayout::getShowInDirLinkFont() const
-{
-    static QFont empty;
-    return empty;
-}
-
 QRect PttBlockLayout::getShowInDirLinkRect() const
 {
     static QRect empty;
     return empty;
-}
-
-namespace
-{
-    int32_t getBubbleWidthMax()
-    {
-        return Utils::scale_value(320);
-    }
-
-    int32_t getCtrlButtonMarginLeft()
-    {
-        return Utils::scale_value(16);
-    }
-
-    int32_t getCtrlButtonMarginTop()
-    {
-        return Utils::scale_value(8);
-    }
-
-    int32_t getDecodedTextHorPadding()
-    {
-        return Utils::scale_value(16);
-    }
-
-    int32_t getDecodedTextVertPadding()
-    {
-        return Utils::scale_value(16);
-    }
-
-    int32_t getTextButtonMarginRight()
-    {
-        return Utils::scale_value(16);
-    }
-
-    int32_t getTextButtonMarginTop()
-    {
-        return Utils::scale_value(16);
-    }
 }
 
 UI_COMPLEX_MESSAGE_NS_END

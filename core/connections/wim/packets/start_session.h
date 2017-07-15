@@ -39,6 +39,8 @@ namespace core
             std::string aimsid_;
             std::string aimid_;
 
+            time_t timeout_;
+            std::function<bool(int32_t)> wait_function_;
 
             int64_t ts_;
 
@@ -52,7 +54,7 @@ namespace core
             const time_t get_ts() const { return ts_; }
             const std::string get_aimid() const { return aimid_; }
 
-            start_session(const wim_packet_params& params, bool _is_ping, const std::string& _uniq_device_id, const std::string& _locale);
+            start_session(const wim_packet_params& params, bool _is_ping, const std::string& _uniq_device_id, const std::string& _locale, time_t _timeout, std::function<bool(int32_t)> _wait_function);
             virtual ~start_session();
         };
     }

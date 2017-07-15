@@ -50,19 +50,21 @@ namespace Utils
 
    public Q_SLOTS:
 
-            void initMainWindow();
+            void initMainWindow(const bool _has_valid_login);
             void receiveUrlCommand(QString _urlCommand);
             void applicationStateChanged(Qt::ApplicationState state);
-
+            void coreLogins(const bool _has_valid_login);
+            void guiSettings();
     private:
         void init_win7_features();
+        void makeBuild();
 
         std::unique_ptr<Ui::MainWindow> mainWindow_;
         std::unique_ptr<LocalPeer> peer_;
         std::unique_ptr<QApplication> app_;
 
 #ifdef _WIN32
-        AppGuard guard_;
+        std::unique_ptr<AppGuard> guard_;
 #endif //_WIN32
     };
 }

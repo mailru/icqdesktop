@@ -37,19 +37,22 @@ Ui::IncomingCallWindow::IncomingCallWindow(const std::string& _account, const st
     , account_(_account)
     , header_(new(std::nothrow) voipTools::BoundBox<VoipSysPanelHeader>(this))
     , controls_(new voipTools::BoundBox<IncomingCallControls>(this))
+    , transparentPanelOutgoingWidget_(nullptr)
 	, shadow_(this)
 {
     setStyleSheet(Utils::LoadStyle(":/voip/incoming_call.qss"));
-    QIcon icon(":/resources/main_window/appicon.ico");
+    QIcon icon(build::is_icq()
+        ? ":/resources/main_window/appicon.ico"
+        : ":/resources/main_window/appicon_agent.ico");
     setWindowIcon(icon);
     
 #ifdef _WIN32
     setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::Window);
     setAttribute(Qt::WA_ShowWithoutActivating);
 #else
-    // We have problem on Mac with WA_ShowWithoutActivating and WindowDoesNotAcceptFocus.
-    // If video window is showing with this flags, we cannot activate main ICQ window.
-    // We use Qt::Dialog here, because it works correctly, if main window is fullscreen.
+    // We have a problem on Mac with WA_ShowWithoutActivating and WindowDoesNotAcceptFocus.
+    // If video window is showing with these flags, we can not activate ICQ mainwindow
+    // We use Qt::Dialog here, because it works correctly, if main window is in fullscreen mode
     setWindowFlags(Qt::WindowStaysOnTopHint | Qt::Dialog);
     //setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_X11DoNotAcceptFocus);
@@ -57,9 +60,7 @@ Ui::IncomingCallWindow::IncomingCallWindow(const std::string& _account, const st
     
     setAttribute(Qt::WA_UpdatesDisabled);
 
-    QVBoxLayout* rootLayout = new QVBoxLayout();
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
+    QVBoxLayout* rootLayout = Utils::emptyVLayout();
     rootLayout->setAlignment(Qt::AlignVCenter);
     setLayout(rootLayout);
     
@@ -69,8 +70,15 @@ Ui::IncomingCallWindow::IncomingCallWindow(const std::string& _account, const st
     std::vector<Ui::BaseVideoPanel*> panels;
     panels.push_back(header_.get());
     panels.push_back(controls_.get());
+
+#ifdef _WIN32
+    // Use it for Windows only, because macos Video Widnow resends mouse events to transparent panels.
+    transparentPanelOutgoingWidget_ = std::unique_ptr<TransparentPanel>(new TransparentPanel(this, header_.get()));
+    panels.push_back(transparentPanelOutgoingWidget_.get());
+#endif
+
 #ifndef STRIP_VOIP
-    rootWidget_ = platform_specific::GraphicsPanel::create(this, panels);
+    rootWidget_ = platform_specific::GraphicsPanel::create(this, panels, false);
     rootWidget_->setContentsMargins(0, 0, 0, 0);
     rootWidget_->setAttribute(Qt::WA_UpdatesDisabled);
     rootWidget_->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
@@ -80,6 +88,7 @@ Ui::IncomingCallWindow::IncomingCallWindow(const std::string& _account, const st
     std::vector<BaseVideoPanel*> videoPanels;
 	videoPanels.push_back(header_.get());
 	videoPanels.push_back(controls_.get());
+    videoPanels.push_back(transparentPanelOutgoingWidget_.get());
 
     eventFilter_ = new ResizeEventFilter(videoPanels, shadow_.getShadowWidget(), this);
     installEventFilter(eventFilter_);
@@ -90,7 +99,7 @@ Ui::IncomingCallWindow::IncomingCallWindow(const std::string& _account, const st
 
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipWindowRemoveComplete(quintptr)), this, SLOT(onVoipWindowRemoveComplete(quintptr)), Qt::DirectConnection);
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipWindowAddComplete(quintptr)), this, SLOT(onVoipWindowAddComplete(quintptr)), Qt::DirectConnection);
-    QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallNameChanged(const std::vector<voip_manager::Contact>&)), this, SLOT(onVoipCallNameChanged(const std::vector<voip_manager::Contact>&)), Qt::DirectConnection);
+    QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallNameChanged(const voip_manager::ContactsList&)), this, SLOT(onVoipCallNameChanged(const voip_manager::ContactsList&)), Qt::DirectConnection);
 	QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipMediaLocalVideo(bool)), header_.get(), SLOT(setVideoStatus(bool)), Qt::DirectConnection);
 	QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipMediaLocalVideo(bool)), controls_.get(), SLOT(setVideoStatus(bool)), Qt::DirectConnection);
 
@@ -175,6 +184,10 @@ void Ui::IncomingCallWindow::showEvent(QShowEvent* _e)
 
     header_->show();
     controls_->show();
+    if (transparentPanelOutgoingWidget_)
+    {
+        transparentPanelOutgoingWidget_->show();
+    }
 
 	shadow_.showShadow();
 
@@ -185,6 +198,10 @@ void Ui::IncomingCallWindow::hideEvent(QHideEvent* _e)
 {
 	header_->hide();
 	controls_->hide();
+	if (transparentPanelOutgoingWidget_)
+	{
+        transparentPanelOutgoingWidget_->hide();
+    }
 
 	shadow_.hideShadow();
 
@@ -196,19 +213,22 @@ void Ui::IncomingCallWindow::changeEvent(QEvent* _e)
     QWidget::changeEvent(_e);
 }
 
-void Ui::IncomingCallWindow::onVoipCallNameChanged(const std::vector<voip_manager::Contact>& _contacts)
+void Ui::IncomingCallWindow::onVoipCallNameChanged(const voip_manager::ContactsList& _contacts)
 {
-    if(_contacts.empty()) {
+#ifndef STRIP_VOIP
+    if(_contacts.contacts.empty()) {
         return;
     }
 
-    if (_contacts[0].account == account_ && _contacts[0].contact == contact_)
+    auto res = std::find(_contacts.windows.begin(), _contacts.windows.end(), (void*)rootWidget_->frameId());
+
+    if (res != _contacts.windows.end())
     {
-        contacts_ = _contacts;
+        contacts_ = _contacts.contacts;
         std::vector<std::string> users;
-        for(unsigned ix = 0; ix < _contacts.size(); ix++)
+        for(unsigned ix = 0; ix < contacts_.size(); ix++)
         {
-            users.push_back(_contacts[ix].contact);
+            users.push_back(contacts_[ix].contact);
         }
 
         header_->setAvatars(users);
@@ -217,6 +237,7 @@ void Ui::IncomingCallWindow::onVoipCallNameChanged(const std::vector<voip_manage
 
         header_->setStatus(QT_TRANSLATE_NOOP("voip_pages", "Incoming call").toUtf8());
     }
+#endif //STRIP_VOIP
 }
 
 void Ui::IncomingCallWindow::onAcceptVideoClicked()
@@ -258,7 +279,9 @@ void Ui::IncomingCallWindow::updateTitle()
         return;
     }
 
-    if (contacts_[0].account == account_ && contacts_[0].contact == contact_)
+    auto res = std::find(contacts_.begin(), contacts_.end(), voip_manager::Contact(account_, contact_));
+
+    if (res != contacts_.end())
     {
         std::vector<std::string> friendlyNames;
         for(unsigned ix = 0; ix < contacts_.size(); ix++)
@@ -287,7 +310,7 @@ QPoint Ui::IncomingCallWindow::findBestPosition(const QPoint& _windowPosition, c
     }
 
     // Search position for next window.
-    // For several incommign window we place them into cascade.
+    // For several incomming window we place them into cascade.
     for (IncomingCallWindow* window : instances_)
     {
         if (window)
@@ -306,7 +329,7 @@ QPoint Ui::IncomingCallWindow::findBestPosition(const QPoint& _windowPosition, c
 
 #ifndef _WIN32
 
-// Resend messages to header to fix drag&drop for transporents panels.
+// Resend messages to header to fix drag&drop for transparent panels.
 void Ui::IncomingCallWindow::mouseMoveEvent(QMouseEvent* event)
 {
     resendMouseEventToPanel(event);

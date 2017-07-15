@@ -139,7 +139,7 @@ namespace core
                             node_a.put("<xmlattr>.login", _params.aimid_);
                             node_a.put("<xmlattr>.protocol_uid", _params.aimid_);
                             node_a.put("<xmlattr>.server", "Boss");
-                            node_a.put("<xmlattr>.account_type", "Icq");
+                            node_a.put("<xmlattr>.account_type", ((build::is_icq()) ? "Icq" : "Agent"));
                             node_a.put("<xmlattr>.main", "1");
 
                             boost::property_tree::ptree node_l;

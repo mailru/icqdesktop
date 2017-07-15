@@ -14,6 +14,8 @@ namespace Ui
         // Used for animation.
         Q_PROPERTY(int xPos    READ x WRITE setXPos)
         Q_PROPERTY(int yCenter READ yCenter WRITE setYCenter)
+        Q_PROPERTY(int yPos    READ y WRITE setYPos)
+        Q_PROPERTY(int xCenter READ xCenter WRITE setXCenter)
 
 	public:
 
@@ -29,8 +31,14 @@ namespace Ui
         const QString& name();
 
         void setXPos(int x);
+        void setYPos(int x);
+
         void setYCenter(int y);
+        void setXCenter(int y);
+
         int  yCenter();
+        int  xCenter();
+
         void updateSize();
 
     public slots:
@@ -44,6 +52,7 @@ namespace Ui
 	protected:
 
         void changeEvent(QEvent * event) override;
+        void moveEvent(QMoveEvent *event) override;
 
 		QPixmap image_;
 		QString maskPath_;
@@ -52,6 +61,10 @@ namespace Ui
         float loadingProgress_;
         bool maskEngineReady_;
         bool applyWhenEnebled_;
+        QPixmap closeIcon_;
+
+        QPropertyAnimation* resizeAnimationMin_;
+        QPropertyAnimation* resizeAnimationMax_;
 
 		void paintEvent(QPaintEvent * event) override;
 	};
@@ -69,12 +82,18 @@ namespace Ui
 
     Q_SIGNALS:
 
-        void animationFinished(bool out);    
+        void animationFinished(bool out);
+        void animationRunned(bool out);
+
+    protected Q_SLOTS:
+
+        // Set out true for close and false for open.
+        void runAnimationVertical(bool out);
+        void runAnimationHorizontal(bool out);
 
     protected:
 
-        // Set out true for close and false for open.
-        void runAnimation(bool out);
+        void prerunAnimation(bool out, bool vertical);
 
         // Added animation for icons.
         template <typename T> void addAnimation(QObject* mask, const QByteArray& param, const T& start, const T& finish,
@@ -97,6 +116,7 @@ namespace Ui
         void onShowMaskList();
         void onHideMaskList();
         void getCallStatus(bool& isAccepted);
+        void animationRunningFinished(bool out);
 
     public:
 		MaskPanel(QWidget* _parent, QWidget* _container, int topOffset, int bottomOffset);
@@ -123,6 +143,7 @@ namespace Ui
         void callDestroyed();
         void animationFinished(bool out);
         void scrollToWidget(QString maskName);
+        void animationRunned(bool out);
 
 	protected Q_SLOTS:
 
@@ -133,7 +154,7 @@ namespace Ui
 		void scrollListDown();
 		void updateUpDownButtons();
         void setVideoStatus(bool);
-        void updateMaskList();
+        void updateMaskList(const voip_manager::ContactEx&  contactEx);
         void autoHidePreviewPrimary();
 
         void onVoipMinimalBandwidthChanged(bool _bEnable);
@@ -158,6 +179,8 @@ namespace Ui
 
         // Enumirate all masks. First mask is empty mask.
         void enumerateMask(std::function<void(MaskWidget* mask)> func);
+		
+		void updateMaskList();
 
     private:
 
@@ -195,5 +218,10 @@ namespace Ui
 
         // Background widget to able process mouse events on transparent parts of panel.
         PanelBackground* backgroundWidget_;
+
+        // Is hide/show animation running in this moment.
+        bool animationRunning_;
+        // Force hide mask list on animation finish.
+        bool hideMaskListOnAnimationFinish_;
     };
 }

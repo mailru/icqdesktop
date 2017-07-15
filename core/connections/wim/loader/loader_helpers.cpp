@@ -147,16 +147,16 @@ snaps::snap_metainfo_uptr load_snap_meta_from_file(const std::wstring &_path, co
     json.assign(json_str, json_str + file_size);
     json.push_back('\0');
 
-    return snaps::parse_json(json.data());
+    return snaps::parse_json(json.data(), _ttl_id);
 }
 
-std::string sign_loader_uri(const std::string &_host, const wim_packet_params &_params, const Str2StrMap &_extra)
+std::string sign_loader_uri(const std::string &_host, const wim_packet_params &_params, const str_2_str_map &_extra)
 {
     assert(!_host.empty());
 
     const time_t ts = (std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) - _params.time_offset_);
 
-    Str2StrMap p;
+    str_2_str_map p;
     p["a"] = _params.a_token_;
     p["k"] = _params.dev_id_;
     p["ts"] = tools::from_int64(ts);

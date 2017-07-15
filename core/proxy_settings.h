@@ -5,6 +5,7 @@
 namespace core
 {
     class coll_helper;
+    class core_settings;
 
     struct proxy_settings
     {
@@ -30,27 +31,40 @@ namespace core
         bool unserialize(tools::binary_stream& _bs);
 
         void serialize(core::coll_helper _collection) const;
+
+        static proxy_settings auto_proxy()
+        {
+            return proxy_settings();
+        }
     };
 
     class proxy_settings_manager
     {
-        std::mutex      mtx_;
-        proxy_settings	settings_;
-        proxy_settings  registry_settings_;
-        proxy_settings  user_settings_;
-        bool switched_;
+        core_settings& settings_storage_;
+
+#ifdef _WIN32
+        std::array<proxy_settings, 3> settings_;
+#else
+        std::array<proxy_settings, 2> settings_;
+#endif
+
+        size_t current_settings_;
+
+        mutable std::mutex mutex_;
 
     public:
-        proxy_settings_manager();
+        explicit proxy_settings_manager(core_settings& _settings_storage);
         virtual ~proxy_settings_manager();
 
-        proxy_settings get();
-        proxy_settings get_registry_settings();
-        void switch_settings();
-        proxy_settings get_user_proxy_settings();
+        proxy_settings get_current_settings() const;
+
+        void apply(const proxy_settings& _settings);
+
+        bool try_to_apply_alternative_settings();
 
     private:
-        void init_from_registry();
+#ifdef _WIN32
+        proxy_settings load_from_registry();
+#endif
     };
-
 }

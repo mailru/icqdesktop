@@ -9,16 +9,12 @@
 #include "smiles_menu/SmilesMenu.h"
 #include "../core_dispatcher.h"
 #include "../gui_settings.h"
+#include "../controls/CommonStyle.h"
 #include "../utils/gui_coll_helper.h"
 #include "../utils/InterConnector.h"
 
-#ifdef __APPLE__
-#   include "../utils/macos/mac_support.h"
-#endif
-
 namespace
 {
-    const int top_height = 64;
     const int sidebar_default_width = 320;
     const int sidebar_max_width = 428;
     const int sidebar_single_width = 650;
@@ -31,7 +27,7 @@ namespace Ui
         : QWidget(_parent)
         , Parent_(_parent)
     {
-        setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint | Qt::WindowSystemMenuHint);
+        setWindowFlags(Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint | Qt::WindowSystemMenuHint);
         setAttribute(Qt::WA_TranslucentBackground);
         setAcceptDrops(true);
     }
@@ -43,29 +39,33 @@ namespace Ui
         painter.setPen(Qt::NoPen);
         painter.setRenderHint(QPainter::Antialiasing);
 
-        painter.setBrush(QBrush(QColor(255, 255, 255, 0)));
+        painter.setBrush(QBrush(Qt::transparent));
+
+        QColor overlayColor("#ffffff");
+        overlayColor.setAlphaF(0.9);
+
         painter.fillRect(
             rect().x(),
             rect().y(),
             rect().width(),
-            Utils::scale_value(64),
-            QBrush(QColor(255, 255, 255, 1))
+            Ui::CommonStyle::getTopPanelHeight(),
+            QBrush(Qt::transparent)
         );
         painter.fillRect(
             rect().x(),
-            rect().y() + Utils::scale_value(64),
+            rect().y() + Ui::CommonStyle::getTopPanelHeight(),
             rect().width(),
-            rect().height() - Utils::scale_value(64),
-            QBrush(QColor(255, 255, 255, 255 * 0.9))
+            rect().height() - Ui::CommonStyle::getTopPanelHeight(),
+            QBrush(overlayColor)
         );
 
-        QPen pen (QColor(0x57, 0x9e, 0x1c), Utils::scale_value(2), Qt::DashLine, Qt::RoundCap);
+        QPen pen (QColor("#579e1c"), Utils::scale_value(2), Qt::DashLine, Qt::RoundCap);
         painter.setPen(pen);
         painter.drawRoundedRect(
             Utils::scale_value(24),
-            Utils::scale_value(top_height) + Utils::scale_value(24),
+            Ui::CommonStyle::getTopPanelHeight() + Utils::scale_value(24),
             rect().width() - Utils::scale_value(24) * 2,
-            rect().height() - Utils::scale_value(top_height) - Utils::scale_value(24) * 2,
+            rect().height() - Ui::CommonStyle::getTopPanelHeight() - Utils::scale_value(24) * 2,
             Utils::scale_value(8),
             Utils::scale_value(8)
         );
@@ -125,6 +125,7 @@ namespace Ui
                     {
                         Ui::GetDispatcher()->uploadSharedFile(contact, url.toLocalFile());
                         Ui::GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::filesharing_dnd_dialog);
+                        Parent_->onSendMessage(contact);
                     }
                 }
                 else if (url.isValid())
@@ -134,6 +135,7 @@ namespace Ui
                     QString text = url.toString();
                     collection.set_value_as_string("message", text.toUtf8().data(), text.toUtf8().size());
                     Ui::GetDispatcher()->post_message_to_core("send_message", collection.get());
+                    Parent_->onSendMessage(contact);
                 }
             }
         }
@@ -157,20 +159,16 @@ namespace Ui
         , sidebarVisible_(false)
 	{
         setAcceptDrops(true);
-        topWidget_->setFixedHeight(Utils::scale_value(top_height));
+        topWidget_->setFixedHeight(Ui::CommonStyle::getTopPanelHeight());
 		rootLayout_->setContentsMargins(0, 0, 0, 0);
 		rootLayout_->setSpacing(0);
         rootLayout_->addWidget(topWidget_);
         topWidget_->hide();
-        auto verticalLayout = new QVBoxLayout();
-        verticalLayout->setContentsMargins(0, 0, 0, 0);
-        verticalLayout->setSpacing(0);
+        auto verticalLayout = Utils::emptyVLayout();
 		verticalLayout->addWidget(historyControlWidget_);
 		verticalLayout->addWidget(smilesMenu_);
 		verticalLayout->addWidget(inputWidget_);
-        layout_ = new QHBoxLayout();
-        layout_->setSpacing(0);
-        layout_->setContentsMargins(0, 0, 0, 0);
+        layout_ = Utils::emptyHLayout();
         layout_->addLayout(verticalLayout);
         layout_->addWidget(sidebar_);
         layout_->addStretch();
@@ -198,6 +196,8 @@ namespace Ui
 		connect(inputWidget_, &InputWidget::ctrlFPressedInInputWidget, this, &ContactDialog::onCtrlFPressedInInputWidget, Qt::QueuedConnection);
 		connect(this, &ContactDialog::contactSelected, inputWidget_, &InputWidget::contactSelected, Qt::QueuedConnection);
 		connect(this, &ContactDialog::contactSelected, historyControlWidget_, &HistoryControl::contactSelected, Qt::QueuedConnection);
+		connect(this, &ContactDialog::contactSelectedToLastMessage, historyControlWidget_, &HistoryControl::contactSelectedToLastMessage, Qt::QueuedConnection);
+
         connect(historyControlWidget_, SIGNAL(clicked()), this, SLOT(historyControlClicked()), Qt::QueuedConnection);
 
 		initSmilesMenu();
@@ -209,6 +209,9 @@ namespace Ui
 
         sidebarUpdateTimer_->setInterval(500);
         sidebarUpdateTimer_->setSingleShot(true);
+        
+        dragOverlayWindow_->move(0,0);
+        dragOverlayWindow_->hide();
 	}
 
 
@@ -262,6 +265,8 @@ namespace Ui
         {
             sidebarWidth = showSingle ? width() : Utils::scale_value(sidebar_default_width);
         }
+
+        dragOverlayWindow_->resize((!showSingle && _show) ? width() - sidebarWidth : width(), height());
 
         if (showSingle)
         {
@@ -330,13 +335,27 @@ namespace Ui
         }
     }
 
-	void ContactDialog::onContactSelected(QString _aimId, qint64 _messageId)
+	void ContactDialog::onContactSelected(QString _aimId, qint64 _messageId, qint64 _quoteId)
 	{
-		emit contactSelected(_aimId, _messageId);
+		emit contactSelected(_aimId, _messageId, _quoteId);
         if (needShowSidebar())
-            showSidebar(_aimId, menu_page);
+        {
+            if (!isSidebarVisible() || sidebar_->currentAimId() != _aimId)
+                showSidebar(_aimId, menu_page);
+        }
         else
+        {
             setSidebarVisible(false);
+        }
+	}
+
+	void ContactDialog::onContactSelectedToLastMessage(QString _aimId, qint64 _messageId)
+	{
+		emit contactSelectedToLastMessage(_aimId, _messageId);
+		if (needShowSidebar())
+			showSidebar(_aimId, menu_page);
+		else
+			setSidebarVisible(false);
 	}
 
 	void ContactDialog::initSmilesMenu()
@@ -373,7 +392,9 @@ namespace Ui
     void ContactDialog::updateDragOverlay()
     {
         if (!rect().contains(mapFromGlobal(QCursor::pos())))
+        {
             hideDragOverlay();
+        }
     }
 
     void ContactDialog::historyControlClicked()
@@ -406,14 +427,6 @@ namespace Ui
 
     void ContactDialog::showDragOverlay()
     {
-#ifdef __APPLE__
-        auto pos = MacSupport::viewPosition(winId());
-#else
-        QPoint pos = QPoint(rect().x(), rect().y());
-        pos = mapToGlobal(pos);
-#endif
-        dragOverlayWindow_->move(pos.x(),pos.y());
-        dragOverlayWindow_->resize(width(), height());
         dragOverlayWindow_->show();
         overlayUpdateTimer_->start();
         Utils::InterConnector::instance().setDragOverlay(true);
@@ -486,6 +499,8 @@ namespace Ui
 
     void ContactDialog::resizeEvent(QResizeEvent* _e)
     {
+        dragOverlayWindow_->resize(width(), height());
+        
         if (isSidebarVisible())
         {
             int width = _e->size().width();

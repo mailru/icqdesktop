@@ -132,11 +132,10 @@ void LOGIN_GetLogins2(MAKFC_CLoginData *login);
 
 inline BOOL MAKFC_LoginDataRootIsMD5()
 {
-#ifdef _AGENT
-	return TRUE;
-#else
-	return FALSE;
-#endif //_AGENT
+    if (build::is_agent())
+        return TRUE;
+    else
+        return FALSE;
 }
 
 LOGINRECORDS LOGIN_GetLogins(const BLOWFISHKEY& key, BOOL bConvertLogins);

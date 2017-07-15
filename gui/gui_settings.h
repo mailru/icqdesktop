@@ -131,4 +131,21 @@ Q_SIGNALS:
     qt_gui_settings* get_gui_settings();
 
     const std::string get_account_setting_name(const std::string& settingName);
+
+
+    class qt_common_settings
+    {
+    private:
+        bool need_show_promo_;
+
+    public:
+        qt_common_settings()
+            : need_show_promo_(false)
+        {}
+
+        bool get_need_show_promo() const;
+        void set_need_show_promo(bool _need_show_promo);
+    };
+
+    qt_common_settings* get_common_settings();
 }

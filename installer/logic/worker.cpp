@@ -48,10 +48,10 @@ namespace installer
         {
             run_async_function<installer::error>(std::bind(store_exported_settings, _is_from_8x), [this, _is_from_8x](const installer::error& /*_err*/)
             {
-                std::function<installer::error()> store_exported_account_without_args = std::bind(store_exported_account, _is_from_8x);
+                std::function<installer::error()> store_exported_account_without_args = std::bind(store_exported_accounts, _is_from_8x);
+
                 run_async_function<installer::error>(store_exported_account_without_args, [this](const installer::error& /*_err*/)
                 {
-
                     run_async_function<installer::error>(start_process, [this](const installer::error& /*_err*/)
                     {
 
@@ -91,7 +91,7 @@ namespace installer
                     emit error(_err);
                     return;
                 }
-                run_async_function<installer::error>(uninstall_8x_from_executable, [this](const installer::error& _err)
+                run_async_function<installer::error>(delete_8x_links, [this](const installer::error& _err)
                 {
                     if (!_err.is_ok())
                     {
@@ -115,14 +115,8 @@ namespace installer
                                 return;
                             }
 
-                            run_async_function<installer::error>(write_registry, [this](const installer::error& _err)
+                            if (get_install_config().is_appx())
                             {
-                                if (!_err.is_ok())
-                                {
-                                    emit error(_err);
-                                    return;
-                                }
-
                                 run_async_function<installer::error>(create_links, [this](const installer::error& _err)
                                 {
                                     if (!_err.is_ok())
@@ -131,27 +125,87 @@ namespace installer
                                         return;
                                     }
 
-                                    if (get_exported_data().get_accounts().size())
+                                    emit finish();
+
+                                }, 100);
+                            }
+                            else
+                            {
+                                run_async_function<installer::error>(write_registry, [this](const installer::error& _err)
+                                {
+                                    if (!_err.is_ok())
                                     {
-                                        if (get_exported_data().get_accounts().size() > 1)
-                                        {
-                                            emit select_account();
-                                            return;
-                                        }
-                                        else
-                                        {
-                                            get_exported_data().set_exported_account(*get_exported_data().get_accounts().begin());
-                                        }
+                                        emit error(_err);
+                                        return;
                                     }
 
-                                    final_install(!get_exported_data().get_accounts().empty() /* from 8x */);
+                                    run_async_function<installer::error>(create_links, [this](const installer::error& _err)
+                                    {
+                                        if (!_err.is_ok())
+                                        {
+                                            emit error(_err);
+                                            return;
+                                        }
 
-                                }, 85);
-                            }, 60);
+                                        set_delete_8x_files_on_final(true);
+                                        set_delete_8x_self_on_final(false);
+
+                                        if (select_account_if_need())
+                                        {
+                                            emit select_account();
+
+                                            return;
+                                        }
+
+                                        final_install(!get_exported_data().get_accounts().empty() /* from 8x */);
+                                    }, 85);
+                                }, 60);
+                            }
                         }, 40);
                     }, 30);
                 }, 20);
             }, 10 );
+        }
+
+        bool worker::select_account_if_need()
+        {
+            const auto& accounts = logic::get_exported_data().get_accounts();
+
+            int icq_accounts_count = 0, agent_accounts_count = 0;
+
+            std::shared_ptr<logic::wim_account> icq_account;
+            std::shared_ptr<logic::wim_account> agent_account;
+
+            for (auto account : accounts)
+            {
+                if (account->type_ == logic::wim_account::account_type::atIcq)
+                {
+                    icq_account = account;
+                    ++icq_accounts_count;
+                }
+                else if (account->type_ == logic::wim_account::account_type::atAgent)
+                {
+                    agent_account = account;
+                    ++agent_accounts_count;
+                }
+            }
+
+            if (icq_accounts_count == 1)
+            {
+                get_exported_data().add_exported_account(icq_account);
+            }
+
+            if (agent_accounts_count == 1)
+            {
+                get_exported_data().add_exported_account(agent_account);
+            }
+
+            if (icq_accounts_count <= 1 && agent_accounts_count <= 1)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         void worker::uninstall()
@@ -350,17 +404,11 @@ namespace installer
                                 set_delete_8x_files_on_final(true);
                                 set_delete_8x_self_on_final(true);
 
-                                if (get_exported_data().get_accounts().size())
+                                if (select_account_if_need())
                                 {
-                                    if (get_exported_data().get_accounts().size() > 1)
-                                    {
-                                        emit select_account();
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        get_exported_data().set_exported_account(*get_exported_data().get_accounts().begin());
-                                    }
+                                    emit select_account();
+
+                                    return;
                                 }
 
                                 final_install(true /* from 8x */);

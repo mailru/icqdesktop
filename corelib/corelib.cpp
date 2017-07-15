@@ -14,6 +14,9 @@
         extern "C"
     #endif
 #endif
+
+
+
 bool get_core_instance(core::icore_interface** _core)
 {
 	*_core = new core::core_instance();

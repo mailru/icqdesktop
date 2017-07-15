@@ -3,16 +3,19 @@
 #include "async_task.h"
 #include "utils.h"
 #include "tools/system.h"
+#include "configuration/app_config.h"
 
 namespace core
 {
     const int64_t max_file_size = 1024*1024*10;
     const int64_t max_logs_size = max_file_size*5;
+    const int64_t max_logs_size_full = max_file_size*50;
 
     network_log::network_log(const boost::filesystem::wpath& _logs_directory)
         :   write_thread_(new async_executer()),
             file_context_(new log_file_context(_logs_directory))
     {
+        max_size_ = core::configuration::get_app_config().full_log_ ? max_logs_size_full : max_logs_size;
     }
 
     network_log::~network_log()
@@ -77,7 +80,7 @@ namespace core
         return path;
     }
 
-    void clean_logs(const boost::filesystem::wpath& _logs_directory)
+    void clean_logs(const boost::filesystem::wpath& _logs_directory, int max_size)
     {
         using namespace boost::xpressive;
 
@@ -109,7 +112,6 @@ namespace core
         }
 
         int64_t size = 0;
-
         for (auto iter = files.rbegin(); iter != files.rend(); ++iter)
         {
             boost::filesystem::wpath file_path = _logs_directory;
@@ -117,7 +119,7 @@ namespace core
 
             if (core::tools::system::is_exist(file_path))
             {
-                if (size > max_logs_size)
+                if (size > max_size)
                 {
                     boost::system::error_code e;
                     boost::filesystem::remove(file_path, e);
@@ -146,7 +148,8 @@ namespace core
         auto file_context = file_context_;
         auto file_names_history = &file_names_history_;
 
-        write_thread_->run_async_function([current_time, current_thread_id, bs_data, file_context, file_names_history]()->int32_t
+        auto max_size = max_size_;
+        write_thread_->run_async_function([current_time, current_thread_id, bs_data, file_context, file_names_history, max_size]()->int32_t
         {
             if (!file_context->file_stream_)
             {
@@ -205,13 +208,17 @@ namespace core
                 file_context->file_stream_->close();
                 file_context->file_stream_.reset();
 
-                clean_logs(file_context->logs_directory_);
+                clean_logs(file_context->logs_directory_, max_size);
             }
 
             return 0;
         });
     }
 
-
-
+    void network_log::write_string(const std::string& _text)
+    {
+        tools::binary_stream stream;
+        stream.write(_text);
+        write_data(stream);
+    }
 }

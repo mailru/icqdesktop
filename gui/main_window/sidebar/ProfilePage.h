@@ -24,6 +24,7 @@ namespace Ui
         void setInfo(const QString& info, const QString& prefix = QString());
         void elideText(int width);
         void setAttachPhone(bool value);
+        QString getInfoText();
 
     private Q_SLOTS:
         void menuRequested();
@@ -90,7 +91,6 @@ namespace Ui
         QWidget* ignoreWidget_;
         QWidget* buttonWidget_;
         LineWidget* Line_;
-        QWidget* rightWidget_;
         QWidget* avatarBottomSpace_;
         QWidget* chatEditWidget_;
         LabelEx* ignoreLabel_;

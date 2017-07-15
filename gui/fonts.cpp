@@ -43,7 +43,7 @@ namespace
 
         namespace weight
         {
-            const QString semiboldQss = "504";
+            const QString mediumQss = "504";
 
             int32_t semibold(const int32_t _size);
 
@@ -216,6 +216,33 @@ QString defaultAppFontQssWeight()
     return iter->second;
 }
 
+QString SetFont(const QString& _qss)
+{
+    QString result(_qss);
+
+    const auto fontFamily = appFontFamilyNameQss(defaultAppFontFamily(), FontWeight::Normal);
+    const auto fontFamilyBold = appFontFamilyNameQss(defaultAppFontFamily(), FontWeight::Bold);
+    const auto fontFamilyMedium = appFontFamilyNameQss(defaultAppFontFamily(), FontWeight::Medium);
+    const auto fontFamilyLight = appFontFamilyNameQss(defaultAppFontFamily(), FontWeight::Light);
+
+    result.replace("%FONT_FAMILY%", fontFamily);
+    result.replace("%FONT_FAMILY_BOLD%", fontFamilyBold);
+    result.replace("%FONT_FAMILY_MEDIUM%", fontFamilyMedium);
+    result.replace("%FONT_FAMILY_LIGHT%", fontFamilyLight);
+
+    const auto fontWeightQss = appFontWeightQss(FontWeight::Normal);
+    const auto fontWeightBold = appFontWeightQss(FontWeight::Bold);
+    const auto fontWeightMedium = appFontWeightQss(FontWeight::Medium);
+    const auto fontWeightLight = appFontWeightQss(FontWeight::Light);
+
+    result.replace("%FONT_WEIGHT%", fontWeightQss);
+    result.replace("%FONT_WEIGHT_BOLD%", fontWeightBold);
+    result.replace("%FONT_WEIGHT_MEDIUM%", fontWeightMedium);
+    result.replace("%FONT_WEIGHT_LIGHT%", fontWeightLight);
+
+    return result;
+}
+
 namespace
 {
     const QssWeightsMapT& getCurrentWeightsMap()
@@ -246,7 +273,6 @@ namespace
             weightMap.emplace(FontWeight::Light, "200");
             weightMap.emplace(FontWeight::Normal, "400");
             weightMap.emplace(FontWeight::Medium, "450");
-            weightMap.emplace(FontWeight::Semibold, "550");
             weightMap.emplace(FontWeight::Bold, "800");
         }
 
@@ -262,7 +288,6 @@ namespace
             weightMap.emplace(FontWeight::Light, "300");
             weightMap.emplace(FontWeight::Normal, "400");
             weightMap.emplace(FontWeight::Medium, "450");
-            weightMap.emplace(FontWeight::Semibold, "550");
             weightMap.emplace(FontWeight::Bold, "800");
         }
 
@@ -278,7 +303,6 @@ namespace
             weightMap.emplace(FontWeight::Light, "200");
             weightMap.emplace(FontWeight::Normal, "400");
             weightMap.emplace(FontWeight::Medium, "450");
-            weightMap.emplace(FontWeight::Semibold, "550");
             weightMap.emplace(FontWeight::Bold, "800");
         }
 
@@ -293,9 +317,8 @@ namespace
         {
             weightMap.emplace(FontWeight::Light, "200");
             weightMap.emplace(FontWeight::Normal, "400");
-            weightMap.emplace(FontWeight::Medium, "505");
-            weightMap.emplace(FontWeight::Semibold, "550");
-            weightMap.emplace(FontWeight::Bold, "600");
+            weightMap.emplace(FontWeight::Medium, "550");
+            weightMap.emplace(FontWeight::Bold, "700");
         }
 
         return weightMap;
@@ -328,8 +351,8 @@ namespace
             if (_fontWeight == FontWeight::Light)
                 return QString();
 
-            if (_fontWeight == FontWeight::Semibold)
-                return san_francisco::weight::semiboldQss;
+            if (_fontWeight == FontWeight::Medium)
+                return san_francisco::weight::mediumQss;
 
             return QString();
         }
@@ -354,8 +377,6 @@ namespace
             #else
             case FontWeight::Medium: return QFONT_WEIGHT_MEDIUM;
             #endif
-
-            case FontWeight::Semibold: return QFont::Weight::DemiBold;
 
             case FontWeight::Bold: return QFont::Weight::Bold;
         }
@@ -384,9 +405,10 @@ namespace
                 break;
 
             case FontWeight::Medium:
-            case FontWeight::Semibold:
-            case FontWeight::Bold:
                 familyName += " Semibold";
+                break;
+
+            case FontWeight::Bold:
                 break;
 
             default:
@@ -451,9 +473,12 @@ namespace
                     return;
 
                 case FontWeight::Medium:
-                case FontWeight::Bold:
-                case FontWeight::Semibold:
                     _font.setFamily("Segoe UI Semibold");
+                    return;
+
+                case FontWeight::Bold:
+                    _font.setWeight(
+                        icqWeight2QtWeight(FontWeight::Bold));
                     return;
 
                 default:
@@ -480,13 +505,11 @@ namespace
                     return;
 
                 case FontWeight::Medium:
-                    _font.setWeight(
-                        icqWeight2QtWeight(FontWeight::Medium));
+                    _font.setWeight(QFont::Weight::DemiBold);
                     return;
 
                 case FontWeight::Bold:
-                case FontWeight::Semibold:
-                    _font.setWeight(QFont::Weight::DemiBold);
+                    _font.setWeight(icqWeight2QtWeight(FontWeight::Bold));
                     return;
             }
 
@@ -507,15 +530,11 @@ namespace
                 return;
 
             case FontWeight::Medium:
-                _font.setWeight(QFont::Weight::Medium);
+                _font.setWeight(QFont::Weight::DemiBold);
                 return;
 
             case FontWeight::Bold:
                 _font.setWeight(QFont::Weight::Bold);
-                return;
-
-            case FontWeight::Semibold:
-                _font.setWeight(QFont::Weight::DemiBold);
                 return;
             }
 

@@ -35,24 +35,28 @@
 <context>
     <name>Ui::AccountsPage</name>
     <message>
-        <source>Now we support only one ICQ account per session. Please choose prefered one to continue.</source>
-        <translation>لا ندعم الآن إلا حساب ICQ واحدًا لكل جلسة. يرجى اختيار حساب مفضّل للمتابعة.</translation>
-    </message>
-    <message>
         <source>Choose your account</source>
         <translation>اختيار حساب</translation>
+    </message>
+    <message>
+        <source>Now we support only one account per session. Please choose prefered one to continue.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select ICQ account if you want it to be merged with your Agent account.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do not merge</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Now select ICQ account if you want to merge it with previously selected Agent.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>about_us</name>
-    <message>
-        <source>About ICQ</source>
-        <translation>حول ICQ</translation>
-    </message>
-    <message>
-        <source>ICQ</source>
-        <translation>ICQ</translation>
-    </message>
     <message>
         <source>This product includes software developed by the OpenSSL project for use in the OpenSSL Toolkit</source>
         <translation>يحتوي هذا المنتج على برنامج تم تطويره بواسطة OpenSSL Project للاستخدام في OpenSSL Toolkit</translation>
@@ -76,6 +80,10 @@
     <message>
         <source>Presented by Mail.Ru</source>
         <translation>مقدّم من Mail.Ru</translation>
+    </message>
+    <message>
+        <source>© Mail.Ru LLC</source>
+        <translation>© Mail.Ru LLC</translation>
     </message>
 </context>
 <context>
@@ -138,10 +146,6 @@ photo</source>
         <translation>رفع صورة</translation>
     </message>
     <message>
-        <source>Image should be at least 600x600 px</source>
-        <translation>يجب ألا يقل مقاس الصورة عن 600x600 بكسل</translation>
-    </message>
-    <message>
         <source>Back</source>
         <translation>رجوع</translation>
     </message>
@@ -178,6 +182,10 @@ photo</source>
     <message>
         <source>Edit photo</source>
         <translation>تعديل صورة</translation>
+    </message>
+    <message>
+        <source>Image should be at least 200x200 px</source>
+        <translation>يجب ألا يقل مقاس الصورة عن 200x200 بكسل</translation>
     </message>
 </context>
 <context>
@@ -306,22 +314,6 @@ photo</source>
         <translation>حساب رسمي</translation>
     </message>
     <message>
-        <source>Seen </source>
-        <translation>تمت القراءة </translation>
-    </message>
-    <message>
-        <source>today</source>
-        <translation>اليوم</translation>
-    </message>
-    <message>
-        <source>yesterday</source>
-        <translation>أمس</translation>
-    </message>
-    <message>
-        <source> at </source>
-        <translation> في </translation>
-    </message>
-    <message>
         <source>member</source>
         <comment>1</comment>
         <translation>عضو</translation>
@@ -340,26 +332,6 @@ photo</source>
         <source>members</source>
         <comment>21</comment>
         <translation>أعضاء</translation>
-    </message>
-    <message>
-        <source>new message</source>
-        <comment>1</comment>
-        <translation>رسالة</translation>
-    </message>
-    <message>
-        <source>new messages</source>
-        <comment>2</comment>
-        <translation>رسائل جديدة</translation>
-    </message>
-    <message>
-        <source>new messages</source>
-        <comment>5</comment>
-        <translation>رسائل جديدة</translation>
-    </message>
-    <message>
-        <source>new messages</source>
-        <comment>21</comment>
-        <translation>رسائل جديدة</translation>
     </message>
     <message>
         <source>Today</source>
@@ -384,10 +356,6 @@ photo</source>
     <message>
         <source>Cancel</source>
         <translation>إلغاء</translation>
-    </message>
-    <message>
-        <source>Preview</source>
-        <translation>معاينة</translation>
     </message>
     <message>
         <source>Set to all</source>
@@ -503,10 +471,6 @@ photo</source>
         <translation>أمس</translation>
     </message>
     <message>
-        <source>Add contact</source>
-        <translation>إضافة الاتصال</translation>
-    </message>
-    <message>
         <source>Hello. Please add me to your contact list</source>
         <translation>مرحبًا. يُرجى إضافتي إلى قائمة جهات الاتصال لديك</translation>
     </message>
@@ -547,10 +511,6 @@ photo</source>
         <translation>رسالة صوتية</translation>
     </message>
     <message>
-        <source>New chat</source>
-        <translation>دردشة جديدة</translation>
-    </message>
-    <message>
         <source>Video</source>
         <translation>فيديو</translation>
     </message>
@@ -567,10 +527,6 @@ photo</source>
         <translation>إغلاق الكل</translation>
     </message>
     <message>
-        <source>Search</source>
-        <translation>بحث</translation>
-    </message>
-    <message>
         <source>CONTACTS</source>
         <translation>جهات الاتصال</translation>
     </message>
@@ -583,20 +539,12 @@ photo</source>
         <translation>الرسائل</translation>
     </message>
     <message>
-        <source>Search in all chats</source>
+        <source>SEARCH IN ALL CHATS</source>
         <translation>ابحث في كل الدردشات</translation>
-    </message>
-    <message>
-        <source>Create groupchat</source>
-        <translation>إنشاء الدردشة الجماعية</translation>
     </message>
 </context>
 <context>
     <name>contactus_page</name>
-    <message>
-        <source>Contact Us</source>
-        <translation>اتصل بنا</translation>
-    </message>
     <message>
         <source>Your comments or suggestions...</source>
         <translation>تعليقاتك أو اقتراحاتك...</translation>
@@ -1730,6 +1678,26 @@ photo</source>
         <source>Chat name</source>
         <translation>اسم الدردشة</translation>
     </message>
+    <message>
+        <source>Link to chat</source>
+        <translation>رابط للدردشة</translation>
+    </message>
+    <message>
+        <source>Ability to join chat by link</source>
+        <translation>القدرة على الانضمام للدردشة برابط</translation>
+    </message>
+    <message>
+        <source>Admin approval required to join</source>
+        <translation>موافقة المدير مطلوبة للانضمام</translation>
+    </message>
+    <message>
+        <source>Age restriction</source>
+        <translation>قيود السن</translation>
+    </message>
+    <message>
+        <source>Members must be of legal age to join</source>
+        <translation>يجب على الأعضاء أن يكونوا بالسن القانونية للانضمام</translation>
+    </message>
 </context>
 <context>
     <name>input_widget</name>
@@ -1807,15 +1775,11 @@ photo</source>
     </message>
     <message>
         <source>You are not a member of this chat. </source>
-        <translation type="unfinished"></translation>
+        <translation>أنت لست عضوًا في هذه الدردشة. </translation>
     </message>
 </context>
 <context>
     <name>livechats</name>
-    <message>
-        <source>Live chats</source>
-        <translation>الدردشات الحية</translation>
-    </message>
     <message>
         <source>friend</source>
         <comment>1</comment>
@@ -1859,6 +1823,10 @@ photo</source>
     <message>
         <source>Waiting for approval</source>
         <translation>في انتظار الموافقة</translation>
+    </message>
+    <message>
+        <source>Live chats</source>
+        <translation>الدردشات الحية</translation>
     </message>
 </context>
 <context>
@@ -1908,20 +1876,6 @@ photo</source>
         <translation>تسجيل الدخول بواسطة UIN/البريد الإلكتروني</translation>
     </message>
     <message>
-        <source>Please confirm your country code and enter
-your phone number</source>
-        <translation>يُرجى تأكيد كود بلدك وإدخال
-رقم هاتفك</translation>
-    </message>
-    <message>
-        <source>Please enter the code you&apos;ve just received in your phone</source>
-        <translation>يُرجى إدخال الرمز الذي استلمته للتو في هاتفك</translation>
-    </message>
-    <message>
-        <source>Enter your UIN or Email to get started</source>
-        <translation>أدخل UIN أو البريد الإلكتروني الخاص بك للبدء</translation>
-    </message>
-    <message>
         <source>Resend code in </source>
         <translation>إعادة إرسال الرمز في </translation>
     </message>
@@ -1952,6 +1906,38 @@ your phone number</source>
     <message>
         <source>Forgot password?</source>
         <translation>هل نسيت كلمة المرور؟</translation>
+    </message>
+    <message>
+        <source>Welcome to Mail.Ru Agent</source>
+        <translation>مرحبًا بك في Mail.Ru Agent</translation>
+    </message>
+    <message>
+        <source>Email</source>
+        <translation>بريدك الالكتروني</translation>
+    </message>
+    <message>
+        <source>Login with Email</source>
+        <translation>تسجيل الدخول بواسطة البريد الإلكتروني</translation>
+    </message>
+    <message>
+        <source>Two-factor authentication is on, please create an app password &lt;a href=&quot;https://e.mail.ru/settings/2-step-auth&quot;&gt;here&lt;/a&gt; to login</source>
+        <translation>المصادقة الثنائية قيد التشغيل، يُرجى إنشاء كلمة مرور للتطبيق &lt;a href=&quot;https://e.mail.ru/settings/2-step-auth&quot;&gt;here&lt;/a&gt; لتسجيل الدخول</translation>
+    </message>
+    <message>
+        <source>Enter code from SMS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter phone number</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter UIN or Email</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter your Email</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2054,6 +2040,88 @@ your phone number</source>
     </message>
 </context>
 <context>
+    <name>main_menu</name>
+    <message>
+        <source>Create group chat</source>
+        <translation>إنشاء محادثة جماعية</translation>
+    </message>
+    <message>
+        <source>Add contact</source>
+        <translation>إضافة الاتصال</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation>جهات الاتصال</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>إعدادات</translation>
+    </message>
+    <message>
+        <source>Sounds</source>
+        <translation>الأصوات</translation>
+    </message>
+    <message>
+        <source>Discover</source>
+        <translation>اكتشف</translation>
+    </message>
+    <message>
+        <source>Stories</source>
+        <translation>قصص</translation>
+    </message>
+    <message>
+        <source>Sign out</source>
+        <translation>تسجيل الخروج</translation>
+    </message>
+    <message>
+        <source>About app</source>
+        <translation>معلومات عن التطبيق</translation>
+    </message>
+    <message>
+        <source>Contact Us</source>
+        <translation>اتصل بنا</translation>
+    </message>
+</context>
+<context>
+    <name>main_page</name>
+    <message>
+        <source>My profile</source>
+        <translation>ملفي التعريفي</translation>
+    </message>
+    <message>
+        <source>General settings</source>
+        <translation>الإعدادات العامة</translation>
+    </message>
+    <message>
+        <source>Voice and video</source>
+        <translation>الصوت والفيديو</translation>
+    </message>
+    <message>
+        <source>Notifications</source>
+        <translation>إخطارات</translation>
+    </message>
+    <message>
+        <source>Back to chats</source>
+        <translation>العودة إلى الدردشات</translation>
+    </message>
+    <message>
+        <source>Contact Us</source>
+        <translation>اتصل بنا</translation>
+    </message>
+    <message>
+        <source>About app</source>
+        <translation>معلومات عن التطبيق</translation>
+    </message>
+    <message>
+        <source>Wallpaper</source>
+        <translation>صورة خلفية</translation>
+    </message>
+    <message>
+        <source>Add contact</source>
+        <translation>إضافة الاتصال</translation>
+    </message>
+</context>
+<context>
     <name>notifications_alert</name>
     <message>
         <source>View all</source>
@@ -2114,6 +2182,14 @@ your phone number</source>
         <source>No messages found</source>
         <translation>لم يتم العثور على أية رسائل</translation>
     </message>
+    <message>
+        <source>Install Mail.Ru Agent on mobile</source>
+        <translation>تثبيت Mail.Ru Agent على الهاتف المحمول</translation>
+    </message>
+    <message>
+        <source>by phone number or Email</source>
+        <translation>بواسطة رقم الهاتف أو البريد الإلكتروني</translation>
+    </message>
 </context>
 <context>
     <name>popup_window</name>
@@ -2144,10 +2220,6 @@ your phone number</source>
     <message>
         <source>Sign out</source>
         <translation>تسجيل الخروج</translation>
-    </message>
-    <message>
-        <source>Chat name</source>
-        <translation>اسم الدردشة</translation>
     </message>
     <message>
         <source>Save</source>
@@ -2239,11 +2311,27 @@ your phone number</source>
     </message>
     <message>
         <source>Are you sure you want to ban user to write in this chat?</source>
-        <translation type="unfinished"></translation>
+        <translation>هل تريد بالتأكيد حظر المستخدم من الكتابة في هذه الدردشة؟</translation>
     </message>
     <message>
         <source>Are you sure you want to allow user to write in this chat?</source>
-        <translation type="unfinished"></translation>
+        <translation>هل تريد بالتأكيد السماح للمستخدم بالكتابة في هذه الدردشة؟</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete all unknown contacts?</source>
+        <translation>هل تريد بالتأكيد حذف أعضاء قائمة الاتصال المجهولين؟</translation>
+    </message>
+    <message>
+        <source>Close all</source>
+        <translation>إغلاق الكل</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete user from this call?</source>
+        <translation>هل تريد بالتأكيد حذف المستخدم من هذا الاتصال؟</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation>جهات الاتصال</translation>
     </message>
 </context>
 <context>
@@ -2370,10 +2458,6 @@ your phone number</source>
         <translation>لم يتم العثور على شيء</translation>
     </message>
     <message>
-        <source>Add contact</source>
-        <translation>إضافة الاتصال</translation>
-    </message>
-    <message>
         <source>Phone or Name, Email, UIN</source>
         <translation>الهاتف أو الاسم، البريد الإلكتروني أو UIN</translation>
     </message>
@@ -2383,10 +2467,6 @@ your phone number</source>
     <message>
         <source>Settings</source>
         <translation>إعدادات</translation>
-    </message>
-    <message>
-        <source>My profile</source>
-        <translation>ملف تعريفي</translation>
     </message>
     <message>
         <source>General</source>
@@ -2403,18 +2483,6 @@ your phone number</source>
     <message>
         <source>Notifications</source>
         <translation>إخطارات</translation>
-    </message>
-    <message>
-        <source>About</source>
-        <translation>حول</translation>
-    </message>
-    <message>
-        <source>Contact Us</source>
-        <translation>اتصل بنا</translation>
-    </message>
-    <message>
-        <source>Change account</source>
-        <translation>تغيير الحساب</translation>
     </message>
     <message>
         <source>ru</source>
@@ -2441,10 +2509,6 @@ your phone number</source>
         <translation>Český</translation>
     </message>
     <message>
-        <source>Launch ICQ when system starts</source>
-        <translation>إطلاق ICQ عند تشغيل الجهاز</translation>
-    </message>
-    <message>
         <source>On</source>
         <translation>تشغيل</translation>
     </message>
@@ -2469,20 +2533,12 @@ your phone number</source>
         <translation>إرسال رسالة بواسطة:</translation>
     </message>
     <message>
-        <source>Preview images and videos</source>
-        <translation>معاينة الصور ومقاطع الفيديو</translation>
-    </message>
-    <message>
         <source>Interface</source>
         <translation>الواجهة</translation>
     </message>
     <message>
         <source>Interface scale:</source>
         <translation>دقة الواجهة:</translation>
-    </message>
-    <message>
-        <source>(ICQ restart required)</source>
-        <translation>(إعادة تشغيل ICQ مطلوبة)</translation>
     </message>
     <message>
         <source>(Recommended)</source>
@@ -2552,16 +2608,40 @@ your phone number</source>
         <source>Chat list compact mode</source>
         <translation>الوضع الموجز لقائمة المحادثة</translation>
     </message>
+    <message>
+        <source>Show mail notifications</source>
+        <translation>إظهار إشعارات البريد</translation>
+    </message>
+    <message>
+        <source>My Profile</source>
+        <translation>ملف تعريفي</translation>
+    </message>
+    <message>
+        <source>Launch when system starts</source>
+        <translation>الإطلاق عند تشغيل الجهاز</translation>
+    </message>
+    <message>
+        <source>(Application restart required)</source>
+        <translation>(تلزم إعادة تشغيل التطبيق)</translation>
+    </message>
+    <message>
+        <source>Auto play videos</source>
+        <translation>تشغيل مقاطع الفيديو تلقائيًا</translation>
+    </message>
+    <message>
+        <source>Preview images and links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show snaps</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>sidebar</name>
     <message>
         <source>Attach phone</source>
         <translation>ربط رقم الهاتف</translation>
-    </message>
-    <message>
-        <source>Ignored Contacts</source>
-        <translation>جهات الاتصال التي تم تجاهلها</translation>
     </message>
     <message>
         <source>Connect to ICQ account</source>
@@ -2578,10 +2658,6 @@ your phone number</source>
     <message>
         <source>Report spam</source>
         <translation>إبلاغ عن رسالة غير مرغوبة فيها</translation>
-    </message>
-    <message>
-        <source>Edit profile</source>
-        <translation>تعديل بيانات الحساب</translation>
     </message>
     <message>
         <source>UIN</source>
@@ -2604,24 +2680,12 @@ your phone number</source>
         <translation>اسم العائلة</translation>
     </message>
     <message>
-        <source>Birthdate</source>
-        <translation>تاريخ الميلاد</translation>
-    </message>
-    <message>
-        <source>Gender</source>
-        <translation>جنس</translation>
-    </message>
-    <message>
         <source>Country</source>
         <translation>بلد</translation>
     </message>
     <message>
         <source>City</source>
         <translation>مدينة</translation>
-    </message>
-    <message>
-        <source>About me</source>
-        <translation>مبذة عني</translation>
     </message>
     <message>
         <source>Online</source>
@@ -2636,36 +2700,8 @@ your phone number</source>
         <translation>غير مرئي</translation>
     </message>
     <message>
-        <source>Seen </source>
-        <translation>تمت القراءة </translation>
-    </message>
-    <message>
-        <source>today</source>
-        <translation>اليوم</translation>
-    </message>
-    <message>
-        <source>yesterday</source>
-        <translation>أمس</translation>
-    </message>
-    <message>
-        <source> at </source>
-        <translation> في </translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>غير متصل</translation>
-    </message>
-    <message>
         <source>for safety and spam protection</source>
         <translation>للسلامة والحماية من العناصر غير المرغوب فيها</translation>
-    </message>
-    <message>
-        <source>Male</source>
-        <translation>ذكر</translation>
-    </message>
-    <message>
-        <source>Female</source>
-        <translation>أنثى</translation>
     </message>
     <message>
         <source>Add to chat</source>
@@ -2744,10 +2780,6 @@ your phone number</source>
         <translation>حفظ</translation>
     </message>
     <message>
-        <source>Public chat</source>
-        <translation>الدردشة العامة</translation>
-    </message>
-    <message>
         <source>Revoke admin role</source>
         <translation>سحب حقوق المسؤول</translation>
     </message>
@@ -2798,18 +2830,6 @@ Please edit phone number and try again.</source>
         <translation>تم نسخ الرابط</translation>
     </message>
     <message>
-        <source>Join with Approval</source>
-        <translation>انضمام بموافقة</translation>
-    </message>
-    <message>
-        <source>Chat will be visible to everyone</source>
-        <translation>ستكون المحادثة ظاهرة للجميع</translation>
-    </message>
-    <message>
-        <source>Admin approval required to join</source>
-        <translation>موافقة المدير مطلوبة للانضمام</translation>
-    </message>
-    <message>
         <source>more</source>
         <translation>المزيد</translation>
     </message>
@@ -2850,30 +2870,6 @@ Please edit phone number and try again.</source>
         <translation>البحث عن أية رسائل</translation>
     </message>
     <message>
-        <source>Link to chat</source>
-        <translation>رابط للدردشة</translation>
-    </message>
-    <message>
-        <source>Ability to join chat by link</source>
-        <translation>القدرة على الانضمام للدردشة برابط</translation>
-    </message>
-    <message>
-        <source>Read only</source>
-        <translation>قراءة فقط</translation>
-    </message>
-    <message>
-        <source>New members can read, approved by admin members can send</source>
-        <translation>بإمكان الأعضاء الجدد قراءة، والأعضاء الموافق عليهم من المدير بإمكانهم الإرسال</translation>
-    </message>
-    <message>
-        <source>Age restriction</source>
-        <translation>قيود السن</translation>
-    </message>
-    <message>
-        <source>Members must be of legal age to join</source>
-        <translation>يجب على الأعضاء أن يكونوا بالسن القانونية للانضمام</translation>
-    </message>
-    <message>
         <source>Unfortunatelly, you have been deleted and cannot see the members of this chat or message them.</source>
         <translation>للأسف تم حذفك ولا يمكنك مشاهدة قائمة المشاركين في هذه الدردشة أو إرسال الرسائل إليهم.</translation>
     </message>
@@ -2883,11 +2879,69 @@ Please edit phone number and try again.</source>
     </message>
     <message>
         <source>Ban to write</source>
-        <translation type="unfinished"></translation>
+        <translation>حظر من الكتابة</translation>
     </message>
     <message>
         <source>Allow to write</source>
+        <translation>السماح بالكتابة</translation>
+    </message>
+    <message>
+        <source>Email/UIN</source>
+        <translation>Email/UIN</translation>
+    </message>
+</context>
+<context>
+    <name>snaps_page</name>
+    <message>
+        <source>Cancel</source>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>نعم</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete this snap?</source>
+        <translation>هل تريد بالتأكيد حذف هذه اللقطة؟</translation>
+    </message>
+    <message>
+        <source>Delete snap</source>
+        <translation>حذف اللقطة</translation>
+    </message>
+    <message>
+        <source>Unfortunately, this file is not supported on your device.</source>
+        <translation>المعذرة، هذا الملف ليس مدعومًا على جهازك.</translation>
+    </message>
+    <message>
+        <source>view</source>
+        <comment>1</comment>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>views</source>
+        <comment>2</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>views</source>
+        <comment>5</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>views</source>
+        <comment>21</comment>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>title</name>
+    <message>
+        <source>ICQ</source>
+        <translation>ICQ</translation>
+    </message>
+    <message>
+        <source>Mail.Ru Agent</source>
+        <translation>Mail.Ru Agent</translation>
     </message>
 </context>
 <context>
@@ -2911,6 +2965,30 @@ Please edit phone number and try again.</source>
     <message>
         <source>Open</source>
         <translation>فتح</translation>
+    </message>
+    <message>
+        <source>New email</source>
+        <translation>رسالة بريد جديدة</translation>
+    </message>
+    <message>
+        <source> new email</source>
+        <comment>1</comment>
+        <translation> رسالة بريد جديدة</translation>
+    </message>
+    <message>
+        <source> new emails</source>
+        <comment>2</comment>
+        <translation> رسائل بريد جديدة</translation>
+    </message>
+    <message>
+        <source> new emails</source>
+        <comment>5</comment>
+        <translation> رسائل بريد جديدة</translation>
+    </message>
+    <message>
+        <source> new emails</source>
+        <comment>21</comment>
+        <translation> رسائل بريد جديدة</translation>
     </message>
 </context>
 <context>
@@ -2948,10 +3026,6 @@ Please edit phone number and try again.</source>
         <translation>رنين...</translation>
     </message>
     <message>
-        <source>turned off the camera</source>
-        <translation>قام إيقاف الكاميرا</translation>
-    </message>
-    <message>
         <source>End call</source>
         <translation>إنهاء المكالمة</translation>
     </message>
@@ -2974,6 +3048,26 @@ Please edit phone number and try again.</source>
     <message>
         <source> enabled data saving</source>
         <translation> بتمكين حفظ البيانات</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation>إضافة</translation>
+    </message>
+    <message>
+        <source>Add to call</source>
+        <translation>إضافة إلى الاتصال</translation>
+    </message>
+    <message>
+        <source>MEMBERS</source>
+        <translation>المشاركين</translation>
+    </message>
+    <message>
+        <source>OTHERS</source>
+        <translation>أخرى</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>إلغاء</translation>
     </message>
 </context>
 </TS>

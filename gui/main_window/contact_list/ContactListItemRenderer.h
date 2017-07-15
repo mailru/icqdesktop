@@ -5,11 +5,11 @@
 
 namespace ContactList
 {
-	void RenderServiceContact(QPainter &painter, const bool _isHovered, const bool _isActive, QString _name, Data::ContactType _type, int leftMargin, const ViewParams& viewParams_);
+	void RenderServiceContact(QPainter& _painter, const bool _isHovered, const bool _isActive, QString _name, Data::ContactType _type, int _leftMargin, const ViewParams& _viewParams);
 
-	void RenderContactItem(QPainter &painter, VisualDataBase item, ViewParams _viewParams);
+	void RenderContactItem(QPainter& _painter, VisualDataBase _item, ViewParams _viewParams);
 
-	void RenderGroupItem(QPainter &painter, const QString &groupName, const ViewParams& viewParams_);
+	void RenderGroupItem(QPainter& _painter, const QString &_groupName, const ViewParams& _viewParams);
 
-    void RenderContactsDragOverlay(QPainter& painter);
+    void RenderContactsDragOverlay(QPainter& _painter);
 }

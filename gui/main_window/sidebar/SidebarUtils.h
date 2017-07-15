@@ -26,6 +26,8 @@ Q_SIGNALS:
 
         void setImage(const QString& image);
         void setText(const QString& text);
+        void setColor(const QString& color);
+        void setFont(const QFont& font);
         void setLink(const QString& text, const QColor& color);
 
     protected:
@@ -67,7 +69,4 @@ Q_SIGNALS:
         bool Hovered_;
         bool Enabled_;
     };
-
-    QHBoxLayout* emptyHLayout(QWidget* parent = 0);
-    QVBoxLayout* emptyVLayout(QWidget* parent = 0);
 }

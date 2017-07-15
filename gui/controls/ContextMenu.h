@@ -39,6 +39,7 @@ namespace Ui
    protected:
        virtual void showEvent(QShowEvent* _e) override;
        virtual void hideEvent(QHideEvent* _e) override;
+       virtual void focusOutEvent(QFocusEvent *_e) override;
 
    private:
        bool InvertRight_;

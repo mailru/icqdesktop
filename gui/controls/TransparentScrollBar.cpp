@@ -8,9 +8,9 @@ namespace Ui
 {
     namespace L
     {
-        const auto backgroundColor = QColor(0xd9, 0xdd, 0xdd, 0x7f);
-        const auto buttonColor = QColor(0x69, 0x69, 0x69, 0x7f);
-        const auto hoverButtonColor = QColor(0x69, 0x69, 0x69);
+        const auto backgroundColor = QColor(0xd9, 0xdd, 0xdd, (int32_t)(0.5 * 255));
+        const auto buttonColor = QColor(0x76, 0x76, 0x76, (int32_t)(0.5 * 255));
+        const auto hoverButtonColor = QColor("#767676");
     
         const auto disappearTime = 2000; // ms
         const auto wideTime = 250; // ms
@@ -21,11 +21,11 @@ namespace Ui
         const auto minOpacity = 0;
         const auto maxOpacity = 1;
 
-        const auto minScrollButtonWidth_dip = 6;
-        const auto maxScrollButtonWidth_dip = 6;
+        const auto minScrollButtonWidth_dip = 4;
+        const auto maxScrollButtonWidth_dip = 4;
         const auto minScrollButtonHeight_dip = 50;
 
-        const auto backgroundWidth_dip = 6;
+        const auto backgroundWidth_dip = 4;
         const auto backgroundRightMargin_dip = 4;
         const auto backgroundUpMargin_dip = 4;
         const auto backgroundDownMargin_dip = 4;
@@ -253,6 +253,15 @@ namespace Ui
         {
             scrollButton_->fadeIn();
             transparentAnimation_->fadeIn();
+        }
+    }
+
+    void TransparentScrollBar::fadeOut()
+    {
+        if (scrollButton_ && (L::is_show_with_small_content || calcScrollBarRatio() < 1))
+        {
+            scrollButton_->fadeOut();
+            transparentAnimation_->fadeOut();
         }
     }
 
@@ -545,6 +554,12 @@ namespace Ui
     {
         AbstractWidgetWithScrollBar::wheelEvent(event);
         QScrollArea::wheelEvent(event);
+    }
+
+    void ScrollAreaWithTrScrollBar::resizeEvent(QResizeEvent *event)
+    {
+        QScrollArea::resizeEvent(event);
+        emit resized();
     }
 
     void ScrollAreaWithTrScrollBar::updateGeometry()

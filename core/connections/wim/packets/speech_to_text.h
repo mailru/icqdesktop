@@ -30,8 +30,6 @@ namespace core
 
         public:
 
-            virtual int32_t execute() override;
-
             speech_to_text(
                 const wim_packet_params& _params,
                 const std::string& _url,

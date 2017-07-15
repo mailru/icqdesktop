@@ -5,6 +5,7 @@
 #include "../utils/gui_coll_helper.h"
 #include "../../corelib/enumerations.h"
 #include "../utils/log/log.h"
+#include "../utils/UrlParser.h"
 
 #include "../main_window/history_control/FileSharingInfo.h"
 #include "../main_window/history_control/StickerInfo.h"
@@ -18,8 +19,6 @@
 
 namespace
 {
-    bool isSupportedImagePreviewExts(const QStringRef &ext);
-
 	void unserializeMessages(
 		core::iarray* msgArray,
 		const QString &aimId,
@@ -38,10 +37,6 @@ namespace
     bool containsSitePreviewUri(const QString &text, Out QStringRef &uri);
 
     bool containsPttAudio(const QString& text, Out int& duration);
-
-    bool containsImage(const QString& text);
-
-    bool containsVideo(const QString& text);
 
     int decodeSymbols(const QString& str)
     {
@@ -438,11 +433,6 @@ namespace Data
 		return LastId_;
 	}
 
-	const QStringList& MessageBuddy::GetNotificationKeys() const
-	{
-		return NotificationKeys_;
-	}
-
     core::message_type MessageBuddy::GetType() const
     {
         assert(Type_ > core::message_type::min);
@@ -492,8 +482,6 @@ namespace Data
         SetVoipEvent(buddy.GetVoipEvent());
 
         Quotes_ = buddy.Quotes_;
-
-		NotificationKeys_.append(buddy.NotificationKeys_);
 	}
 
     void MessageBuddy::EraseEventData()
@@ -582,12 +570,6 @@ namespace Data
         return Logic::MessageKey(Id_, Prev_, InternalId_, PendingId_, Time_, Type_, IsOutgoing(), GetPreviewableLinkType(), Logic::control_type::ct_message);
 	}
 
-	void MessageBuddy::SetNotificationKeys(const QStringList &keys)
-	{
-		assert(NotificationKeys_.empty());
-		NotificationKeys_ = keys;
-	}
-
 	void MessageBuddy::SetOutgoing(const bool isOutgoing)
 	{
 		Outgoing_ = isOutgoing;
@@ -665,6 +647,7 @@ namespace Data
             unserializeMessages(modificationsArray, aimId, myAimid, theirs_last_delivered, theirs_last_read, Out modifications);
         }
 
+		last_msgid = -1;
         if (helper->is_value_exist("last_msg_in_index"))
         {
             last_msgid = helper->get_value_as_int64("last_msg_in_index");
@@ -793,21 +776,6 @@ namespace Data
 
 namespace
 {
-    bool isSupportedImagePreviewExts(const QStringRef &ext)
-    {
-        const QString extensions[] = { "bmp", "gif", "jpg", "jpeg", "png", "tif", "tiff" };
-
-        for (const auto &knownExt : extensions)
-        {
-            if (ext == knownExt)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
 	void unserializeMessages(
 		core::iarray* msgArray,
 		const QString &aimId,
@@ -827,7 +795,7 @@ namespace
 			"	last_delivered=<" << theirs_last_delivered << ">");
 
         // unserialize only last 30 messages
-        int32_t startPos = ((msgArray->size() > Data::PRELOAD_MESSAGES_COUNT) ? (msgArray->size() - Data::PRELOAD_MESSAGES_COUNT) : 0);
+        int32_t startPos = /*0;/*/((msgArray->size() > Data::PRELOAD_MESSAGES_COUNT) ? (msgArray->size() - Data::PRELOAD_MESSAGES_COUNT) : 0);
 
 		for (auto i = startPos; i < msgArray->size(); ++i)
 		{
@@ -865,26 +833,8 @@ namespace
 		message->SetOutgoing(msgColl.get<bool>("outgoing"));
         message->SetDeleted(msgColl.get<bool>("deleted"));
 
-		if (message->IsOutgoing())
-		{
-			if ((message->Id_ != -1))
-			{
-				message->Unread_ = (message->Id_ > theirs_last_read);
-
-				if (message->Id_ <= theirs_last_delivered)
-				{
-
-				}
-				else if (!message->InternalId_.isEmpty())
-				{
-					message->SetNotificationKeys(QStringList(message->InternalId_));
-				}
-			}
-			else if (!message->InternalId_.isEmpty())
-			{
-				message->SetNotificationKeys(QStringList(message->InternalId_));
-			}
-		}
+		if (message->IsOutgoing() && (message->Id_ != -1))
+		    message->Unread_ = (message->Id_ > theirs_last_read);
 
 		if (message->Id_ == -1 && !message->InternalId_.isEmpty())
 		{
@@ -990,23 +940,15 @@ namespace
 
         for (const auto &part : parts)
         {
-            const auto isUri = (
-                part.startsWith("http://", Qt::CaseInsensitive) ||
-                part.startsWith("www.", Qt::CaseInsensitive) ||
-                part.startsWith("https://", Qt::CaseInsensitive));
-            if (!isUri)
-            {
-                continue;
-            }
+            Utils::UrlParser parser;
 
-            const auto lastDotIndex = part.lastIndexOf(".");
-            if (lastDotIndex < 0)
-            {
-                continue;
-            }
+            parser.process(part);
 
-            Out uri = part;
-            return true;
+            if (parser.hasUrl())
+            {
+                uri = part;
+                return true;
+            }
         }
 
         return false;
@@ -1058,56 +1000,6 @@ namespace
             duration = decodeSymbols(durationStr);
 
             return true;
-        }
-
-        return false;
-    }
-
-    bool containsImage(const QString& text)
-    {
-        const auto parts = text.splitRef(QChar(' '), QString::SkipEmptyParts);
-        for (const auto &part : parts)
-        {
-            if (!part.startsWith("www.", Qt::CaseInsensitive) &&
-                !part.startsWith("http://", Qt::CaseInsensitive) &&
-                !part.startsWith("https://", Qt::CaseInsensitive))
-            {
-                continue;
-            }
-
-            auto index = part.lastIndexOf('/');
-            if (index < 0)
-            {
-                continue;
-            }
-
-            ++index;
-            return ((part.at(index) >= '0') && (part.at(index) <= '7'));
-        }
-
-        return false;
-    }
-
-    bool containsVideo(const QString& text)
-    {
-        const auto parts = text.splitRef(QChar(' '), QString::SkipEmptyParts);
-        for (const auto &part : parts)
-        {
-            if (!part.startsWith("www.", Qt::CaseInsensitive) &&
-                !part.startsWith("http://", Qt::CaseInsensitive) &&
-                !part.startsWith("https://", Qt::CaseInsensitive))
-            {
-                continue;
-            }
-
-            auto index = part.lastIndexOf('/');
-            if (index < 0)
-            {
-                continue;
-            }
-
-            ++index;
-            return ((part.at(index) >= '8') && (part.at(index) <= 'F'));
         }
 
         return false;

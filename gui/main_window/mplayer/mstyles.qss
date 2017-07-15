@@ -1,242 +1,389 @@
-QWidget[TransparentWidget="true"]
-{
-	background: rgba(0,0,0,80%);
-}
-
-Ui--VideoPlayer
+Ui--DialogPlayer
 {
 	background: black;
 	border: none;
 }
 
-QWidget#VideoView
+QWidget#control_panel_gradient[mode="dialog"]
 {
-	background: black;
-	border: none;
+	border-bottom-right-radius: 8dip;
+	border-bottom-left-radius: 8dip;
+	border-image: url(:/resources/videoplayer/gradient_a_100.png);
 }
+
+QWidget#control_panel_gradient[mode="window"]
+{
+	border-image: url(:/resources/videoplayer/gradient_a_100.png);
+	border-radius: 0;
+}
+
+
+QWidget#control_panel_gradient[mode="full_screen"]
+{
+	border-image: url(:/resources/videoplayer/gradient_b_100.png);
+	border-radius: 0;
+}
+
 
 Ui--VideoPlayerControlPanel
 {
-	background: black;
-	border: none;
 }
 
-Ui--VideoPlayerHeader
+Ui--VideoPlayerControlPanel[mode="common"]
 {
-	background: rgba(0,0,0,35%);
-	border: none;
 }
 
-QLabel#VideoPlayerCaption
+Ui--VideoPlayerControlPanel[mode="window"]
 {
-	color: white;	
+}
+
+Ui--VideoPlayerControlPanel[mode="dialog"]
+{
+	border-radius: 8dip;
+}
+
+Ui--VideoPlayerControlPanel[mode="full_screen"]
+{
+}
+
+QWidget#VideoTimeProgress[mode="dialog"]
+{
+	color: #ffffff;
 	font-size: 14dip;
+	font-family: "%FONT_FAMILY_MEDIUM%";
+	font-weight: %FONT_FAMILY_MEDIUM%;
 }
 
-
-QWidget#VideoTimeProgress
+QWidget#VideoTimeProgress[mode="window"]
 {
-	color: white;	
-	font-size: 12dip;
+	color: #ffffff;
+	font-size: 14dip;
+	font-family: "%FONT_FAMILY_MEDIUM%";
+	font-weight: %FONT_FAMILY_MEDIUM%;
 }
 
 
-QSlider#VideoProgressSlider::groove:horizontal 
+QWidget#VideoTimeProgress[mode="full_screen"]
+{
+	color: #ffffff;
+	font-size: 18dip;
+	font-family: "%FONT_FAMILY_MEDIUM%";
+	font-weight: %FONT_FAMILY_MEDIUM%;
+}
+
+QSlider#VideoProgressSlider::groove:horizontal[mode="dialog"]
 {
 	background: transparent;
-	height: 24dip;
+	height: 4dip;
 }
 
-QSlider#VideoProgressSlider::sub-page:horizontal
+QSlider#VideoProgressSlider::groove:horizontal[mode="window"]
 {
-	border-image: url(:/resources/videoplayer/content_timebar_100_active.png);
-	margin-right: 11dip;
+	background: transparent;
+	height: 4dip;
+}
+
+
+QSlider#VideoProgressSlider::groove:horizontal[mode="full_screen"]
+{
+	background: transparent;
+	height: 8dip;
+}
+
+QSlider#VideoProgressSlider::sub-page:horizontal[mode="dialog"]
+{
 	border: none;
-	height: 24dip;
+	height: 4dip;
+	background: rgba(87,158,28,100%);
+	border-radius: 2dip;
 }
 
-QSlider#VideoProgressSlider::add-page:horizontal 
+QSlider#VideoProgressSlider::sub-page:horizontal[mode="window"]
 {
-	border-image: url(:/resources/videoplayer/content_timebar_100.png);
-	margin-left: 10dip;
 	border: none;
-	height: 24dip;
+	height: 4dip;
+	background: rgba(87,158,28,100%);
+	border-radius: 2dip;
 }
 
-QSlider#VideoProgressSlider::handle:horizontal
+
+QSlider#VideoProgressSlider::sub-page:horizontal[mode="full_screen"]
 {
-	image: url(:/resources/videoplayer/contr_player_selectbar_100.png);
+	border: none;
+	height: 8dip;
+	background: rgba(87,158,28,100%);
+	border-radius: 4dip;
+}
+
+QSlider#VideoProgressSlider::add-page:horizontal[mode="dialog"]
+{
+	border: none;
+	height: 8dip;
+	background: rgba(255,255,255,40%);
+	border-radius: 2dip;
+}
+
+QSlider#VideoProgressSlider::add-page:horizontal[mode="window"]
+{
+	border: none;
+	height: 8dip;
+	background: rgba(255,255,255,40%);
+	border-radius: 2dip;
+}
+
+
+QSlider#VideoProgressSlider::add-page:horizontal[mode="full_screen"]
+{
+	border: none;
+	height: 8dip;
+	background: rgba(255,255,255,40%);
+	border-radius: 4dip;
+}
+
+QSlider#VideoProgressSlider::handle:horizontal[mode="dialog"]
+{
+	image: url(:/resources/videoplayer/slider_100.png);
+	width: 12dip;
+	height: 12dip;
+	margin-top: -6dip;
+	margin-bottom: -6dip;
+}
+
+QSlider#VideoProgressSlider::handle:horizontal[mode="window"]
+{
+	image: url(:/resources/videoplayer/slider_100.png);
+	width: 12dip;
+	height: 12dip;
+	margin-top: -6dip;
+	margin-bottom: -6dip;
+}
+
+
+QSlider#VideoProgressSlider::handle:horizontal[mode="full_screen"]
+{
+	image: url(:/resources/videoplayer/slider_big_100.png);
 	width: 24dip;
 	height: 24dip;
 	margin-top: -12dip;
 	margin-bottom: -12dip;
 }
 
-QSlider#VideoProgressSlider::handle:horizontal:hover
+QSlider#VideoProgressSlider::handle:horizontal:hover[mode="dialog"]
 {
-	image: url(:/resources/videoplayer/contr_player_selectbar_100_hover.png);
 }
 
-QSlider#VideoProgressSlider::handle:horizontal:pressed
+QSlider#VideoProgressSlider::handle:horizontal:hover[mode="window"]
 {
-	image: url(:/resources/videoplayer/contr_player_selectbar_100_pressed.png);
+}
+
+QSlider#VideoProgressSlider::handle:horizontal:hover[mode="full_screen"]
+{
+}
+
+QSlider#VideoProgressSlider::handle:horizontal:pressed[mode="dialog"]
+{
+}
+
+QSlider#VideoProgressSlider::handle:horizontal:pressed[mode="window"]
+{
 }
 
 
+QSlider#VideoProgressSlider::handle:horizontal:pressed[mode="full_screen"]
+{
+}
 
-
-
-QSlider#VideoVolumeSlider::groove:horizontal 
+QSlider#VideoVolumeSlider::groove:vertical[mode="dialog"]
 {
 	background: transparent;
-	height: 24dip;
+	width: 4dip;
 }
 
-QSlider#VideoVolumeSlider::sub-page:horizontal
+
+QSlider#VideoVolumeSlider::groove:vertical[mode="window"]
 {
-	border-image: url(:/resources/videoplayer/content_timebar_100_active.png);
-	border: none;
-	height: 24dip;
+	background: transparent;
+	width: 4dip;
 }
 
-QSlider#VideoVolumeSlider::add-page:horizontal 
-{
-	border-image: url(:/resources/videoplayer/content_timebar_100.png);
-	border: none;
-	height: 24dip;
-}
 
-QSlider#VideoVolumeSlider::handle:horizontal
+QSlider#VideoVolumeSlider::groove:vertical[mode="full_screen"]
 {
-	image: url(:/resources/videoplayer/content_selectbar_100.png);
+	background: transparent;
 	width: 8dip;
+}
+
+QSlider#VideoVolumeSlider::add-page:vertical[mode="dialog"]
+{
+	background: rgba(87,158,28,100%);
+	border: none;
+	width: 4dip;
+	border-radius: 2dip;
+}
+
+QSlider#VideoVolumeSlider::add-page:vertical[mode="window"]
+{
+	background: rgba(87,158,28,100%);
+	border: none;
+	width: 4dip;
+	border-radius: 2dip;
+}
+
+
+QSlider#VideoVolumeSlider::add-page:vertical[mode="full_screen"]
+{
+	background: rgba(87,158,28,100%);
+	border: none;
+	width: 8dip;
+	border-radius: 4dip;
+}
+
+QSlider#VideoVolumeSlider::sub-page:vertical[mode="dialog"]
+{
+	background: rgba(255,255,255,40%);
+	border: none;
+	width: 4dip;
+	border-radius: 2dip;
+}
+
+
+QSlider#VideoVolumeSlider::sub-page:vertical[mode="window"]
+{
+	background: rgba(255,255,255,40%);
+	border: none;
+	width: 4dip;
+	border-radius: 2dip;
+}
+
+
+QSlider#VideoVolumeSlider::sub-page:vertical[mode="full_screen"]
+{
+	background: rgba(255,255,255,40%);
+	border: none;
+	width: 8dip;
+	border-radius: 4dip;
+}
+
+QSlider#VideoVolumeSlider::handle:vertical[mode="dialog"]
+{
+	image: url(:/resources/videoplayer/slider_100.png);
+	width: 12dip;
+	height: 12dip;
+	margin-left: -6dip;
+	margin-right: -6dip;
+}
+
+QSlider#VideoVolumeSlider::handle:vertical[mode="window"]
+{
+	image: url(:/resources/videoplayer/slider_100.png);
+	width: 12dip;
+	height: 12dip;
+	margin-left: -6dip;
+	margin-right: -6dip;
+}
+
+
+QSlider#VideoVolumeSlider::handle:vertical[mode="full_screen"]
+{
+	image: url(:/resources/videoplayer/slider_big_100.png);
+	width: 24dip;
 	height: 24dip;
-	margin-top: -12dip;
-	margin-bottom: -12dip;
+	margin-left: -12dip;
+	margin-right: -12dip;
 }
 
-QSlider#VideoVolumeSlider::handle:horizontal:hover
+QSlider#VideoVolumeSlider::handle:vertical:hover[mode="dialog"]
 {
-	image: url(:/resources/videoplayer/content_selectbar_100_hover.png);
 }
 
-QSlider#VideoVolumeSlider::handle:horizontal:pressed
+QSlider#VideoVolumeSlider::handle:vertical:hover[mode="window"]
 {
-	image: url(:/resources/videoplayer/content_selectbar_100_active.png);
 }
 
-
-
-
-
-
-QPushButton#VideoPlayerPlayButton:checked
+QSlider#VideoVolumeSlider::handle:vertical:hover[mode="full_screen"]
 {
-	border-image: url(:/resources/videoplayer/videoctrl_play_100.png);
 }
 
-QPushButton#VideoPlayerPlayButton:checked:hover
+QSlider#VideoVolumeSlider::handle:vertical:pressed[mode="dialog"]
 {
-	border-image: url(:/resources/videoplayer/videoctrl_play_100_hover.png);
 }
 
-QPushButton#VideoPlayerPlayButton:checked:pressed
+QSlider#VideoVolumeSlider::handle:vertical:pressed[mode="window"]
 {
-	border-image: url(:/resources/videoplayer/videoctrl_play_100_active.png);
 }
+
+
+QSlider#VideoVolumeSlider::handle:vertical:pressed[mode="full_screen"]
+{
+}
+
 
 QPushButton#VideoPlayerPlayButton
 {
-	border-image: url(:/resources/videoplayer/videoctrl_pause_100.png);
+	border-image: url(:/resources/videoplayer/player_pause_100.png);
 }
-
 QPushButton#VideoPlayerPlayButton:hover
 {
-	border-image: url(:/resources/videoplayer/videoctrl_pause_100_hover.png);
+	border-image: url(:/resources/videoplayer/player_pause_100_hover.png);
 }
-
-QPushButton#VideoPlayerPlayButton:pressed
+QPushButton#VideoPlayerPlayButton:checked:hover
 {
-	border-image: url(:/resources/videoplayer/videoctrl_pause_100_active.png);
+	border-image: url(:/resources/videoplayer/player_play_100_hover.png);
 }
-
-
-
-QPushButton#VideoPlayerSoundButton
+QPushButton#VideoPlayerPlayButton:checked
 {
-	border-image: url(:/resources/videoplayer/videoctrl_volume_off_100.png);
+	border-image: url(:/resources/videoplayer/player_play_100.png);
 }
 
-QPushButton#VideoPlayerSoundButton:hover
+
+
+QPushButton#VideoPlayerSoundButton[mode="0"]
 {
-	border-image: url(:/resources/videoplayer/videoctrl_volume_off_100_hover.png);
+	border-image: url(:/resources/videoplayer/player_sound_off_100.png);
 }
 
-QPushButton#VideoPlayerSoundButton:pressed
+QPushButton#VideoPlayerSoundButton[mode="0"]:hover
 {
-	border-image: url(:/resources/videoplayer/videoctrl_volume_off_100_active.png);
+	border-image: url(:/resources/videoplayer/player_sound_off_100_hover.png);
 }
 
-QPushButton#VideoPlayerSoundButton:checked
+QPushButton#VideoPlayerSoundButton[mode="1"]
 {
-	border-image: url(:/resources/videoplayer/videoctrl_volume_100.png);
+	border-image: url(:/resources/videoplayer/player_sound_q_100.png);
 }
 
-QPushButton#VideoPlayerSoundButton:checked:hover
+QPushButton#VideoPlayerSoundButton[mode="1"]:hover
 {
-	border-image: url(:/resources/videoplayer/videoctrl_volume_100_hover.png);
+	border-image: url(:/resources/videoplayer/player_sound_q_100_hover.png);
 }
 
-QPushButton#VideoPlayerSoundButton:checked:pressed
+QPushButton#VideoPlayerSoundButton[mode="2"]
 {
-	border-image: url(:/resources/videoplayer/videoctrl_volume_100_active.png);
+	border-image: url(:/resources/videoplayer/player_sound_100.png);
 }
 
-
-
-QPushButton#VideoPlayerCloseButton
+QPushButton#VideoPlayerSoundButton[mode="2"]:hover
 {
-	border-image: url(:/resources/videoplayer/videoctrl_close_100.png);
+	border-image: url(:/resources/videoplayer/player_sound_100_hover.png);
 }
-
-QPushButton#VideoPlayerCloseButton:hover
-{
-	border-image: url(:/resources/videoplayer/videoctrl_close_100_hover.png);
-}
-
-QPushButton#VideoPlayerCloseButton:pressed
-{
-	border-image: url(:/resources/videoplayer/videoctrl_close_100_active.png);
-}
-
 
 QPushButton#VideoPlayerFullscreenButton
 {
-	border-image: url(:/resources/videoplayer/videoctrl_fullscreen_100.png);
+	border-image: url(:/resources/videoplayer/player_fullscreen_100.png);
 }
 
 QPushButton#VideoPlayerFullscreenButton:hover
 {
-	border-image: url(:/resources/videoplayer/videoctrl_fullscreen_100_active.png);
-}
-
-QPushButton#VideoPlayerFullscreenButton:pressed
-{
-	border-image: url(:/resources/videoplayer/videoctrl_fullscreen_100_hover.png);
+	border-image: url(:/resources/videoplayer/player_fullscreen_100_hover.png);
 }
 
 
-QPushButton#VideoPlayerFullscreenButton:checked
+QPushButton#VideoPlayerNormalscreenButton
 {
-	border-image: url(:/resources/videoplayer/videoctrl_decrease_100.png);
+	border-image: url(:/resources/videoplayer/player_fullscreen_big_100.png);
 }
 
-QPushButton#VideoPlayerFullscreenButton:checked:hover
+QPushButton#VideoPlayerNormalscreenButton:hover
 {
-	border-image: url(:/resources/videoplayer/videoctrl_decrease_100_active.png);
-}
-
-QPushButton#VideoPlayerFullscreenButton:checked:pressed
-{
-	border-image: url(:/resources/videoplayer/videoctrl_decrease_100_hover.png);
+	border-image: url(:/resources/videoplayer/player_fullscreen_big_100_hover.png);
 }

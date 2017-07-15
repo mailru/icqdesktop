@@ -54,11 +54,6 @@ int32_t get_gateway::init_request(std::shared_ptr<core::http_request_simple> _re
     return 0;
 }
 
-int32_t get_gateway::execute()
-{
-    return wim_packet::execute();
-}
-
 int32_t get_gateway::parse_response(std::shared_ptr<core::tools::binary_stream> _response)
 {
     if (!_response->available())

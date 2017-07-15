@@ -5,7 +5,6 @@
 #include "MessagesModel.h"
 #include "MessageStatusWidget.h"
 #include "MessageStyle.h"
-#include "ContentWidgets/ImagePreviewWidget.h"
 #include "ContentWidgets/FileSharingWidget.h"
 #include "../contact_list/ContactListModel.h"
 
@@ -30,8 +29,6 @@ namespace Ui
 
     namespace
     {
-        int32_t getFullTimeLineWidth();
-
         int32_t getMessageTopPadding();
         int32_t getMessageBottomPadding();
 
@@ -122,10 +119,9 @@ namespace Ui
         , ClickedOnAvatar_(false)
         , Layout_(nullptr)
         , TimeWidget_(nullptr)
-        , isConnectedToDeliveryEvent_(false)
-        , isConnectedReadEvent_(false)
         , startSelectY_(0)
         , isSelection_(false)
+        , isNotAuth_(false)
     {
     }
 
@@ -140,12 +136,11 @@ namespace Ui
         , ContentMenu_(0)
         , ClickedOnAvatar_(false)
         , Layout_(new MessageItemLayout(this))
-        , TimeWidget_(new MessageStatusWidget(this))
-        , isConnectedToDeliveryEvent_(false)
-        , isConnectedReadEvent_(false)
+        , TimeWidget_(new MessageTimeWidget(this))
         , startSelectY_(0)
         , isSelection_(false)
         , LastRead_(false)
+        , isNotAuth_(false)
     {
         QMetaObject::connectSlotsByName(this);
 
@@ -158,14 +153,14 @@ namespace Ui
 
         assert(Layout_);
         setLayout(Layout_);
+
+        connect(parent(), SIGNAL(recreateAvatarRect()), this, SLOT(onRecreateAvatarRect()));
 	}
 
 	MessageItem::~MessageItem()
     {
         if (Data_)
-        {
             MessageItemsAvatars::reset(Data_->Sender_);
-        }
 	}
 
     void MessageItem::setContact(const QString& _aimId)
@@ -196,17 +191,6 @@ namespace Ui
 	{
 		Data_->Id_ = _id;
 		Data_->AimId_ = _aimId;
-	}
-
-	void MessageItem::setNotificationKeys(const QStringList& _keys)
-	{
-		Data_->NotificationsKeys_.append(_keys);
-		Data_->NotificationsKeys_.removeDuplicates();
-	}
-
-	const QStringList& MessageItem::getNotificationKeys()
-	{
-		return Data_->NotificationsKeys_;
 	}
 
     void MessageItem::loadAvatar(const int _size)
@@ -253,6 +237,14 @@ namespace Ui
         }
     }
 
+    void MessageItem::onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect)
+    {
+        if (ContentWidget_)
+        {
+            ContentWidget_->onDistanceToViewportChanged(_widgetAbsGeometry, _viewportVisibilityAbsRect);
+        }
+    }
+
     Data::Quote MessageItem::getQuote(bool force) const
     {
         Data::Quote quote;
@@ -262,9 +254,15 @@ namespace Ui
         if (force)
         {
             if (MessageBody_)
+            {
                 quote.text_ = MessageBody_->getPlainText();
+                quote.type_ = Data::Quote::Type::text;
+            }
             else if (ContentWidget_)
+            {
                 quote.text_ = ContentWidget_->toString();
+                quote.type_ = Data::Quote::Type::file_sharing;
+            }
         }
         else
         {
@@ -355,15 +353,15 @@ namespace Ui
 
         ContentMenu_ = new ContextMenu(this);
 
-        if (ContentWidget_->haveOpenInBrowserMenu())
-            ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_openbrowser_100.png")), QT_TRANSLATE_NOOP("context_menu", "Open in browser"), makeData("open_in_browser"));
+        if (ContentWidget_->hasOpenInBrowserMenu())
+            ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/openbrowser_100.png")), QT_TRANSLATE_NOOP("context_menu", "Open in browser"), makeData("open_in_browser"));
 
-        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_link_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy link"), makeData("copy_link"));
-        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_attach_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy file"), makeData("copy_file"));
-        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_download_100.png")), QT_TRANSLATE_NOOP("context_menu", "Save as..."), makeData("save_as"));
-        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_quote_100.png")), QT_TRANSLATE_NOOP("context_menu", "Quote"), makeData("quote"));
-        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_forwardmsg_100.png")), QT_TRANSLATE_NOOP("context_menu", "Forward"), makeData("forward"));
-        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_closechat_100.png")), QT_TRANSLATE_NOOP("context_menu", "Delete for me"), makeData("delete"));
+        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/link_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy link"), makeData("copy_link"));
+        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/attach_100.png")), QT_TRANSLATE_NOOP("context_menu", "Copy file"), makeData("copy_file"));
+        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/download_100.png")), QT_TRANSLATE_NOOP("context_menu", "Save as..."), makeData("save_as"));
+        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/quote_100.png")), QT_TRANSLATE_NOOP("context_menu", "Quote"), makeData("quote"));
+        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/forwardmsg_100.png")), QT_TRANSLATE_NOOP("context_menu", "Forward"), makeData("forward"));
+        ContentMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/closechat_100.png")), QT_TRANSLATE_NOOP("context_menu", "Delete for me"), makeData("delete"));
 
         connect(ContentMenu_, &ContextMenu::triggered, this, &MessageItem::menu, Qt::QueuedConnection);
 
@@ -372,7 +370,7 @@ namespace Ui
         if (isOutgoing || isChatAdmin)
         {
             ContentMenu_->addActionWithIcon(QIcon(
-                Utils::parse_image_name(":/resources/dialog_closechat_all_100.png")),
+                Utils::parse_image_name(":/resources/context_menu/closechat_all_100.png")),
                 QT_TRANSLATE_NOOP("context_menu", "Delete for all"),
                 makeData("delete_all"));
         }
@@ -386,11 +384,11 @@ namespace Ui
             delete Menu_;
 
         Menu_ = new ContextMenu(this);
-        Menu_->addActionWithIcon(":/resources/dialog_copy_100.png", QT_TRANSLATE_NOOP("context_menu", "Copy"), makeData("copy"));
-        Menu_->addActionWithIcon(":/resources/dialog_quote_100.png", QT_TRANSLATE_NOOP("context_menu", "Quote"), makeData("quote"));
-        Menu_->addActionWithIcon(":/resources/dialog_forwardmsg_100.png", QT_TRANSLATE_NOOP("context_menu", "Forward"), makeData("forward"));
+        Menu_->addActionWithIcon(":/resources/context_menu/copy_100.png", QT_TRANSLATE_NOOP("context_menu", "Copy"), makeData("copy"));
+        Menu_->addActionWithIcon(":/resources/context_menu/quote_100.png", QT_TRANSLATE_NOOP("context_menu", "Quote"), makeData("quote"));
+        Menu_->addActionWithIcon(":/resources/context_menu/forwardmsg_100.png", QT_TRANSLATE_NOOP("context_menu", "Forward"), makeData("forward"));
 
-        Menu_->addActionWithIcon(":/resources/dialog_closechat_100.png", QT_TRANSLATE_NOOP("context_menu", "Delete for me"), makeData("delete"));
+        Menu_->addActionWithIcon(":/resources/context_menu/closechat_100.png", QT_TRANSLATE_NOOP("context_menu", "Delete for me"), makeData("delete"));
 
         connect(Menu_, &ContextMenu::triggered, this, &MessageItem::menu, Qt::QueuedConnection);
 
@@ -399,14 +397,14 @@ namespace Ui
         if (isOutgoing || isChatAdmin)
         {
             Menu_->addActionWithIcon(
-                ":/resources/dialog_closechat_all_100.png",
+                ":/resources/context_menu/closechat_all_100.png",
                 QT_TRANSLATE_NOOP("context_menu", "Delete for all"),
                 makeData("delete_all"));
         }
 
         if (GetAppConfig().IsContextMenuFeaturesUnlocked())
         {
-            Menu_->addActionWithIcon(":/resources/tabs_settings_100.png", "Copy Message ID", makeData("dev:copy_message_id"));
+            Menu_->addActionWithIcon(":/resources/copy_100.png", "Copy Message ID", makeData("dev:copy_message_id"));
         }
 
         Menu_->popup(_pos);
@@ -434,7 +432,7 @@ namespace Ui
             }
             else if (ContentWidget_)
             {
-                if (ContentWidget_->haveContentMenu(globalPos))
+                if (ContentWidget_->hasContextMenu(globalPos))
                     trackContentMenu(globalPos);
                 else
                     trackMenu(globalPos);
@@ -492,18 +490,6 @@ namespace Ui
 
         auto textColor = MessageStyle::getTextColor();
 
-        if (theme())
-        {
-            if (isOutgoing())
-            {
-                textColor = theme()->outgoing_bubble_.text_color_;
-            }
-            else
-            {
-                textColor = theme()->incoming_bubble_.text_color_;
-            }
-        }
-
         QPalette palette;
         palette.setColor(QPalette::Text, textColor);
         MessageBody_->setPalette(palette);
@@ -524,12 +510,7 @@ namespace Ui
         QPalette palette;
         MessageBody_ = new TextEditEx(
             this,
-            Fonts::defaultAppFontFamily(),
-#ifdef __linux__
-            Utils::scale_value(16),
-#else
-            Utils::scale_value(15),
-#endif //__linux__
+            MessageStyle::getTextFont(),
             palette,
             false,
             false
@@ -539,6 +520,7 @@ namespace Ui
         QString styleSheet = QString("background: transparent; selection-background-color: %1;")
             .arg(Utils::rgbaStringFromColor(Utils::getSelectionColor()));
 
+        MessageBody_->document()->setDefaultStyleSheet(MessageStyle::getMessageStyle());
         MessageBody_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         MessageBody_->setFrameStyle(QFrame::NoFrame);
         MessageBody_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -559,7 +541,7 @@ namespace Ui
 
     void MessageItem::updateSenderControlColor()
     {
-        QColor color = theme() ? theme()->contact_name_.text_color_ : QColor(0x57, 0x54, 0x4c);
+        QColor color = theme() ? theme()->contact_name_.text_color_ : MessageStyle::getSenderColor();
         Sender_->setColor(color);
     }
 
@@ -573,9 +555,7 @@ namespace Ui
         QColor color;
         Sender_ = new TextEmojiWidget(
             this,
-            Fonts::defaultAppFontFamily(),
-            Fonts::defaultAppFontWeight(),
-            Utils::scale_value(12),
+            Fonts::appFont(Ui::MessageStyle::getSenderFont().pixelSize()),
             color
         );
         updateSenderControlColor();
@@ -615,6 +595,12 @@ namespace Ui
         assert(!Bubble_.isEmpty());
 
         _p.fillPath(Bubble_, MessageStyle::getBodyBrush(Data_->isOutgoing(), isSelected(), theme()->get_id()));
+
+		QColor qoute_color = QuoteAnimation_.quoteColor();
+		if (qoute_color.isValid())
+		{
+			_p.fillPath(Bubble_, (QBrush(qoute_color)));
+		}
     }
 
     QRect MessageItem::evaluateAvatarRect() const
@@ -637,15 +623,8 @@ namespace Ui
 
         auto bubbleGeometry(_contentGeometry);
 
-        if (!isFileSharing() || !isBlockItem())
-        {
-            return bubbleGeometry;
-        }
-
         bubbleGeometry.setWidth(
-            bubbleGeometry.width() -
-            getFullTimeLineWidth() -
-            MessageStyle::getTimeMargin());
+            bubbleGeometry.width());
 
         return bubbleGeometry;
     }
@@ -746,7 +725,9 @@ namespace Ui
 
     int32_t MessageItem::evaluateRightContentMargin() const
     {
-        auto rightContentMargin = MessageStyle::getRightMargin(isOutgoing());
+        auto rightContentMargin =
+            MessageStyle::getRightMargin(isOutgoing()) +
+            MessageStyle::getTimeMaxWidth();
 
         return rightContentMargin;
     }
@@ -919,11 +900,6 @@ namespace Ui
             auto blockWidth = _contenHorGeometry.width();
             blockWidth -= (MessageStyle::getBubbleHorPadding() * 2);
 
-            if (isFileSharing())
-            {
-                blockWidth += MessageStyle::getTimeMargin();
-            }
-
             ContentWidget_->setFixedWidth(blockWidth);
 
             return;
@@ -932,15 +908,6 @@ namespace Ui
         auto width = _contenHorGeometry.width();
 
         const auto maxWidgetWidth = ContentWidget_->maxWidgetWidth();
-        const auto isMaxWidgetWidthSet = (maxWidgetWidth != -1);
-
-        const auto isPreview = (bool)qobject_cast<HistoryControl::PreviewContentWidget*>(ContentWidget_);
-        if (!isPreview && (!ContentWidget_->hasTextBubble() || isMaxWidgetWidthSet))
-        {
-            width -= MessageStatusWidget::getMaxWidth();
-            width -= MessageStyle::getTimeMargin();
-            width -= MessageStyle::getTimeMargin();
-        }
 
         assert(width > 0);
 
@@ -966,8 +933,8 @@ namespace Ui
         }
 
         auto messageBodyWidth = _bubbleHorGeometry.width();
-        messageBodyWidth -= (MessageStyle::getBubbleHorPadding() * 2);
-        messageBodyWidth -= MessageStatusWidget::getMaxWidth();
+        messageBodyWidth -= MessageStyle::getBubbleHorPadding();
+        messageBodyWidth -= MessageStyle::getBubbleHorPadding();
 
         const auto widthChanged = (messageBodyWidth != MessageBody_->getTextSize().width());
         if (!widthChanged)
@@ -1024,22 +991,6 @@ namespace Ui
 
         QPoint posHint;
 
-        if (ContentWidget_)
-        {
-            // width with left margin
-            auto fullTimeLineWidth = getFullTimeLineWidth();
-
-            if (ContentWidget_->hasTextBubble())
-            {
-                // right margin
-                fullTimeLineWidth += MessageStyle::getTimeMargin();
-            }
-
-            posHint = ContentWidget_->deliveryStatusOffsetHint(
-                fullTimeLineWidth
-            );
-        }
-
         assert(posHint.x() >= 0);
         assert(posHint.y() >= 0);
 
@@ -1049,14 +1000,12 @@ namespace Ui
         {
             timeX = posHint.x();
             timeX += evaluateLeftContentMargin();
-            timeX += MessageStyle::getTimeMargin();
+            timeX += MessageStyle::getTimeMarginX();
         }
         else
         {
             timeX = _contentGeometry.right();
-
-            timeX -= MessageStatusWidget::getMaxWidth();
-            timeX -= MessageStyle::getTimeMargin();
+            timeX += MessageStyle::getTimeMarginX();
         }
 
         auto timeY = 0;
@@ -1071,13 +1020,13 @@ namespace Ui
             timeY = _contentGeometry.bottom();
         }
 
-        timeY -= MessageStyle::getTimeMargin();
+        timeY -= MessageStyle::getTimeMarginY();
         timeY -= timeWidgetSize.height();
 
         const QRect timeGeometry(
             timeX,
             timeY,
-            MessageStatusWidget::getMaxWidth(),
+            MessageStyle::getTimeMaxWidth(),
             timeWidgetSize.height()
         );
 
@@ -1297,6 +1246,38 @@ namespace Ui
         GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::profile_avatar);
     }
 
+    void MessageItem::forwardRoutine()
+    {
+        if (isFileSharing())
+        {
+            HistoryControl::FileSharingWidget* p = qobject_cast<HistoryControl::FileSharingWidget*>(ContentWidget_);
+            p->shareRoutine();
+        }
+        else
+        {
+            QList<Data::Quote> q;
+            q.push_back(getQuote(true));
+            emit forward(q);
+        }
+    }
+
+    void MessageItem::setNotAuth(const bool _isNotAuth)
+    {
+        isNotAuth_ = _isNotAuth;
+    }
+
+    bool MessageItem::isNotAuth()
+    {
+        return isNotAuth_;
+    }
+
+	void MessageItem::setQuoteSelection()
+	{
+		QuoteAnimation_.startQuoteAnimation();
+		if (ContentWidget_)
+			ContentWidget_->startQuoteAnimation();
+	}
+
 	void MessageItem::menu(QAction* _action)
 	{
 		const auto params = _action->data().toMap();
@@ -1361,9 +1342,7 @@ namespace Ui
 		}
         else if (command == "forward")
         {
-            QList<Data::Quote> q;
-            q.push_back(getQuote(true));
-            emit forward(q);
+            forwardRoutine();
         }
         else if (command == "copy_link")
         {
@@ -1410,19 +1389,17 @@ namespace Ui
         }
 	}
 
-	bool MessageItem::isMessageBubbleVisible() const
+    void MessageItem::onRecreateAvatarRect()
+    {
+        AvatarRect_ = QRect();
+    }
+
+    bool MessageItem::isMessageBubbleVisible() const
 	{
 		if (!ContentWidget_)
 		{
 			return true;
 		}
-        if (auto item = qobject_cast<HistoryControl::ImagePreviewWidget*>(ContentWidget_))
-        {
-            if (!item->isImageBubbleVisible() || item->isTextPresented())
-            {
-                return true;
-            }
-        }
 
 		return ContentWidget_->isBlockElement();
 	}
@@ -1446,7 +1423,8 @@ namespace Ui
 
         MessageBody_->document()->clear();
 
-		Logic::Text4Edit(_message, *MessageBody_, Logic::Text2DocHtmlMode::Escape, true, true);
+        const bool showLinks = (!isNotAuth() || isOutgoing());
+		Logic::Text4Edit(_message, *MessageBody_, Logic::Text2DocHtmlMode::Escape, showLinks, true);
 
         MessageBody_->verticalScrollBar()->blockSignals(false);
 
@@ -1479,14 +1457,17 @@ namespace Ui
         return true;
     }
 
+    void MessageItem::setDeliveredToServer(const bool _delivered)
+    {
+        setOutgoing(Data_->isOutgoing(), true, Data_->Chat_);
+        setTime(Data_->Time_);
+    }
+
 	void MessageItem::setOutgoing(const bool _isOutgoing, const bool _isDeliveredToServer, const bool _isMChat, const bool _isInit)
 	{
         Data_->Outgoing_.Outgoing_ = _isOutgoing;
         Data_->Outgoing_.Set_ = true;
         Data_->Chat_ = _isMChat;
-
-        if (TimeWidget_)
-            TimeWidget_->setOutgoing(_isOutgoing);
 
         if (_isOutgoing && (Data_->deliveredToServer_ != _isDeliveredToServer || _isInit))
         {
@@ -1500,8 +1481,6 @@ namespace Ui
 
                 if (!_isInit)
                     update();
-
-                isConnectedToDeliveryEvent_ = connect(Logic::GetMessagesModel(), SIGNAL(deliveredToServer(QString)), this, SLOT(deliveredToServer(QString)), Qt::QueuedConnection);
             }
             else
             {
@@ -1512,49 +1491,8 @@ namespace Ui
                     if (!_isInit)
                         update();
                 }
-
-                if (isConnectedToDeliveryEvent_)
-                {
-                    disconnect(Logic::GetMessagesModel(), SIGNAL(deliveredToServer(QString)), this, SLOT(deliveredToServer(QString)));
-                    isConnectedToDeliveryEvent_ = false;
-                }
             }
         }
-	}
-
-    void MessageItem::readByClient(QString _aimid, qint64 _id)
-    {
-        if (_aimid != Data_->AimId_)
-            return;
-
-        if (Data_->Id_ != _id)
-        {
-            setLastRead(false);
-        }
-
-        return;
-    }
-
-	void MessageItem::deliveredToServer(QString _key)
-	{
-		assert(!_key.isEmpty());
-
-		__TRACE(
-			"delivery",
-			"status event reached a widget\n" <<
-			"	status=<server>\n" <<
-			"	key=<" << _key <<">");
-
-		if (!Data_ || !Data_->NotificationsKeys_.contains(_key))
-		{
-			return;
-		}
-
-        if (Data_->deliveredToServer_)
-            return;
-
-		setOutgoing(Data_->isOutgoing(), true, Data_->Chat_);
-		setTime(Data_->Time_);
 	}
 
     void MessageItem::setMchatSenderAimId(const QString& _senderAimId)
@@ -1615,10 +1553,6 @@ namespace Ui
 		ContentWidget_ = _widget;
 
         connect(ContentWidget_, SIGNAL(stateChanged()), this, SLOT(updateData()), Qt::UniqueConnection);
-        if (TimeWidget_)
-        {
-            TimeWidget_->setMessageBubbleVisible(isMessageBubbleVisible());
-        }
 
         if (!parent())
         {
@@ -1725,16 +1659,6 @@ namespace Ui
 
         updateSenderControlColor();
 
-        if (TimeWidget_)
-        {
-            const auto bubbleVisible = (
-                isFileSharing() ?
-                    false :
-                    isMessageBubbleVisible());
-
-            TimeWidget_->setMessageBubbleVisible(bubbleVisible);
-        }
-
         update();
 
         return true;
@@ -1748,12 +1672,6 @@ namespace Ui
 
 		Data_ = std::move(data);
         setAimid(Data_->AimId_);
-
-        const auto updateNotificationKeys = (Data_->isOutgoing());
-		if (updateNotificationKeys)
-        {
-            setNotificationKeys(Data_->NotificationsKeys_);
-        }
 
         if (_messageItem.MessageBody_)
         {
@@ -1814,15 +1732,6 @@ namespace Ui
 
     namespace
     {
-
-        int32_t getFullTimeLineWidth()
-        {
-            const auto fullTimeLineWidth = (
-                MessageStatusWidget::getMaxWidth() +
-                MessageStyle::getTimeMargin());
-
-            return fullTimeLineWidth;
-        }
 
         int32_t getMessageTopPadding()
         {

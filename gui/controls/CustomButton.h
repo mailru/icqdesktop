@@ -5,11 +5,14 @@ namespace Ui
 
 class CustomButton : public QPushButton
 {
-    virtual void paintEvent(QPaintEvent*) override;
-    void leaveEvent(QEvent * _e) override;
-    void enterEvent(QEvent * _e) override;
-    void mousePressEvent(QMouseEvent * _e) override;
-    void mouseReleaseEvent(QMouseEvent * _e) override;
+protected:
+    virtual void paintEvent(QPaintEvent *_event) override;
+    virtual void leaveEvent(QEvent *_event) override;
+    virtual void enterEvent(QEvent *_event) override;
+    virtual void mousePressEvent(QMouseEvent *_event) override;
+    virtual void mouseReleaseEvent(QMouseEvent *_event) override;
+
+private:
     void init();
     
 public:
@@ -34,6 +37,7 @@ public:
 
     void setActive(bool _isActive);
 	void setFillColor(QColor);
+    void setTextColor(const QString&);
     QSize sizeHint() const override;
     
     void setMenu(QMenu* menu);

@@ -21,7 +21,6 @@ namespace Previewer
         enum ButtonState
         {
             Default     = 0x1,
-            Active      = 0x2,
             Disabled    = 0x4,
             Hover       = 0x10,
             Pressed     = 0x20

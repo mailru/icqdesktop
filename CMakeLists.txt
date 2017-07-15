@@ -2,19 +2,36 @@ cmake_minimum_required(VERSION 3.4)
 
 project(icq)
 
+if(NOT APP_TYPE)
+    set(IS_ICQ ON)
+    message(STATUS "building: ICQ (NOT APP_TYPE)")
+elseif(${APP_TYPE} STREQUAL "ICQ")
+    set(IS_ICQ ON)
+    message(STATUS "building: ICQ")
+elseif(${APP_TYPE} STREQUAL "Agent")
+    set(IS_AGENT ON)
+    message(STATUS "building: Agent")
+else()
+    message(FATAL_ERROR "You must specify the application type (-DAPP_TYPE=ICQ|Agent)")
+endif()
+
 if(NOT ICQ_FINAL_BUILD)
     add_definitions(-DICQ_DEVELOPMENT_BUILD)
-    message(STATUS "Development build")
+    message(STATUS "build type: dev")
 else()
     add_definitions(-DICQ_FINAL_BUILD)
-    message(STATUS "Final build")
+    message(STATUS "build type: final")
+endif()
+
+if(NOT ICQ_QT_DYNAMIC)
+    add_definitions(-DICQ_QT_STATIC)
+    message(STATUS "Qt linking: static")
+else()
+    add_definitions(-DICQ_QT_DYNAMIC)
+    message(STATUS "Qt linking: dynamic")
 endif()
 
 get_filename_component(ICQ_ROOT "${CMAKE_SOURCE_DIR}" ABSOLUTE)
-
-if(NOT CMAKE_BUILD_TYPE)
-    message(FATAL_ERROR "Need to specify CMAKE_BUILD_TYPE (-DCMAKE_BUILDTYPE=Debug|Release)")
-endif()
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(ICQ_DEBUG ON)
@@ -27,7 +44,7 @@ elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set(ICQ_LIB_DIR "${ICQ_ROOT}/bin/Release")
     set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 else()
-    message(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE value (Debug|Release)")
+    message(FATAL_ERROR "Need to specify CMAKE_BUILD_TYPE (-DCMAKE_BUILDTYPE=Debug|Release)")
 endif()
 
 file(MAKE_DIRECTORY ${ICQ_BIN_DIR})
@@ -36,6 +53,9 @@ message(STATUS "binaries output: " ${ICQ_BIN_DIR})
 message(STATUS "libraries output: " ${ICQ_LIB_DIR})
 
 set(ICQ_CORELIB_STATIC_LINKING ON)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(MSVC)
     set(ICQ_PLATFORM windows)
@@ -73,6 +93,7 @@ elseif(APPLE)
     add_definitions(-fvisibility=hidden)
     add_definitions(-fasm-blocks)
     add_definitions(-stdlib=libc++)
+    add_definitions(-mmacosx-version-min=10.8)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
 elseif(UNIX)
@@ -145,6 +166,7 @@ elseif(LINUX)
     set(Boost_LIBRARIES ${Boost_LIBRARIES} "${ICQ_EXTERNAL_PLATFORM}/libboost_filesystem.a")
     set(Boost_LIBRARIES ${Boost_LIBRARIES} "${ICQ_EXTERNAL_PLATFORM}/libboost_locale.a")
     set(Boost_LIBRARIES ${Boost_LIBRARIES} "${ICQ_EXTERNAL_PLATFORM}/libboost_system.a")
+    set(Boost_LIBRARIES ${Boost_LIBRARIES} "${ICQ_EXTERNAL_PLATFORM}/libboost_thread.a")
 endif()
 include_directories(${BOOST_INCLUDEDIR})
 
@@ -170,6 +192,27 @@ elseif(APPLE)
 endif()
 
 
+# -------------------------   libevent   -------------------------
+set(ICQ_LIBEVENT "${ICQ_EXTERNAL_PLATFORM}/libevent-2.1.8")
+include_directories(${ICQ_LIBEVENT}/include)
+if(MSVC)
+    set(LIBEVENT_LIBRARIES
+        optimized "${ICQ_LIBEVENT}/lib/event.lib" debug "${ICQ_LIBEVENT}/lib/eventd.lib"
+        optimized "${ICQ_LIBEVENT}/lib/event_core.lib" debug "${ICQ_LIBEVENT}/lib/event_cored.lib"
+        optimized "${ICQ_LIBEVENT}/lib/event_extra.lib" debug "${ICQ_LIBEVENT}/lib/event_extrad.lib")
+elseif(LINUX)
+    set(LIBEVENT_LIBRARIES
+        "${ICQ_LIBEVENT}/lib/libevent.a"
+        "${ICQ_LIBEVENT}/lib/libevent_pthreads.a"
+        )
+elseif(APPLE)
+    set(LIBEVENT_LIBRARIES
+        "${ICQ_LIBEVENT}/lib/libevent.a"
+        "${ICQ_LIBEVENT}/lib/libevent_pthreads.a"
+        )
+endif()
+
+
 # --------------------------   openssl   -------------------------
 set(ICQ_OPENSSL "${ICQ_EXTERNAL}/openssl")
 include_directories(${ICQ_OPENSSL})
@@ -177,6 +220,7 @@ if(MSVC)
     set(OPENSSL_LIBRARIES
         optimized "${ICQ_OPENSSL}/libeay32.lib" optimized "${ICQ_OPENSSL}/ssleay32.lib"
         debug "${ICQ_OPENSSL}/debug/libeay32.lib" debug "${ICQ_OPENSSL}/debug/ssleay32.lib")
+elseif(LINUX)
 elseif(APPLE)
     set(OPENSSL_LIBRARIES "${ICQ_EXTERNAL_PLATFORM}/libssl.a")
 endif()
@@ -274,86 +318,131 @@ else()
     set(ICQ_QT_BIN_DIR "${ICQ_QT_ROOT}/bin")
 endif()
 
-add_definitions(-DQT_STATIC)
 include_directories("${ICQ_QT_INCLUDE_DIR}")
 include_directories("${ICQ_QT_INCLUDE_DIR}/QtCore")
 include_directories("${ICQ_QT_INCLUDE_DIR}/QtGui")
 include_directories("${ICQ_QT_INCLUDE_DIR}/QtWidgets")
 include_directories("${ICQ_QT_INCLUDE_DIR}/QtOpenGL")
-if(MSVC)
-    set(QT_LIBRARIES
-        optimized ${ICQ_QT_LIB_DIR}/Qt5Gui.lib debug ${ICQ_QT_LIB_DIR}/Qt5Guid.lib
-        optimized ${ICQ_QT_LIB_DIR}/Qt5Core.lib debug ${ICQ_QT_LIB_DIR}/Qt5Cored.lib
-        optimized ${ICQ_QT_LIB_DIR}/Qt5Widgets.lib debug ${ICQ_QT_LIB_DIR}/Qt5Widgetsd.lib
-        optimized ${ICQ_QT_LIB_DIR}/Qt5PlatformSupport.lib debug ${ICQ_QT_LIB_DIR}/Qt5PlatformSupportd.lib
-        optimized ${ICQ_QT_LIB_DIR}/Qt5Multimedia.lib debug ${ICQ_QT_LIB_DIR}/Qt5Multimediad.lib
-        optimized ${ICQ_QT_LIB_DIR}/Qt5MultimediaWidgets.lib debug ${ICQ_QT_LIB_DIR}/Qt5MultimediaWidgetsd.lib
-        optimized ${ICQ_QT_LIB_DIR}/Qt5Network.lib debug ${ICQ_QT_LIB_DIR}/Qt5Networkd.lib
-        optimized ${ICQ_QT_LIB_DIR}/qtharfbuzzng.lib debug ${ICQ_QT_LIB_DIR}/qtharfbuzzngd.lib
-        optimized ${ICQ_QT_LIB_DIR}/qtmain.lib debug ${ICQ_QT_LIB_DIR}/qtmaind.lib
-        optimized ${ICQ_QT_LIB_DIR}/qwindows.lib debug ${ICQ_QT_LIB_DIR}/qwindowsd.lib
-        optimized ${ICQ_QT_LIB_DIR}/qico.lib debug ${ICQ_QT_LIB_DIR}/qicod.lib
-        optimized ${ICQ_QT_LIB_DIR}/qtaudio_windows.lib debug ${ICQ_QT_LIB_DIR}/qtaudio_windowsd.lib
-        optimized ${ICQ_QT_LIB_DIR}/qtiff.lib debug ${ICQ_QT_LIB_DIR}/qtiffd.lib
-        optimized ${ICQ_QT_LIB_DIR}/qjp2.lib debug ${ICQ_QT_LIB_DIR}/qjp2d.lib
-        optimized ${ICQ_QT_LIB_DIR}/Qt5OpenGL.lib debug ${ICQ_QT_LIB_DIR}/Qt5OpenGLd.lib
-        optimized ${ICQ_QT_LIB_DIR}/qtpcre.lib debug ${ICQ_QT_LIB_DIR}/qtpcred.lib
-        optimized ${ICQ_QT_LIB_DIR}/qtfreetype.lib debug ${ICQ_QT_LIB_DIR}/qtfreetyped.lib
-)
-elseif(APPLE)
-    add_definitions(-DQT_GUI_LIB=1)
-    set(QT_LIBRARIES
-        ${ICQ_QT_LIB_DIR}/libQt5Concurrent.a
-        ${ICQ_QT_LIB_DIR}/libQt5Core.a
-        ${ICQ_QT_LIB_DIR}/libQt5DBus.a
-        ${ICQ_QT_LIB_DIR}/libQt5Gui.a
-        ${ICQ_QT_LIB_DIR}/libQt5Multimedia.a
-        ${ICQ_QT_LIB_DIR}/libQt5Network.a
-        ${ICQ_QT_LIB_DIR}/libQt5PlatformSupport.a
-        ${ICQ_QT_LIB_DIR}/libQt5PrintSupport.a
-        ${ICQ_QT_LIB_DIR}/libQt5Widgets.a
-        ${ICQ_QT_LIB_DIR}/libqtfreetype.a
-        ${ICQ_QT_LIB_DIR}/libqtharfbuzzng.a
-        ${ICQ_QT_LIB_DIR}/libqtiff.a
-        ${ICQ_QT_LIB_DIR}/libqtpcre.a
-        ${ICQ_QT_LIB_DIR}/libqcocoa.a 
-        )
-elseif(LINUX)
-    set(QT_LIBRARIES
-        ${ICQ_QT_LIB_DIR}/libQt5Widgets.a
-        ${ICQ_QT_LIB_DIR}/libqtmedia_audioengine.a
-        ${ICQ_QT_LIB_DIR}/libqtmultimedia_m3u.a
-        ${ICQ_QT_LIB_DIR}/libQt5Multimedia.a
-        ${ICQ_QT_LIB_DIR}/libqxcb.a
-        ${ICQ_QT_LIB_DIR}/libQt5XcbQpa.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libX11-xcb.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libXi.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libxcb.a
-        ${ICQ_QT_LIB_DIR}/libxcb-static.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libxkbcommon-x11.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libxkbcommon.a
-        ${ICQ_QT_LIB_DIR}/libQt5PlatformSupport.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libfontconfig.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libfreetype.a
-        ${ICQ_QT_LIB_DIR}/libqico.a
-        ${ICQ_QT_LIB_DIR}/libQt5Gui.a
-        ${ICQ_QT_LIB_DIR}/libqconnmanbearer.a
-        ${ICQ_QT_LIB_DIR}/libqgenericbearer.a
-        ${ICQ_QT_LIB_DIR}/libqnmbearer.a
-        ${ICQ_QT_LIB_DIR}/libQt5Network.a
-        ${ICQ_QT_LIB_DIR}/libQt5DBus.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libdbus-1.a
-        ${ICQ_QT_LIB_DIR}/libQt5Core.a
-        ${ICQ_QT_LIB_DIR}/libqtpcre.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/librt.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libxcb-util.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libffi.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libpcre.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libexpat.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libXext.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libXau.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libXdmcp.a
-        ${ICQ_EXTERNAL_PLATFORM}/system/libz.a)
+
+if(ICQ_QT_DYNAMIC)
+    if(MSVC)
+        message(FATAL_ERROR "Not implemented yet")
+    elseif(APPLE)
+        add_definitions(-DQT_GUI_LIB=1)
+        set(QT_LIBRARIES
+            optimized ${ICQ_QT_LIB_DIR}/libQt5Core.5.dylib debug ${ICQ_QT_LIB_DIR}/libQt5Core_debug.5.dylib
+            optimized ${ICQ_QT_LIB_DIR}/libQt5Gui.5.dylib debug ${ICQ_QT_LIB_DIR}/libQt5Gui_debug.5.dylib
+            optimized ${ICQ_QT_LIB_DIR}/libQt5Widgets.5.dylib debug ${ICQ_QT_LIB_DIR}/libQt5Widgets_debug.5.dylib
+            optimized ${ICQ_QT_LIB_DIR}/libQt5PrintSupport.5.dylib debug ${ICQ_QT_LIB_DIR}/libQt5PrintSupport_debug.5.dylib
+            optimized ${ICQ_QT_LIB_DIR}/libQt5Multimedia.5.dylib debug ${ICQ_QT_LIB_DIR}/libQt5Multimedia_debug.5.dylib
+            optimized ${ICQ_QT_LIB_DIR}/libQt5Network.5.dylib debug ${ICQ_QT_LIB_DIR}/libQt5Network_debug.5.dylib
+            )
+
+        if(ICQ_DEBUG)
+            set(QT_LIBRARIES_TO_COPY
+                ${ICQ_QT_LIB_DIR}/libQt5Core_debug.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5Gui_debug.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5Widgets_debug.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5PrintSupport_debug.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5Multimedia_debug.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5Network_debug.5.dylib
+            )
+        else()
+            set(QT_LIBRARIES_TO_COPY
+                ${ICQ_QT_LIB_DIR}/libQt5Core.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5Gui.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5Widgets.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5PrintSupport.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5Multimedia.5.dylib
+                ${ICQ_QT_LIB_DIR}/libQt5Network.5.dylib
+            )
+        endif()
+
+        if(ICQ_DEBUG)
+            set(QT_PLUGINS_TO_COPY ${ICQ_QT_LIB_DIR}/libqcocoa_debug.dylib)
+        else()
+            set(QT_PLUGINS_TO_COPY ${ICQ_QT_LIB_DIR}/libqcocoa.dylib)
+        endif()
+    elseif(LINUX)
+        message(FATAL_ERROR "Not implemented yet")
+    endif()
+else()
+    add_definitions(-DQT_STATIC)
+    if(MSVC)
+        set(QT_LIBRARIES
+            optimized ${ICQ_QT_LIB_DIR}/Qt5Gui.lib debug ${ICQ_QT_LIB_DIR}/Qt5Guid.lib
+            optimized ${ICQ_QT_LIB_DIR}/Qt5Core.lib debug ${ICQ_QT_LIB_DIR}/Qt5Cored.lib
+            optimized ${ICQ_QT_LIB_DIR}/Qt5Widgets.lib debug ${ICQ_QT_LIB_DIR}/Qt5Widgetsd.lib
+            optimized ${ICQ_QT_LIB_DIR}/Qt5PlatformSupport.lib debug ${ICQ_QT_LIB_DIR}/Qt5PlatformSupportd.lib
+            optimized ${ICQ_QT_LIB_DIR}/Qt5Multimedia.lib debug ${ICQ_QT_LIB_DIR}/Qt5Multimediad.lib
+            optimized ${ICQ_QT_LIB_DIR}/Qt5MultimediaWidgets.lib debug ${ICQ_QT_LIB_DIR}/Qt5MultimediaWidgetsd.lib
+            optimized ${ICQ_QT_LIB_DIR}/Qt5Network.lib debug ${ICQ_QT_LIB_DIR}/Qt5Networkd.lib
+            optimized ${ICQ_QT_LIB_DIR}/qtharfbuzzng.lib debug ${ICQ_QT_LIB_DIR}/qtharfbuzzngd.lib
+            optimized ${ICQ_QT_LIB_DIR}/qtmain.lib debug ${ICQ_QT_LIB_DIR}/qtmaind.lib
+            optimized ${ICQ_QT_LIB_DIR}/qwindows.lib debug ${ICQ_QT_LIB_DIR}/qwindowsd.lib
+            optimized ${ICQ_QT_LIB_DIR}/qico.lib debug ${ICQ_QT_LIB_DIR}/qicod.lib
+            optimized ${ICQ_QT_LIB_DIR}/qtaudio_windows.lib debug ${ICQ_QT_LIB_DIR}/qtaudio_windowsd.lib
+            optimized ${ICQ_QT_LIB_DIR}/qtiff.lib debug ${ICQ_QT_LIB_DIR}/qtiffd.lib
+            optimized ${ICQ_QT_LIB_DIR}/qjp2.lib debug ${ICQ_QT_LIB_DIR}/qjp2d.lib
+            optimized ${ICQ_QT_LIB_DIR}/Qt5OpenGL.lib debug ${ICQ_QT_LIB_DIR}/Qt5OpenGLd.lib
+            optimized ${ICQ_QT_LIB_DIR}/qtpcre.lib debug ${ICQ_QT_LIB_DIR}/qtpcred.lib
+            optimized ${ICQ_QT_LIB_DIR}/qtfreetype.lib debug ${ICQ_QT_LIB_DIR}/qtfreetyped.lib
+    )
+    elseif(APPLE)
+        add_definitions(-DQT_GUI_LIB=1)
+        set(QT_LIBRARIES
+            ${ICQ_QT_LIB_DIR}/libQt5Concurrent.a
+            ${ICQ_QT_LIB_DIR}/libQt5Core.a
+            ${ICQ_QT_LIB_DIR}/libQt5DBus.a
+            ${ICQ_QT_LIB_DIR}/libQt5Gui.a
+            ${ICQ_QT_LIB_DIR}/libQt5Multimedia.a
+            ${ICQ_QT_LIB_DIR}/libQt5Network.a
+            ${ICQ_QT_LIB_DIR}/libQt5PlatformSupport.a
+            ${ICQ_QT_LIB_DIR}/libQt5PrintSupport.a
+            ${ICQ_QT_LIB_DIR}/libQt5Widgets.a
+	        ${ICQ_QT_LIB_DIR}/libQt5MacExtras.a
+            ${ICQ_QT_LIB_DIR}/libqtfreetype.a
+            ${ICQ_QT_LIB_DIR}/libqtharfbuzzng.a
+            ${ICQ_QT_LIB_DIR}/libqtiff.a
+            ${ICQ_QT_LIB_DIR}/libqico.a
+            ${ICQ_QT_LIB_DIR}/libqtpcre.a
+            ${ICQ_QT_LIB_DIR}/libqcocoa.a
+            )
+    elseif(LINUX)
+        set(QT_LIBRARIES
+            ${ICQ_QT_LIB_DIR}/libQt5Widgets.a
+            ${ICQ_QT_LIB_DIR}/libqtmedia_audioengine.a
+            ${ICQ_QT_LIB_DIR}/libqtmultimedia_m3u.a
+            ${ICQ_QT_LIB_DIR}/libQt5Multimedia.a
+            ${ICQ_QT_LIB_DIR}/libqxcb.a
+            ${ICQ_QT_LIB_DIR}/libQt5XcbQpa.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libXi.a
+            ${ICQ_QT_LIB_DIR}/libxcb-static.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libxkbcommon-x11.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libxkbcommon.a
+            ${ICQ_QT_LIB_DIR}/libQt5PlatformSupport.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libfontconfig.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libfreetype.a
+            ${ICQ_QT_LIB_DIR}/libqico.a
+            ${ICQ_QT_LIB_DIR}/libQt5Gui.a
+            ${ICQ_QT_LIB_DIR}/libqconnmanbearer.a
+            ${ICQ_QT_LIB_DIR}/libqgenericbearer.a
+            ${ICQ_QT_LIB_DIR}/libqnmbearer.a
+            ${ICQ_QT_LIB_DIR}/libQt5Network.a
+            ${ICQ_QT_LIB_DIR}/libQt5DBus.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libdbus-1.a
+            ${ICQ_QT_LIB_DIR}/libQt5Core.a
+            ${ICQ_QT_LIB_DIR}/libqtpcre.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/librt.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libxcb-util.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libffi.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libpcre.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libexpat.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libXext.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libXau.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libXdmcp.a
+            ${ICQ_EXTERNAL_PLATFORM}/system/libz.a)
+    endif()
 endif()
 
 
@@ -404,7 +493,7 @@ function(use_precompiled_header_mac output pch_h ${ARGN})
         endforeach()
     endif()
     add_custom_command(OUTPUT ${_pch_bin}
-        COMMAND ${CMAKE_CXX_COMPILER} ${_build_flags} ${_paths} ${_definitions} -std=gnu++11 -x c++-header ${pch_h} -o ${_pch_bin}
+        COMMAND ${CMAKE_CXX_COMPILER} ${_build_flags} ${_paths} ${_definitions} -mmacosx-version-min=10.8 -std=gnu++11 -x c++-header ${pch_h} -o ${_pch_bin}
         DEPENDS ${pch_h} VERBATIM)
     foreach(_source IN ITEMS ${ARGN})
         set_source_files_properties(${_source} PROPERTIES
@@ -529,9 +618,7 @@ endfunction()
 add_subdirectory(core)
 add_subdirectory(corelib)
 add_subdirectory(gui)
-if(NOT LINUX)
-add_subdirectory(tests/unit_tests)
-endif()
 if(MSVC)
     add_subdirectory(coretest)
+    add_subdirectory(tests/unit_tests)
 endif()

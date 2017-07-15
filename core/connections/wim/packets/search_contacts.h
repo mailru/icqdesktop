@@ -1,10 +1,7 @@
-#ifndef __WIM_SEARCH_CONTACTS_H_
-#define __WIM_SEARCH_CONTACTS_H_
-
 #pragma once
 
-#include "../wim_packet.h"
-#include "../../search_contacts_params.h"
+#include "../robusto_packet.h"
+#include "../search_contacts_response.h"
 
 namespace core
 {
@@ -17,48 +14,29 @@ namespace core
 
 namespace core
 {
-    namespace profile
-    {
-        class info;
-        typedef std::vector<std::shared_ptr<info>> profiles_list;
-    }
-
     namespace wim
     {
-        class search_contacts : public wim_packet
+        class search_contacts: public robusto_packet
         {
-            enum search_type
+            struct params
             {
-                unknown,
-                presence_get,
-                memberdir_get,
-                memberdir_search
-            };
-
-            search_type					search_type_;
-
-            const core::search_params	filters_;
-            profile::profiles_list		search_result_;
-
-
+                std::string tag_;
+                std::string keyword_;
+                std::string phonenumber_;
+            }
+            params_;
+            
             virtual int32_t init_request(std::shared_ptr<core::http_request_simple> _request) override;
-            virtual int32_t parse_response_data(const rapidjson::Value& _data) override;
-
-
+            virtual int32_t parse_results(const rapidjson::Value& _node_results) override;
+            virtual int32_t on_response_error_code() override;
+            
         public:
-
-            search_contacts(
-                const wim_packet_params& _params,
-                const core::search_params& _filters);
-
+            search_contacts_response response_;
+            
+            search_contacts(const wim_packet_params& _packet_params, const std::string& keyword, const std::string& phonenumber, const std::string& tag);
             virtual ~search_contacts();
-
-            const profile::profiles_list& get_result() const;
         };
-
+        
     }
-
+    
 }
-
-
-#endif// __WIM_SEARCH_CONTACTS_H_

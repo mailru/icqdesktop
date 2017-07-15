@@ -94,12 +94,17 @@ std::wstring core::base_im::get_my_info_file_name()
 
 std::wstring base_im::get_active_dilaogs_file_name()
 {
-    return (get_im_data_path() + L"/" + L"dialogs" + L"/" + archive::version_db_filename(L"cache"));
+    return (get_im_data_path() + L"/" + L"dialogs" + L"/" + archive::cache_filename());
 }
 
 std::wstring base_im::get_favorites_file_name()
 {
-    return (get_im_data_path() + L"/" + L"favorites" + L"/" + archive::version_db_filename(L"cache"));
+    return (get_im_data_path() + L"/" + L"favorites" + L"/" + archive::cache_filename());
+}
+
+std::wstring base_im::get_mailboxes_file_name()
+{
+    return (get_im_data_path() + L"/" + L"mailboxes" + L"/" + archive::cache_filename());
 }
 
 std::wstring core::base_im::get_im_data_path()
@@ -160,17 +165,9 @@ std::wstring base_im::get_im_downloads_path(const std::string &alt)
     }
 
     if (platform::is_apple())
-    {
         return user_downloads_path;
-    }
 
-    if (platform::is_windows())
-    {
-        return (user_downloads_path + L"/ICQ");
-    }
-
-    std::wstring str = converter.from_bytes("/ICQ");
-    return (user_downloads_path + str);
+    return (user_downloads_path + (build::is_icq() ? L"/ICQ" : L"/Mail.ru Agent"));
 }
 
 std::wstring base_im::get_content_cache_path()
@@ -180,6 +177,11 @@ std::wstring base_im::get_content_cache_path()
     path /= L"content.cache";
 
     return path.wstring();
+}
+
+std::wstring base_im::get_snaps_storage_filename()
+{
+    return (get_im_data_path() + L"/" + L"snaps" + L"/" + L"cache");
 }
 
 // voip
@@ -258,6 +260,10 @@ void core::base_im::on_voip_user_update_avatar_text_header(const std::string& co
 
 void core::base_im::on_voip_user_update_avatar(const std::string& contact, const unsigned char* data, unsigned size, unsigned avatar_h, unsigned avatar_w) {
     return __on_voip_user_bitmap(voip_manager_, contact, voip2::AvatarType_UserMain, data, size, avatar_h, avatar_w);
+}
+
+void core::base_im::on_voip_user_update_avatar_background(const std::string& contact, const unsigned char* data, unsigned size, unsigned h, unsigned w) {
+    return __on_voip_user_bitmap(voip_manager_, contact, voip2::AvatarType_Background, data, size, h, w);
 }
 
 void core::base_im::on_voip_call_end(std::string contact, bool busy) {
@@ -435,5 +441,12 @@ void core::base_im::on_voip_init_mask_engine()
 {
 #ifndef STRIP_VOIP
     voip_manager_->get_mask_manager()->init_mask_engine();
+#endif
+}
+
+void core::base_im::on_voip_window_set_conference_layout(void* hwnd, int layout)
+{
+#ifndef STRIP_VOIP
+    voip_manager_->get_window_manager()->window_set_conference_layout(hwnd, (voip_manager::ConferenceLayout)layout);
 #endif
 }

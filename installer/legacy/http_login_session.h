@@ -35,10 +35,10 @@ struct wim_auth_parameters
     MAKFC_CString m_database_key;
 
     wim_auth_parameters() : 
-        m_exipired_in( ::time( 0 ) ), 
-        m_time_offset( 0 ), 
-        m_next_fetch_time( CFileTime::GetCurrentTime().GetTime() ),
-        m_active_session_id( 0 )
+        m_exipired_in(::time(0)),
+        m_time_offset(0), 
+        m_next_fetch_time(CFileTime::GetCurrentTime().GetTime()),
+        m_active_session_id(0)
     {
 
     }

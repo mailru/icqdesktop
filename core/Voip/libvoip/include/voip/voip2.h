@@ -9,7 +9,7 @@ namespace voip2 {
 using namespace voip;
 
 #define PREVIEW_RENDER_NAME     "@preview"
-#define MASKARAD_USER "@maskarad"
+#define MASKARAD_USER           "@maskarad"
 
 enum LayoutType {       // -= remote =-         -= camera =-
     LayoutType_One,     // equally spaced       detached
@@ -107,6 +107,7 @@ enum VoipOutgoingMsg {
     OSCAR_Outgoing_SessionAllocatePstn,
     OSCAR_Outgoing_WebRtc
 };
+
 /*
     | Event | Code   |
     +-------+--------+  <- DTMF codes
@@ -131,6 +132,7 @@ struct WindowSettings {
         unsigned textWidth;
         unsigned textHeight;
 
+        unsigned position;
         // Avatar position adjustment:
         // for (Position_HCenter | Position_VCenter)
         // signed (up/down) offset in percents (-100..100) of the (HEIGHT/2) of the draw rect
@@ -157,12 +159,15 @@ struct WindowSettings {
 
     // Preview:
     bool previewSelfieMode;         // on Calling or Invite mode show preview fullscreen
+                                    // In Snap mode this flag required for th focusEffect and Camera Zoom
     bool previewIsButton;           // false - show actual camera state, true - operate as a player button
     bool previewDisable;            // disable preview for this window
     bool previewSolo;               // show only preview in this window
+    bool previewRounded;            // show rounded deatached preview
+    bool previewSelfieIsRounded;    // and rounded also in selfie mode
 
-    unsigned previewMaxArea;        // maximum area = (width * heigth) for preview
-    unsigned previewMinArea;        // minimum area
+    unsigned detachedStreamMaxArea; // maximum area = (width * heigth) for preview
+    unsigned detachedStreamMinArea; // minimum area
 
     unsigned      previewBorderWidth;        // width in pixels
     unsigned char previewBorderColorBGRA[4]; // IOS: Quartz supports premultiplied alpha only for images
@@ -183,20 +188,29 @@ struct WindowSettings {
     unsigned channelStatusDisplayW; // if 0 then appropriate size will be extracted
     unsigned channelStatusDisplayH; // from ChannelStatusContext
 
-    unsigned tray_height_pix;
-    unsigned lentaBetweenChannelOffset;
-    unsigned blocksBetweenChannelOffset;
-    bool     forcePrimaryVideoCropIfConference;
-    bool     alignPrimaryVideoTopIfConference;
-    float    desired_aspect_ration_in_videoconf;
+    struct Conference {
+        bool     forcePrimaryVideoCrop;
+        bool     alignPrimaryVideoTop;
+        
+        unsigned trayHeight;         // in pixels
+        float    trayMaxHeight;      // in % of view height
+        unsigned trayChannelsGap;    // gap between channel in LayoutType_Three and LayoutType_Four
+        unsigned blocksChannelsGap;  // gap between channel in LayoutType_One and LayoutType_Two
+        unsigned blocksGap;          // horizontal gap from frame
+
+        float    aspectRatio;
+        bool     useGridAdvance;
+        
+        bool     useHeaders;        // used headers for remote streams otherwise use log in under avatar.
+    } conference;
+    
     
     ButtonContext        buttonContext;
 
     unsigned headerOffset;
     unsigned header_height_pix;
-    unsigned gap_width_pix;
 
-    FocusEffectContext focusEffect;
+    FocusEffectContext focusEffect; // Required previewSelfieMode = true
 
     // Avatar bounce animation
     // TODO: make context
@@ -219,6 +233,8 @@ struct WindowSettings {
     unsigned oldverTextLargeDelayMs; // if 0 - TextLarge will be shown on hover only
     
     unsigned animationTimeMs;
+
+	bool     usePreviewBackground; // use background for preview.
 };
 /*
     Integration design:
@@ -397,6 +413,31 @@ enum VideoDeviceTorchFlags {
     VideoDevice_TorchOn,
     VideoDevice_TorchAuto
 };
+enum SnapRecordingStatus {      // Started -> Started_Reencoding -> Ready
+    SnapRecording_DELIM_STARTED,
+        SnapRecording_Started = SnapRecording_DELIM_STARTED,
+    SnapRecording_DELIM_INFO,
+//      SnapRecording_Started_Reencoding = SnapRecording_DELIM_INFO, // stop offline recording w/o delete_output flag set
+//      SnapRecording_Competion_Forced,
+//      SnapRecording_Progress,
+        SnapRecording_ChunkReady = SnapRecording_DELIM_INFO,  // <- empty buffer signals end-of-chunk
+    SnapRecording_DELIM_COMPLETE,
+        SnapRecording_Ready = SnapRecording_DELIM_COMPLETE,
+    SnapRecording_DELIM_COMPLETE_NOFILE,
+        SnapRecording_Destroyed_ByUser = SnapRecording_DELIM_COMPLETE_NOFILE,
+    SnapRecording_DELIM_COMPLETE_WITH_ERROR,
+        SnapRecording_Destroyed_NoSession = SnapRecording_DELIM_COMPLETE_WITH_ERROR, // start failed since no maskarad session exist
+        SnapRecording_Destroyed_SessionClosed,
+        SnapRecording_Destroyed_CreateError,
+        SnapRecording_Destroyed_CameraFailed,
+        SnapRecording_Destroyed_Error,
+};
+
+enum MaskLoadStatus {
+    MaskLoad_Success,
+    MaskLoad_Canceled,
+    MaskLoad_Failed,
+};
 
 class VoipObserver {
 public:
@@ -420,13 +461,16 @@ public:
 
     virtual void MinimalBandwidthMode_StateChanged(bool mbmEnabled) = 0;
     
-    // TODO: For now it is used only for Masksrad.
-    virtual void RecordFileReady(const char* filename, unsigned width, unsigned height) {}
-    virtual void StillImageReady(const char *data, unsigned len, unsigned width, unsigned height) {}
+    // TODO: For now it is used only for Maskarad.
+    virtual void StillImageReady(const char *data, unsigned len, unsigned width, unsigned height) = 0;
+    // end-of-chunk <=> no_data <=> data = NULL, size == 0
+    virtual void SnapRecordingStatusChanged(const char* filename, voip2::SnapRecordingStatus snapRecordingStatus, unsigned width, unsigned height, const char *data, unsigned size) = 0;
+    virtual void FirstFramePreviewForSnapReady(const char *rgb565, unsigned len, unsigned width, unsigned height) = 0;
 
     // @return res = true on success.
-    virtual void MaskEngineInitStatus(bool success) {}
-    virtual void MaskLoadStatus(const char* mask_path, bool success) {}
+    virtual void MaskModelInitStatusChanged(bool success) {}  // Model status always reported as first
+    virtual void MaskRenderInitStatusChanged(bool success) {} // MaskEngineInitialized = ModelOk & RenderOk
+    virtual void MaskLoadStatusChanged(const char* mask_path, MaskLoadStatus maskLoadStatus) {}
 };
 
 enum {
@@ -503,11 +547,12 @@ public:
     virtual void CallStop   () = 0; // Does not affect incoming calls
 
     // -- Camera interface
-    virtual void StartCallRecording(unsigned rotateAngle, float aspectRatio) = 0;
-    virtual void StopCallRecording(bool deleteRecordedFile=false) = 0;
-    virtual void CaptureStillImage(unsigned rotateAngle, bool mirror, float aspectRatio) = 0;
+    virtual void SetMaskaradAspectRatio(unsigned aspect_num, unsigned aspect_denum) = 0;
+    virtual void StartSnapRecording(const char* filename, bool previewFirstFrame = false, VoipSnapMode voipSnapMode = SNAP_HIGH_RATE_FOR_REENCODE, int chunkLimitSec = 0) = 0;
+    virtual void StopSnapRecording(const char* filename = NULL, bool deleteRecordedFile = false) = 0; // empty names means "current" file
+
+    virtual void CaptureStillImage() = 0;
     virtual void SetVideoDeviceParams(VideoDeviceFlashFlags flash, VideoDeviceTorchFlags torch, bool enableManualFocus, bool enableManualExposure) = 0;
-    // -- Camera interface
 
     virtual void ShowIncomingConferenceParticipants(const char* user_id, ConferenceParticipants& conferenceParticipants) = 0;
     virtual void SendAndPlayOobDTMF(const char* user_id, int code, int play_ms=200, int play_Db=10) = 0;
@@ -527,16 +572,22 @@ public:
     virtual void WindowSetPrimary           (hwnd_t wnd, const char* user_id, bool animated=true) = 0;
     virtual void WindowSetControlsStatus    (hwnd_t wnd, bool visible, unsigned off_left, unsigned off_top, unsigned off_right, unsigned off_bottom, bool animated, bool enableOverlap) = 0;
     virtual void WindowAddButton            (ButtonType type, ButtonPosition position) = 0;
-    virtual void WindowSetAvatarPosition    (hwnd_t wnd, unsigned position) = 0; // position - combination of values from Position enum, if (hwnd == NULL) sets position for all windows
+	virtual void WindowShowButton			(ButtonType type, bool visible) = 0;
     virtual void WindowSetTheme             (hwnd_t wnd, voip2::WindowThemeType theme) = 0;
 
+    virtual void WindowSetPostRenderEffectParams (hwnd_t wnd, const char *param_str) = 0; // see video_render_device_opengl_postfilter.h for params description
+
+    virtual void WindowExternalMouseClick   (hwnd_t wnd, int x, int y) = 0;
+    virtual void WindowExternalMouseZoom    (hwnd_t wnd, int x, int y, float scale) = 0;
+
     // Mask API
-    static bool GetMaskEngineVersion(unsigned int &version);                // Downloaded data must match engine's version.
-                                                                            // Return false if engine is not compiled into library.
+    static unsigned GetMaskEngineVersion();                                 // Downloaded data must match engine's version.
     virtual void InitMaskEngine(const char *data_folder_path = 0) = 0;      // Use NULL to destroy. On error you can catch signal.
     virtual void EnumerateMasks(const char *mask_base_folder, Vector<MaskInfo> &masks) = 0;
     virtual void LoadMask(const char *mask_path) = 0;                       // Use NULL to unload mask.
     
+    virtual void SetEffect(int slot, e_AudioEffect effect) = 0;
+    virtual void SetPitch(float pitch_factor) = 0;
 
 #if (__PLATFORM_WINPHONE || WINDOWS_PHONE) && defined(__cplusplus_winrt)
     virtual void GetVoipInfo(voip2::CallInfo& callInfo) = 0;

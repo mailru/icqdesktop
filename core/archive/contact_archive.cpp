@@ -12,10 +12,10 @@ using namespace core;
 using namespace archive;
 
 contact_archive::contact_archive(const std::wstring& _archive_path, const std::string& _contact_id)
-    : index_(new archive_index(_archive_path + L"/" + version_db_filename(L"_idx")))
-    , data_(new messages_data(_archive_path + L"/" + version_db_filename(L"_db")))
-    , state_(new archive_state(_archive_path + L"/" + version_db_filename(L"_ste"), _contact_id))
-    , images_(new image_cache(_archive_path + L"/" + version_db_filename(L"_img")))
+    : index_(new archive_index(_archive_path + L"/" + index_filename()))
+    , data_(new messages_data(_archive_path + L"/" + db_filename()))
+    , state_(new archive_state(_archive_path + L"/" + dlg_state_filename(), _contact_id))
+    , images_(new image_cache(_archive_path + L"/" + image_cache_filename()))
     , path_(_archive_path)
     , local_loaded_(false)
 {
@@ -39,7 +39,7 @@ bool contact_archive::repair_images() const
     return images_->build(*this);
 }
 
-void contact_archive::get_messages(int64_t _from, int64_t _count, history_block& _messages, get_message_policy policy, bool _to_older) const
+void contact_archive::get_messages(int64_t _from, int64_t _count_early, int64_t _count_later, history_block& _messages, get_message_policy policy) const
 {
     _messages.clear();
 
@@ -48,7 +48,7 @@ void contact_archive::get_messages(int64_t _from, int64_t _count, history_block&
     {
         std::lock_guard<std::mutex> lock(mutex_);
 
-        index_->serialize_from(_from, _count, headers, _to_older);
+        index_->serialize_from(_from, _count_early, _count_later, headers);
         if (headers.empty())
             return;
 
@@ -66,9 +66,9 @@ void contact_archive::get_messages(int64_t _from, int64_t _count, history_block&
     }
 }
 
-void contact_archive::get_messages_index(int64_t _from, int64_t _count, headers_list& _headers, bool _to_older) const
+void contact_archive::get_messages_index(int64_t _from, int64_t _count_early, int64_t _count_later, headers_list& _headers) const
 {
-    index_->serialize_from(_from, _count, _headers, _to_older);
+    index_->serialize_from(_from, _count_early, _count_later, _headers);
 }
 
 bool contact_archive::get_history_file(const std::wstring& _file_name, core::tools::binary_stream& _data
@@ -328,6 +328,11 @@ bool contact_archive::get_next_hole(int64_t _from, archive_hole& _hole, int64_t 
     return index_->get_next_hole(_from, _hole, _depth);
 }
 
+int64_t contact_archive::validate_hole_request(const archive_hole& _hole, const int32_t _count)
+{
+    return index_->validate_hole_request(_hole, _count);
+}
+
 bool contact_archive::need_optimize()
 {
     return index_->need_optimize();
@@ -370,18 +375,27 @@ void contact_archive::delete_messages_up_to(const int64_t _up_to)
     images_->synchronize(*index_);
 }
 
-std::wstring archive::version_db_filename(const std::wstring &filename)
+std::wstring archive::db_filename()
 {
-    assert(!std::any_of(
-        filename.begin(),
-        filename.end(),
-        [](const wchar_t _ch)
-        {
-            return ::iswdigit(_ch);
-        }
-    ));
+    return L"_db2";
+}
 
-    const auto DB_VERSION = 2;
+std::wstring archive::index_filename()
+{
+    return L"_idx2";
+}
 
-    return (filename + std::to_wstring(DB_VERSION));
+std::wstring archive::dlg_state_filename()
+{
+    return L"_ste2";
+}
+
+std::wstring archive::image_cache_filename()
+{
+    return L"_img3";
+}
+
+std::wstring archive::cache_filename()
+{
+    return L"cache2";
 }

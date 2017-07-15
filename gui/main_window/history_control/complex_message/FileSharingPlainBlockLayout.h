@@ -17,21 +17,13 @@ public:
 
     virtual QRect getAuthorAvatarRect() const override;
 
-    virtual int32_t getAuthorAvatarSize() const override;
-
     virtual QRect getAuthorNickRect() const override;
 
     virtual const QRect& getContentRect() const override;
 
-    virtual QFont getFilenameFont() const override;
-
     const QRect& getFilenameRect() const override;
 
-    virtual QFont getFileSizeFont() const override;
-
     virtual QRect getFileSizeRect() const override;
-
-    virtual QFont getShowInDirLinkFont() const override;
 
     virtual QRect getShowInDirLinkRect() const override;
 

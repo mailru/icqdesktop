@@ -6,7 +6,8 @@ namespace Ui
     class BackButton;
     class CustomButton;
     class HistoryControlPage;
-    
+    class LabelEx;
+
     enum ThemePanelChoice: int
     {
         ThemePanelCancel,
@@ -22,12 +23,10 @@ namespace Ui
         Q_OBJECT
         
         virtual void paintEvent(QPaintEvent*) override;
-        virtual void resizeEvent(QResizeEvent *) override;
         
-        CustomButton *previewButton_;
-        CustomButton *cancelButton_;
-        CustomButton *setToAllButton_;
-        CustomButton *setButton_;
+        LabelEx *cancelButton_;
+        QPushButton *setToAllButton_;
+        QPushButton *setButton_;
         BackButton *backFromThemeButton_;
         
         HistoryControlPage *historyControlPage_;
@@ -39,7 +38,6 @@ namespace Ui
         HistoryControlPageThemePanel(HistoryControlPage* _parent);
         ~HistoryControlPageThemePanel();
         
-        void updateTopThemeButtonsVisibility();
         void setShowSetThemeButton(const bool _show);
         
         void setCallback(ThemePanelCallback);
@@ -53,7 +51,6 @@ namespace Ui
         void backFromThemePressed();
         void setToAllThemePressed();
         void setThemePressed();
-        void timerUpdateTopThemeButtonsVisibility();
     };
 }
 

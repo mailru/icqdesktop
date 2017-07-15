@@ -10,6 +10,7 @@ namespace voip_manager {
     struct VoipProtoMsg;
     struct WindowParams;
     struct VoipProxySettings;
+    class auth_parameters;
 }
 
 namespace core
@@ -46,7 +47,6 @@ namespace core
     namespace stickers
     {
         class face;
-        class download_task;
     }
 
     namespace themes
@@ -74,6 +74,7 @@ namespace core
         std::wstring get_my_info_file_name();
         std::wstring get_active_dilaogs_file_name();
         std::wstring get_favorites_file_name();
+        std::wstring get_mailboxes_file_name();
         std::wstring get_im_data_path();
         std::wstring get_file_name_by_url(const std::string& _url);
         std::wstring get_masks_path();
@@ -81,6 +82,7 @@ namespace core
         std::wstring get_themes_path();
         std::wstring get_im_downloads_path(const std::string &alt);
         std::wstring get_content_cache_path();
+        std::wstring get_snaps_storage_filename();
 
         virtual std::string _get_protocol_uid() = 0;
         void set_id(int32_t _id);
@@ -112,7 +114,7 @@ namespace core
 
         virtual const wim::wim_packet_params make_wim_params() = 0;
         virtual const wim::wim_packet_params make_wim_params_general(bool _is_current_auth_params) = 0;
-
+        
         virtual void erase_auth_data() = 0; // when logout
         virtual void start_session(bool _is_ping = false) = 0;
         virtual void handle_net_error(int32_t err) = 0;
@@ -142,6 +144,9 @@ namespace core
         virtual void add_chat(int64_t _seq, const std::string& _m_chat_name, const std::vector<std::string>& _m_chat_members) = 0;
         virtual void modify_chat(int64_t _seq, const std::string& _aimid, const std::string& _m_chat_name) = 0;
 
+        // mrim
+        virtual void get_mrim_key(int64_t _seq, const std::string& _email) = 0;
+
         // avatar function
         virtual void get_contact_avatar(int64_t _seq, const std::string& _contact, int32_t _avatar_size, bool _force) = 0;
         virtual void show_contact_avatar(int64_t _seq, const std::string& _contact, int32_t _avatar_size) = 0;
@@ -149,8 +154,8 @@ namespace core
         // history functions
         virtual void get_archive_images(int64_t _seq_, const std::string& _contact, int64_t _from, int64_t _count) = 0;
         virtual void repair_archive_images(int64_t _seq_, const std::string& _contact) = 0;
-        virtual void get_archive_messages(int64_t _seq_, const std::string& _contact, int64_t _from, int64_t _count, bool _to_older, bool _need_prefetch) = 0;
-        virtual void get_archive_index(int64_t _seq_, const std::string& _contact, int64_t _from, int64_t _count) = 0;
+        virtual void get_archive_messages(int64_t _seq_, const std::string& _contact, int64_t _from, int64_t _count_early, int64_t _count_later, bool _need_prefetch, std::function<void(int64_t)> last_message_catcher) = 0;
+		virtual void get_archive_index(int64_t _seq_, const std::string& _contact, int64_t _from, int64_t _count, std::function<void(int64_t)> last_message_catcher) = 0;
         virtual void get_archive_messages_buddies(int64_t _seq_, const std::string& _contact, std::shared_ptr<archive::msgids_list> _ids) = 0;
         virtual void set_last_read(const std::string& _contact, int64_t _message) = 0;
         virtual void hide_dlg_state(const std::string& _contact) = 0;
@@ -186,7 +191,7 @@ namespace core
 
         // search functions
         virtual void history_search_in_history(const std::string& search_patterns, const std::vector<std::string>& _aimids) = 0;
-        virtual void history_search_in_cl(const std::vector<std::vector<std::string>>& search_patterns, int64_t _req_id, unsigned fixed_patterns_count) = 0;
+        virtual void history_search_in_cl(const std::vector<std::vector<std::string>>& search_patterns, int64_t _req_id, unsigned fixed_patterns_count, const std::string& pattern) = 0;
         virtual void setup_search_params(int64_t _req_id) = 0;
         virtual void clear_search_params() = 0;
 
@@ -225,9 +230,11 @@ namespace core
         virtual void on_voip_user_update_avatar_no_camera(const std::string& contact, const unsigned char* data, unsigned size, unsigned h, unsigned w);
         virtual void on_voip_user_update_avatar_text(const std::string& contact, const unsigned char* data, unsigned size, unsigned h, unsigned w);
         virtual void on_voip_user_update_avatar_text_header(const std::string& contact, const unsigned char* data, unsigned size, unsigned h, unsigned w);
+        virtual void on_voip_user_update_avatar_background(const std::string& contact, const unsigned char* data, unsigned size, unsigned h, unsigned w);
         virtual void on_voip_window_update_background(void* hwnd, const unsigned char* data, unsigned size, unsigned w, unsigned h);
         virtual void on_voip_window_set_offsets(void* hwnd, unsigned l, unsigned t, unsigned r, unsigned b);
 		virtual void on_voip_window_set_primary(void* hwnd, const std::string& contact);
+        virtual void on_voip_window_set_conference_layout(void* hwnd, int);
 
         virtual void on_voip_device_changed(const std::string& dev_type, const std::string& uid);
 
@@ -262,17 +269,22 @@ namespace core
             std::shared_ptr<core::tools::binary_stream> _data,
             const std::string& _extension) = 0;
 
+        virtual void get_file_sharing_preview_size(
+            const int64_t _seq,
+            const std::string& _file_url) = 0;
+
+        virtual void download_file_sharing_metainfo(
+            const int64_t _seq,
+            const std::string& _file_url) = 0;
+
         virtual void download_file_sharing(
             const int64_t _seq,
             const std::string& _contact,
             const std::string& _file_url,
-            const std::string& _download_dir,
+            const bool _force_request_metainfo,
             const std::string& _filename,
-            const file_sharing_function _function) = 0;
-
-        virtual void request_file_direct_uri(
-            const int64_t _seq,
-            const std::string& _file_url) = 0;
+            const std::string& _download_dir,
+            bool _raise_priority) = 0;
 
         virtual void download_image(
             const int64_t _seq,
@@ -281,7 +293,8 @@ namespace core
             const std::string& _destination,
             const bool _download_preview,
             const int32_t _preview_width,
-            const int32_t _preview_height) = 0;
+            const int32_t _preview_height,
+            const bool _raise_priority) = 0;
 
         virtual void download_link_preview(
             const int64_t _seq,
@@ -290,26 +303,24 @@ namespace core
             const int32_t _preview_width,
             const int32_t _preview_height) = 0;
 
-        virtual void cancel_loader_task(const int64_t _task_id) = 0;
+        virtual void cancel_loader_task(const std::string& _url) = 0;
 
-        virtual void abort_file_sharing_download(
-            const int64_t _seq,
-            const int64_t _process_seq) = 0;
+        virtual void abort_file_sharing_download(const std::string& _url) = 0;
+
         virtual void abort_file_sharing_upload(
             const int64_t _seq,
             const std::string & _contact,
             const std::string &_process_seq) = 0;
         virtual void raise_download_priority(
             const int64_t _task_id) = 0;
-        virtual void raise_contact_downloads_priority(
-            const std::string &_contact_aimid) = 0;
+
+        virtual void contact_switched(const std::string &_contact_aimid) = 0;
 
         virtual void set_played(const std::string& url, bool played) = 0;
         virtual void speech_to_text(int64_t _seq, const std::string& _url, const std::string& _locale) = 0;
 
         // search for contacts
-        virtual void search_contacts(int64_t _seq, const core::search_params& _filters) = 0;
-        virtual void search_contacts2(int64_t _seq, const std::string& keyword, const std::string& phonenumber, const std::string& tag) = 0;
+        virtual void search_contacts(int64_t _seq, const std::string& keyword, const std::string& phonenumber, const std::string& tag) = 0;
         virtual void get_profile(int64_t _seq, const std::string& _contact) = 0;
 
         // tools
@@ -324,17 +335,23 @@ namespace core
         virtual void set_avatar(const int64_t _seq, tools::binary_stream image, const std::string& _aimId, const bool _chat) = 0;
 
         virtual void save_auth_to_export(std::function<void()> _on_result) = 0;
-        virtual void set_show_promo_in_auth(bool _need_promo) = 0;
-        virtual void start_after_close_promo() = 0;
 
-        virtual void read_snap(const uint64_t _snap_id, const std::string& _aimId, const bool _mark_prev_snaps_read) = 0;
-        virtual void download_snap_metainfo(const int64_t seq, const std::string& _contact_aimid, const std::string &ttl_id) = 0;
+        virtual void read_snap(const uint64_t _snap_id, const std::string& _aimId, const bool _mark_prev_snaps_read, const bool _refresh_storage) = 0;
+        virtual void delete_snap(const uint64_t _snap_id) = 0;
+        virtual void download_snap_metainfo(const int64_t seq, const std::string& _contact_aimid, const std::string &ttl_id, bool _raise_priority) = 0;
 
         // masks
         virtual void get_mask_id_list(int64_t _seq) = 0;
         virtual void get_mask_preview(int64_t _seq, const std::string& mask_id) = 0;
         virtual void get_mask_model(int64_t _seq) = 0;
         virtual void get_mask(int64_t _seq, const std::string& mask_id) = 0;
+
+        //snaps
+        virtual void refresh_snaps_storage() = 0;
+        virtual void refresh_user_snaps(const std::string& _aimId) = 0;
+        virtual void remove_from_snaps_storage(const std::string& _aimId) = 0;
+
+        virtual bool has_valid_login() const = 0;
     };
 
 }

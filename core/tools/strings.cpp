@@ -241,7 +241,7 @@ namespace core
                     if (pos > _word.length() - 1)
                         break;
 
-                    if (contains_on_pos(_patterns, _word, pos, pattern, fixed_patterns_count))
+                    if (contains_on_pos(_patterns, _word, (int)pos, pattern, fixed_patterns_count))
                     {
                         priority = _word.length() == pattern.length() ? fixed_patterns_count : fixed_patterns_count * 2 + 1;
                         return true;
@@ -264,7 +264,7 @@ namespace core
             auto lower = system::to_lower(str);
             auto upper = system::to_upper(str);
 
-            if (lower.size() == 0 || (lower.size() == 1 && lower[0] == '\0'))
+            if (lower.empty() || (lower.size() == 1 && lower[0] == '\0'))
                 lower = str;
 
             auto id = 0u;
@@ -287,10 +287,10 @@ namespace core
                 _table.push_back(std::make_pair(lower, *_last_symb_id));
             }
 
-            _indexes.push_back(_symbols.size());
+            _indexes.push_back((int)_symbols.size());
             _symbols.append(lower);
 
-            _indexes.push_back(_symbols.size());
+            _indexes.push_back((int)_symbols.size());
             _symbols.append(upper);
 
             return result;

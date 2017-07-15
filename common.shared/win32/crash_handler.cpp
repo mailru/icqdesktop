@@ -44,15 +44,27 @@ namespace core
 {
     namespace dump
     {
-        std::string crash_handler::product_bundle_ = "";
+        std::string crash_handler::product_bundle_;
+        std::wstring crash_handler::product_path_;
         bool crash_handler::is_sending_after_crash_ = false;
 
-        crash_handler::crash_handler()
+        crash_handler::crash_handler(
+            const std::string& _bundle, 
+            const std::wstring& _product_path, 
+            const bool _is_sending_after_crash)
         {
+            crash_handler::is_sending_after_crash_ = _is_sending_after_crash;
+            crash_handler::product_bundle_ = _bundle;
+            crash_handler::product_path_ = _product_path;
         }
 
         crash_handler::~crash_handler()
-        {    
+        {
+        }
+
+        std::wstring crash_handler::get_product_path()
+        {
+            return crash_handler::product_path_;
         }
 
         void crash_handler::set_product_bundle(const std::string& _product_bundle)
@@ -67,7 +79,7 @@ namespace core
 
         std::wstring get_report_path()
         {
-            return ::common::get_product_data_path() + L"\\reports";
+            return crash_handler::get_product_path() + L"\\reports";
         }
 
         void set_os_version(const std::string& _os_version)
@@ -96,7 +108,7 @@ namespace core
 
             if (dump_type == -1)
             {
-                std::ifstream dump_type_file(::common::get_product_data_path() + L"/settings/dump_type.txt");
+                std::ifstream dump_type_file(crash_handler::get_product_path() + L"/settings/dump_type.txt");
 
                 dump_type = 1;
                 if (dump_type_file.good())
@@ -128,6 +140,9 @@ namespace core
 
         void crash_handler::set_process_exception_handlers()
         {
+            if (!is_crash_handle_enabled())
+                return;
+
             if (!need_write_dump())
                 return;
 
@@ -167,6 +182,9 @@ namespace core
 
         void crash_handler::set_thread_exception_handlers()
         {
+            if (!is_crash_handle_enabled())
+                return;
+
             if (!need_write_dump())
                 return;
 
@@ -294,9 +312,9 @@ namespace core
                 return;
             }
 
-            if (!is_dir_existed(::common::get_product_data_path()))
+            if (!is_dir_existed(crash_handler::get_product_path()))
             {
-                 if (!CreateDirectory((::common::get_product_data_path()).c_str(), NULL) &&
+                 if (!CreateDirectory((crash_handler::get_product_path()).c_str(), NULL) &&
                     ERROR_ALREADY_EXISTS != GetLastError())
                 {
                     return;

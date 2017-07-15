@@ -6,6 +6,7 @@
 #include "../../../../common.shared/version_info.h"
 #include "../../../utils.h"
 #include "../../../tools/system.h"
+#include "../../../tools/md5.h"
 
 
 #define WIM_API_LOGIN_HOST		"https://api.login.icq.net/auth/clientLogin"
@@ -18,7 +19,7 @@ client_login::client_login(
     const wim_packet_params& params,
     const std::string& login,
     const std::string& password)
-    :	
+    :
 wim_packet(params),
     login_(login),
     password_(password),
@@ -34,6 +35,11 @@ client_login::~client_login()
 {
 }
 
+
+void client_login::set_product_guid_8x(const std::string& _guid)
+{
+    product_guid_8x_ = _guid;
+}
 
 int32_t client_login::parse_response_data(const rapidjson::Value& _data)
 {
@@ -80,6 +86,7 @@ int32_t client_login::parse_response_data(const rapidjson::Value& _data)
     return 0;
 }
 
+
 int32_t client_login::init_request(std::shared_ptr<core::http_request_simple> _request)
 {
     if (login_.empty() || password_.empty())
@@ -89,8 +96,16 @@ int32_t client_login::init_request(std::shared_ptr<core::http_request_simple> _r
     _request->push_post_parameter("f", "json");
     _request->push_post_parameter("devId", params_.dev_id_);
     _request->push_post_parameter("s", escape_symbols(login_));
+
     std::string password = escape_symbols(password_);
     _request->push_post_parameter("pwd", password);
+
+    if (!product_guid_8x_.empty())
+    {
+        std::string guid = escape_symbols(product_guid_8x_);
+        _request->push_post_parameter("installationToken", guid);
+    }
+
     _request->push_post_parameter("clientName", escape_symbols(utils::get_app_name()));
     _request->push_post_parameter("clientVersion", core::tools::version_info().get_version());
     _request->push_post_parameter("tokenType", WIM_APP_TOKENTYPE);
@@ -138,12 +153,24 @@ int32_t client_login::on_response_error_code()
 {
     switch (status_code_)
     {
-    case 330:
-        return wpie_wrong_login;
-    case 408:
-        return wpie_request_timeout;
-    default:
-        return wpie_login_unknown_error;
+        case 330:
+        {
+            if (status_detail_code_ == 3012)
+            {
+                return wpie_wrong_login_2x_factor;
+            }
+
+            return wpie_wrong_login;
+        }
+        case 408:
+        {
+            return wpie_request_timeout;
+        }
+        default:
+        {
+            return wpie_login_unknown_error;
+        }
+
     }
 }
 

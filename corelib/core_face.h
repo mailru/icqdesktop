@@ -19,6 +19,7 @@ namespace core
 		le_invalid_sms_code = 6,
 		le_error_validate_phone = 7,
         le_attach_error_busy_phone = 8,
+        le_wrong_login_2x_factor = 9,
 	};
 
 	enum avatar_error
@@ -46,6 +47,7 @@ namespace core
 	struct istream : ibase
 	{
 		virtual uint8_t* read(uint32_t) = 0;
+        virtual void write(std::istream& _source) = 0;
 		virtual void write(const uint8_t*, uint32_t) = 0;
 		virtual bool empty() const = 0;
 		virtual uint32_t size() const = 0;

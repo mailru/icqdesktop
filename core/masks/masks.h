@@ -36,7 +36,7 @@ namespace core
         boost::filesystem::path get_model_sentry_path() const;
         boost::filesystem::path get_model_archive_path() const;
 
-        bool save_version(const boost::filesystem::path& _path, uint64_t _version);
+        bool save_etag(const boost::filesystem::path& _path, const std::string& _etag);
 
         void post_message_to_gui(int64_t _seq, const std::string& _message) const;
         void post_message_to_gui(int64_t _seq, const std::string& _message, const boost::filesystem::path& _local_path) const;
@@ -54,7 +54,7 @@ namespace core
         struct mask_info
         {
             mask_info();
-            mask_info(const std::string& _name, const std::string& _archive, const std::string& _preview, time_t _last_modified);
+            mask_info(const std::string& _name, const std::string& _archive, const std::string& _preview, const std::string& _etag);
 
             std::string name_;
 
@@ -62,7 +62,7 @@ namespace core
             std::string archive_;
             std::string preview_;
 
-            time_t last_modified_;
+            std::string etag_;
         };
 
         std::map<std::string, size_t> mask_by_name_;

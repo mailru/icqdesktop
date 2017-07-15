@@ -12,42 +12,40 @@
 #include "UnknownsModel.h"
 #include "UnknownItemDelegate.h"
 #include "SearchModelDLG.h"
-#include "SettingsTab.h"
 #include "../MainWindow.h"
+#include "../ContactDialog.h"
 #include "../contact_list/ChatMembersModel.h"
 #include "../livechats/LiveChatsModel.h"
 #include "../livechats/LiveChatItemDelegate.h"
 #include "../../core_dispatcher.h"
 #include "../../gui_settings.h"
+#include "../settings/SettingsTab.h"
 #include "../../types/contact.h"
 #include "../../types/typing.h"
+#include "../../cache/snaps/SnapStorage.h"
 #include "../../controls/ContextMenu.h"
 #include "../../controls/CommonStyle.h"
 #include "../../controls/TransparentScrollBar.h"
+#include "../../controls/CustomButton.h"
+#include "../../controls/HorScrollableView.h"
 #include "../../utils/utils.h"
 #include "../../utils/InterConnector.h"
 #include "../../utils/gui_coll_helper.h"
+#include "../../fonts.h"
+#include "../history_control/MessagesModel.h"
 
 namespace
 {
-    const int balloon_size = 20;
-    const int unreads_padding = 6;
-    const int unreads_minimum_extent_ = 20;
-    const auto unreadsFont = ContactList::dif(Fonts::defaultAppFontFamily(), Fonts::FontWeight::Semibold, 13);
-    const int LIVECHATS_TITLE_HEIGHT = 64;
     const int autoscroll_offset_recents = 68;
     const int autoscroll_offset_cl = 44;
     const int autoscroll_speed_pixels = 10;
     const int autoscroll_timeout = 50;
 
-    const QString CL_STYLE = QString(
-        "border-right-style: solid; border-right-color: #dadada; border-right-width: 1dip;"
-    );
-
-    const QString CL_TRANSPARENT = QString(
-        "background-color: transparent;"
-        "border: none;"
-    );
+    const int LEFT_OFFSET = 16;
+    const int BACK_WIDTH = 8;
+    const int LIVECHATS_BACK_WIDTH = 52;
+    const int BACK_HEIGHT = 12;
+    const int RECENTS_HEIGHT = 68;
 
     QMap<QString, QVariant> makeData(const QString& _command, const QString& _aimid = QString())
     {
@@ -60,58 +58,6 @@ namespace
 
 namespace Ui
 {
-    AddContactButton::AddContactButton(QWidget* _parent)
-    : QWidget(_parent)
-    , painter_(0)
-    , hover_(false)
-    , select_(false)
-    {
-    }
-
-    void AddContactButton::paintEvent(QPaintEvent*)
-    {
-        if (!painter_)
-        {
-            painter_ = new QPainter(this);
-            painter_->setRenderHint(QPainter::Antialiasing);
-        }
-
-        painter_->begin(this);
-        ::ContactList::ViewParams viewParams;
-        ::ContactList::RenderServiceContact(*painter_, hover_, select_, QT_TRANSLATE_NOOP("contact_list","Add contact"), Data::ContactType::ADD_CONTACT, 0, viewParams);
-        painter_->end();
-    }
-
-    void AddContactButton::enterEvent(QEvent* _e)
-    {
-        hover_ = true;
-        update();
-        return QWidget::enterEvent(_e);
-    }
-
-    void AddContactButton::leaveEvent(QEvent* _e)
-    {
-        hover_ = false;
-        update();
-        return QWidget::leaveEvent(_e);
-    }
-
-    void AddContactButton::mousePressEvent(QMouseEvent* _e)
-    {
-        select_ = true;
-        update();
-        return QWidget::mousePressEvent(_e);
-    }
-
-    void AddContactButton::mouseReleaseEvent(QMouseEvent* _e)
-    {
-        select_ = false;
-        update();
-        emit clicked();
-        return QWidget::mouseReleaseEvent(_e);
-    }
-
-
     SearchInAllChatsButton::SearchInAllChatsButton(QWidget* _parent)
     : QWidget(_parent)
         , painter_(0)
@@ -128,27 +74,25 @@ namespace Ui
             painter_->setRenderHint(QPainter::Antialiasing);
         }
 
-        auto vMainLayout_ = new QVBoxLayout(this);
-        vMainLayout_->setContentsMargins(0, 0, 0, 0);
-        vMainLayout_->setSpacing(0);
+        auto vMainLayout_ = Utils::emptyVLayout(this);
 
         auto horLineWidget_ = new QWidget(this);
         horLineWidget_->setFixedHeight(Utils::scale_value(1));
-        horLineWidget_->setStyleSheet(QString("background-color: #dadada;"));
+        horLineWidget_->setStyleSheet(QString("background-color: #d7d7d7;"));
         horLineWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         vMainLayout_->addSpacing(0);
 
         auto horLine_ = new QWidget(this);
         auto horLineLayout_ = new QHBoxLayout(horLine_);
-        auto findInAllChatsHeight = ::ContactList::SearchInAllChatsHeight();
+        auto findInAllChatsHeight = ::ContactList::GetContactListParams().searchInAllChatsHeight();
 
-        horLineLayout_->setContentsMargins(Utils::scale_value(24), 0, Utils::scale_value(24), findInAllChatsHeight);
+        horLineLayout_->setContentsMargins(0, 0, 0, findInAllChatsHeight);
         horLineLayout_->addWidget(horLineWidget_);
         vMainLayout_->addWidget(horLine_);
 
         painter_->begin(this);
         ::ContactList::ViewParams viewParams;
-        ::ContactList::RenderServiceContact(*painter_, hover_, select_, QT_TRANSLATE_NOOP("contact_list","Search in all chats"), Data::ContactType::SEARCH_IN_ALL_CHATS, 0, viewParams);
+        ::ContactList::RenderServiceContact(*painter_, hover_, select_, QT_TRANSLATE_NOOP("contact_list","SEARCH IN ALL CHATS"), Data::ContactType::SEARCH_IN_ALL_CHATS, 0, viewParams);
         painter_->end();
     }
 
@@ -196,16 +140,12 @@ namespace Ui
             painter_->setRenderHint(QPainter::Antialiasing);
         }
 
-        auto vMainLayout_ = new QVBoxLayout(this);
-        vMainLayout_->setContentsMargins(0, 0, 0, 0);
-        vMainLayout_->setSpacing(0);
-
         painter_->begin(this);
         ::ContactList::ViewParams viewParams;
 
         auto searchModel =  qobject_cast<Logic::SearchModelDLG*>(Logic::getCurrentSearchModel(Logic::MembersWidgetRegim::CONTACT_LIST));
         auto chatAimid = searchModel->getDialogAimid();
-        auto text = QString::fromWCharArray(L"SEARCH IN \u00AB") + Logic::getContactListModel()->getDisplayName(chatAimid).toUpper() + QString::fromWCharArray(L"\u00BB");
+        auto text = QString::fromWCharArray(L"Search in \u00AB") + Logic::getContactListModel()->getDisplayName(chatAimid).toUpper() + QString::fromWCharArray(L"\u00BB");
         ::ContactList::RenderServiceItem(*painter_, text, false /* renderState */, false /* drawLine */, viewParams);
         painter_->end();
     }
@@ -315,67 +255,14 @@ namespace Ui
         return QObject::eventFilter(_obj, _event);
     }
 
-    RecentsButton::RecentsButton(QWidget* _parent)
-    : QPushButton(_parent)
-    , painter_(new QPainter(this))
-    {
-        setObjectName("recentsButton");
-        setCheckable(true);
-    }
-
-    void RecentsButton::paintEvent(QPaintEvent* _e)
-    {
-        QPushButton::paintEvent(_e);
-
-        const auto unreads = (Logic::getRecentsModel()->totalUnreads() + Logic::getUnknownsModel()->totalUnreads());
-        if (unreads > 0)
-        {
-            const auto text = (unreads > 99) ? QString("99+") : QVariant(unreads).toString();
-
-            static QFontMetrics m(unreadsFont.font());
-
-            const auto unreadsRect = m.tightBoundingRect(text);
-            const auto firstChar = text[0];
-            const auto lastChar = text[text.size() - 1];
-            const auto unreadsWidth = (unreadsRect.width() + m.leftBearing(firstChar) + m.rightBearing(lastChar));
-
-            auto balloonWidth = unreadsWidth;
-            const auto isLongText = (text.length() > 1);
-            if (isLongText)
-            {
-                balloonWidth += Utils::scale_value(unreads_padding * 2);
-            }
-            else
-            {
-                balloonWidth = Utils::scale_value(unreads_minimum_extent_);
-            }
-
-            if (painter_->begin(this))
-            {
-                painter_->setPen(QColor("#579e1c"));
-                painter_->setRenderHint(QPainter::Antialiasing);
-                const auto radius = Utils::scale_value(balloon_size / 2);
-                painter_->setBrush(QColor("#579e1c"));
-                int x = (width() / 2) + Utils::scale_value(balloon_size / 2) - radius;
-                int y = (height() / 2) - Utils::scale_value(balloon_size / 2) - radius;
-                painter_->drawRoundedRect(x, y, balloonWidth, Utils::scale_value(balloon_size), radius, radius);
-
-                painter_->setFont(unreadsFont.font());
-                painter_->setPen(Qt::white);
-                const auto textX = x + ((balloonWidth - unreadsWidth) / 2);
-                painter_->drawText(textX, (height() / 2) - Utils::scale_value(balloon_size / 2) + radius / 2, text);
-                painter_->end();
-            }
-        }
-    }
-
-    ContactList::ContactList(QWidget* _parent, Logic::MembersWidgetRegim _regim, Logic::ChatMembersModel* _chatMembersModel)
+    ContactList::ContactList(QWidget* _parent, Logic::MembersWidgetRegim _regim, Logic::ChatMembersModel* _chatMembersModel,
+    	Logic::AbstractSearchModel* searchModel /*= nullptr*/)
     : QWidget(_parent)
     , currentTab_(RECENTS)
+    , prevTab_(RECENTS)
     , unknownsDelegate_(new Logic::UnknownItemDelegate(this))
     , recentsDelegate_(new Logic::RecentItemDelegate(this))
-    , clDelegate_(new Logic::ContactListItemDelegate(this, _regim))
-    , recentsButton_(new RecentsButton(this))
+    , clDelegate_(new Logic::ContactListItemDelegate(this, _regim, _chatMembersModel))
     , popupMenu_(nullptr)
     , regim_(_regim)
     , chatMembersModel_(_chatMembersModel)
@@ -390,30 +277,26 @@ namespace Ui
     , tapAndHold_(false)
     , listEventFilter_(new RCLEventFilter(this))
     , liveChatsDelegate_(new Logic::LiveChatItemDelegate(this))
-    , fixedItemWidth_(-1)
     , pictureOnlyView_(false)
     , scrolledView_(0)
     , scrollMultipler_(1)
     , isSearchInDialog_(false)
+	, searchModel_(searchModel)
+    , snaps_(0)
     {
+		if (!searchModel_)
+		{
+			searchModel_ = Logic::getCurrentSearchModel(regim_);
+		}
+
         setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
         setStyleSheet(Utils::LoadStyle(":/main_window/contact_list/contact_list.qss"));
-        auto mainLayout = new QVBoxLayout(this);
-        mainLayout->setSpacing(0);
+        auto mainLayout = Utils::emptyVLayout(this);
         mainLayout->setSizeConstraint(QLayout::SetNoConstraint);
-        mainLayout->setContentsMargins(0, 0, 0, 0);
         stackedWidget_ = new QStackedWidget(this);
-        Utils::ApplyStyle(stackedWidget_, CL_STYLE);
-
-        QPalette Pal(palette());
-        Pal.setColor(QPalette::Background, Ui::CommonStyle::getFrameTransparency());
-        stackedWidget_->setAutoFillBackground(true);
-        stackedWidget_->setPalette(Pal);
 
         recentsPage_ = new QWidget();
-        recentsLayout_ = new QVBoxLayout(recentsPage_);
-        recentsLayout_->setSpacing(0);
-        recentsLayout_->setContentsMargins(0, 0, 0, 0);
+        recentsLayout_ = Utils::emptyVLayout(recentsPage_);
         recentsView_ = CreateFocusableViewAndSetTrScrollBar(recentsPage_);
         recentsView_->setFrameShape(QFrame::NoFrame);
         recentsView_->setLineWidth(0);
@@ -423,20 +306,21 @@ namespace Ui
         recentsView_->setEditTriggers(QAbstractItemView::NoEditTriggers);
         recentsView_->setUniformItemSizes(false);
         recentsView_->setBatchSize(50);
-        recentsView_->setProperty("ContactListWidget", QVariant(true));
+        recentsView_->setStyleSheet("background: transparent;");
         recentsView_->setCursor(Qt::PointingHandCursor);
         recentsView_->setMouseTracking(true);
         recentsView_->setAcceptDrops(true);
         recentsView_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+
+        connect(recentsView_->verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(recentsScrolled(int)), Qt::DirectConnection);
+        connect(recentsView_->verticalScrollBar(), SIGNAL(actionTriggered(int)), this, SLOT(recentsScrollActionTriggered(int)), Qt::DirectConnection);
 
         recentsLayout_->addWidget(recentsView_);
         stackedWidget_->addWidget(recentsPage_);
         Testing::setAccessibleName(recentsView_, "RecentView");
 
         contactListPage_ = new QWidget();
-        contactListLayout_ = new QVBoxLayout(contactListPage_);
-        contactListLayout_->setSpacing(0);
-        contactListLayout_->setContentsMargins(0, 0, 0, 0);
+        contactListLayout_ = Utils::emptyVLayout(contactListPage_);
         contactListView_ = CreateFocusableViewAndSetTrScrollBar(contactListPage_);
         contactListView_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         contactListView_->setFrameShape(QFrame::NoFrame);
@@ -444,7 +328,7 @@ namespace Ui
         contactListView_->setModelColumn(0);
         contactListView_->setUniformItemSizes(false);
         contactListView_->setBatchSize(50);
-        contactListView_->setProperty("ContactListWidget", QVariant(true));
+        contactListView_->setStyleSheet("background: transparent;");
         contactListView_->setCursor(Qt::PointingHandCursor);
         contactListView_->setMouseTracking(true);
         contactListView_->setAcceptDrops(true);
@@ -453,21 +337,10 @@ namespace Ui
         contactListView_->setAutoScroll(false);
         contactListView_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
-        if (_regim == Logic::MembersWidgetRegim::CONTACT_LIST)
-        {
-            AddContactButton* addButton = new AddContactButton(this);
-            Testing::setAccessibleName(addButton, "AddNewContactButton");
-            addButton->setContentsMargins(0, 0, 0, 0);
-            addButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-            addButton->setFixedHeight(::ContactList::ContactItemHeight());
-            connect(addButton, SIGNAL(clicked()), this, SIGNAL(addContactClicked()), Qt::QueuedConnection);
-            contactListLayout_->addWidget(addButton);
-        }
-
         emptyIgnoreListLabel_ = new EmptyIgnoreListLabel(this);
         emptyIgnoreListLabel_->setContentsMargins(0, 0, 0, 0);
         emptyIgnoreListLabel_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-        emptyIgnoreListLabel_->setFixedHeight(::ContactList::ContactItemHeight());
+        emptyIgnoreListLabel_->setFixedHeight(::ContactList::GetContactListParams().itemHeight());
         contactListLayout_->addWidget(emptyIgnoreListLabel_);
         emptyIgnoreListLabel_->setVisible(false);
 
@@ -476,26 +349,39 @@ namespace Ui
 
         {
             liveChatsPage_ = new QWidget();
-            auto livechatsLayout = new QVBoxLayout(liveChatsPage_);
-            livechatsLayout->setSpacing(0);
-            livechatsLayout->setContentsMargins(0, 0, 0, 0);
+            auto livechatsLayout = Utils::emptyVLayout(liveChatsPage_);
 
-            QLabel* livechatsTitle = new QLabel(contactListPage_);
-            Utils::grabTouchWidget(livechatsTitle);
-            livechatsTitle->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            livechatsTitle->setObjectName("liveChatsTitle");
-            livechatsTitle->setText(QT_TRANSLATE_NOOP("livechats","Live chats"));
-            livechatsTitle->setFixedHeight(Utils::scale_value(LIVECHATS_TITLE_HEIGHT));
-            livechatsLayout->addWidget(livechatsTitle);
+            auto back = new CustomButton(liveChatsPage_, ":/resources/basic_elements/contr_basic_back_100.png");
+            back->setFixedSize(QSize(Utils::scale_value(LIVECHATS_BACK_WIDTH), Utils::scale_value(BACK_HEIGHT)));
+            back->setStyleSheet("background: transparent; border-style: none;");
+            back->setOffsets(Utils::scale_value(LEFT_OFFSET), 0);
+            back->setAlign(Qt::AlignLeft);
+            auto topWidget = new QWidget(liveChatsPage_);
+            auto hLayout = Utils::emptyHLayout(topWidget);
+            hLayout->setContentsMargins(0, 0, Utils::scale_value(LEFT_OFFSET + LIVECHATS_BACK_WIDTH), 0);
+            hLayout->addWidget(back);
+            auto topicLabel = new QLabel(liveChatsPage_);
+            Utils::grabTouchWidget(topicLabel);
+            topicLabel->setObjectName("livechats_topic_label");
+            topicLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            topicLabel->setText(QT_TRANSLATE_NOOP("livechats","Live chats"));
+            hLayout->addWidget(topicLabel);
+            livechatsLayout->addWidget(topWidget);
+
+            back->setCursor(QCursor(Qt::PointingHandCursor));
+            connect(back, &QAbstractButton::clicked,[this] () 
+            { 
+                recentsClicked();
+            });
 
             liveChatsView_ = CreateFocusableViewAndSetTrScrollBar(liveChatsPage_);
-            liveChatsView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            liveChatsView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             liveChatsView_->setFrameShape(QFrame::NoFrame);
             liveChatsView_->setFrameShadow(QFrame::Plain);
             liveChatsView_->setFocusPolicy(Qt::NoFocus);
             liveChatsView_->setLineWidth(0);
             liveChatsView_->setBatchSize(50);
-            liveChatsView_->setProperty("ContactListWidget", QVariant(true));
+            liveChatsView_->setStyleSheet("background: transparent;");
             liveChatsView_->setCursor(Qt::PointingHandCursor);
             liveChatsView_->setMouseTracking(true);
             liveChatsView_->setAcceptDrops(true);
@@ -509,26 +395,22 @@ namespace Ui
 
         {
             searchPage_ = new QWidget();
-            auto searchWithButtonLayout_ = new QVBoxLayout(searchPage_);
-            searchWithButtonLayout_->setSpacing(0);
-            searchWithButtonLayout_->setContentsMargins(0, 0, 0, 0);
+            auto searchWithButtonLayout_ = Utils::emptyVLayout(searchPage_);
 
             searchInChatLabel_ = new SearchInChatLabel();
             searchInChatLabel_->setContentsMargins(0, 0, 0, 0);
             searchInChatLabel_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-            searchInChatLabel_->setFixedHeight(::ContactList::GetRecentsParams(Logic::MembersWidgetRegim::CONTACT_LIST).serviceItemHeight().px());
+            searchInChatLabel_->setFixedHeight(::ContactList::GetContactListParams().serviceItemHeight());
             searchWithButtonLayout_->addWidget(searchInChatLabel_);
             searchInChatLabel_->setVisible(false);
 
             auto searchHost_ = new QWidget();
-            searchLayout_ = new QVBoxLayout(searchHost_);
-            searchLayout_->setSpacing(0);
-            searchLayout_->setContentsMargins(0, 0, 0, 0);
+            searchLayout_ = Utils::emptyVLayout(searchHost_);
             searchView_ = CreateFocusableViewAndSetTrScrollBar(searchPage_);
             searchView_->setFrameShape(QFrame::NoFrame);
             searchView_->setLineWidth(0);
             searchView_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-            searchView_->setProperty("ContactListWidget", QVariant(true));
+            searchView_->setStyleSheet("background: transparent;");
             searchView_->setMouseTracking(true);
             searchView_->setCursor(Qt::PointingHandCursor);
             searchView_->setAcceptDrops(true);
@@ -544,63 +426,11 @@ namespace Ui
             Testing::setAccessibleName(searchInAllButton_, "SearchInAllChatsButton");
             searchInAllButton_->setContentsMargins(0, 0, 0, 0);
             searchInAllButton_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-            searchInAllButton_->setFixedHeight(::ContactList::SearchInAllChatsHeight());
+            searchInAllButton_->setFixedHeight(::ContactList::GetContactListParams().itemHeight());
             connect(searchInAllButton_, &SearchInAllChatsButton::clicked, this, &ContactList::onDisableSearchInDialogButton, Qt::QueuedConnection);
             searchWithButtonLayout_->addWidget(searchInAllButton_);
             searchInAllButton_->setVisible(false);
         }
-
-        buttonsFrame_ = new QFrame(this);
-        buttonsFrame_->setObjectName("bottomPanel");
-        buttonsFrame_->setFrameShape(QFrame::NoFrame);
-        buttonsFrame_->setFrameShadow(QFrame::Sunken);
-        buttonsFrame_->setLineWidth(0);
-        Testing::setAccessibleName(buttonsFrame_, "frame_");
-
-        auto buttonsLayout = new QHBoxLayout(buttonsFrame_);
-
-        buttonsLayout->setSpacing(0);
-        buttonsLayout->setContentsMargins(0, 0, 0, 0);
-        {
-            auto horizontal_spacer = new QSpacerItem(0, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
-            buttonsLayout->addItem(horizontal_spacer);
-        }
-        clTabButton_ = new QPushButton(buttonsFrame_);
-        clTabButton_->setObjectName("contactListButton");
-        clTabButton_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        clTabButton_->setCheckable(true);
-        clTabButton_->setFlat(false);
-        Testing::setAccessibleName(clTabButton_, "AllTabButton");
-
-        livechatsButton_ = new QPushButton(buttonsFrame_);
-        livechatsButton_->setObjectName("liveChatsButton");
-        livechatsButton_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        livechatsButton_->setCheckable(true);
-        livechatsButton_->setFlat(false);
-        Testing::setAccessibleName(livechatsButton_, "livechatsButton_");
-
-        buttonsLayout->addWidget(clTabButton_);
-
-        settingsTabButton_ = new QPushButton(buttonsFrame_);
-        settingsTabButton_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        settingsTabButton_->setCheckable(true);
-        settingsTabButton_->setFlat(false);
-        settingsTabButton_->setObjectName("settingsButton");
-        Testing::setAccessibleName(settingsTabButton_, "settingsTabButton_");
-        buttonsLayout->addWidget(settingsTabButton_);
-
-        auto horizontal_spacer_buttons_right_ = new QSpacerItem(Utils::scale_value(28), 0, QSizePolicy::Fixed, QSizePolicy::Minimum);
-        buttonsLayout->addItem(horizontal_spacer_buttons_right_);
-        {
-            auto horizontal_spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-            buttonsLayout->addItem(horizontal_spacer);
-        }
-        mainLayout->addWidget(buttonsFrame_);
-        auto vertical_spacer_ = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Minimum);
-        mainLayout->addItem(vertical_spacer_);
-
-        clTabButton_->setText(QString());
-        settingsTabButton_->setText(QString());
 
         stackedWidget_->setCurrentIndex(0);
         QMetaObject::connectSlotsByName(this);
@@ -614,6 +444,8 @@ namespace Ui
         connect(&Utils::InterConnector::instance(), SIGNAL(showNoRecentsYet()), this, SLOT(showNoRecentsYet()));
         connect(&Utils::InterConnector::instance(), SIGNAL(hideNoRecentsYet()), this, SLOT(hideNoRecentsYet()));
 
+        connect(&Utils::InterConnector::instance(), SIGNAL(myProfileBack()), this, SLOT(myProfileBack()));
+
         if (_regim == Logic::MembersWidgetRegim::CONTACT_LIST)
         {
             connect(&Utils::InterConnector::instance(), SIGNAL(showNoSearchResults()), this, SLOT(showNoSearchResults()));
@@ -624,14 +456,6 @@ namespace Ui
 
             connect(&Utils::InterConnector::instance(), SIGNAL(dialogClosed(QString)), this, SLOT(dialogClosed(QString)));
         }
-
-		if (regim_ != Logic::MembersWidgetRegim::CONTACT_LIST)
-		{
-            buttonsFrame_->hide();
-		}
-
-		qobject_cast<QHBoxLayout*>(buttonsFrame_->layout())->insertWidget(1, recentsButton_);
-        qobject_cast<QHBoxLayout*>(buttonsFrame_->layout())->insertWidget(3, livechatsButton_);
 
         Utils::grabTouchWidget(contactListView_->viewport(), true);
         Utils::grabTouchWidget(recentsView_->viewport(), true);
@@ -649,15 +473,17 @@ namespace Ui
         connect(QScroller::scroller(recentsView_->viewport()), SIGNAL(stateChanged(QScroller::State)), this, SLOT(touchScrollStateChangedRecents(QScroller::State)), Qt::QueuedConnection);
 
 
-        if (Logic::is_delete_members_regim(regim_))
+        if (Logic::is_members_regim(regim_) || Logic::is_video_conference_regim(regim_))
             contactListView_->setModel(chatMembersModel_);
-        else
-            if (regim_ != Logic::MembersWidgetRegim::SELECT_MEMBERS
-            && regim_ != Logic::MembersWidgetRegim::SHARE_LINK
-            && regim_ != Logic::MembersWidgetRegim::SHARE_TEXT)
-            contactListView_->setModel(Logic::getContactListModel());
+        else if (regim_ != Logic::MembersWidgetRegim::SELECT_MEMBERS
+				&& regim_ != Logic::MembersWidgetRegim::SHARE_LINK
+				&& regim_ != Logic::MembersWidgetRegim::SHARE_TEXT
+				&& regim_ != Logic::MembersWidgetRegim::VIDEO_CONFERENCE)
+			{
+				contactListView_->setModel(Logic::getContactListModel());
+			}
 
-        connect(Logic::getContactListModel(), SIGNAL(select(QString, qint64)), this, SLOT(select(QString, qint64)), Qt::QueuedConnection);
+        connect(Logic::getContactListModel(), SIGNAL(select(QString, qint64, qint64)), this, SLOT(select(QString, qint64, qint64)), Qt::QueuedConnection);
 
         contactListView_->setItemDelegate(clDelegate_);
         connect(contactListView_, SIGNAL(clicked(const QModelIndex&)), this, SLOT(itemClicked(const QModelIndex&)), Qt::QueuedConnection);
@@ -689,13 +515,8 @@ namespace Ui
 
         connect(Logic::getUnknownsModel(), SIGNAL(orderChanged()), this, SLOT(recentOrderChanged()), Qt::QueuedConnection);
         connect(Logic::getUnknownsModel(), SIGNAL(updated()), this, SLOT(recentOrderChanged()), Qt::QueuedConnection);
-        connect(Logic::getUnknownsModel(), SIGNAL(updated()), recentsButton_, SLOT(update()), Qt::QueuedConnection);
         connect(Logic::getRecentsModel(), SIGNAL(orderChanged()), this, SLOT(recentOrderChanged()), Qt::QueuedConnection);
         connect(Logic::getRecentsModel(), SIGNAL(updated()), this, SLOT(recentOrderChanged()), Qt::QueuedConnection);
-        connect(Logic::getRecentsModel(), SIGNAL(updated()), recentsButton_, SLOT(update()), Qt::QueuedConnection);
-        connect(Logic::getContactListModel(), SIGNAL(contactChanged(QString)), recentsButton_, SLOT(update()), Qt::QueuedConnection);
-        connect(Logic::getRecentsModel(), SIGNAL(updated()), livechatsButton_, SLOT(update()), Qt::QueuedConnection);
-        connect(Logic::getContactListModel(), SIGNAL(contactChanged(QString)), livechatsButton_, SLOT(update()), Qt::QueuedConnection);
         connect(Logic::getContactListModel(), SIGNAL(switchTab(QString)), this, SLOT(switchTab(QString)), Qt::QueuedConnection);
 
         connect(Logic::getUnknownsModel(), &Logic::UnknownsModel::updated, this, [=]()
@@ -709,7 +530,7 @@ namespace Ui
                 emit Logic::getUnknownsModel()->refresh();
         });
 
-        searchView_->setModel(Logic::getCurrentSearchModel(regim_));
+        searchView_->setModel(searchModel_);
 
         if (regim_ == Logic::MembersWidgetRegim::CONTACT_LIST)
             searchItemDelegate_ = new Logic::RecentItemDelegate(this);
@@ -724,8 +545,8 @@ namespace Ui
         connect(searchView_, SIGNAL(clicked(const QModelIndex&)), this, SLOT(itemClicked(const QModelIndex&)), Qt::QueuedConnection);
         connect(searchView_, SIGNAL(clicked(const QModelIndex&)), this, SLOT(statsSearchItemPressed(const QModelIndex&)), Qt::QueuedConnection);
         connect(searchView_, SIGNAL(activated(const QModelIndex&)), this, SLOT(searchClicked(const QModelIndex&)), Qt::QueuedConnection);
-        connect(Logic::getCurrentSearchModel(regim_), SIGNAL(results()), this, SLOT(searchResultsFromModel()), Qt::QueuedConnection);
-        connect(this, SIGNAL(searchEnd()), Logic::getCurrentSearchModel(regim_), SLOT(searchEnded()), Qt::QueuedConnection);
+        connect(searchModel_, SIGNAL(results()), this, SLOT(searchResultsFromModel()), Qt::QueuedConnection);
+        connect(this, SIGNAL(searchEnd()), searchModel_, SLOT(searchEnded()), Qt::QueuedConnection);
 
         // Prepare settings
         {
@@ -733,22 +554,9 @@ namespace Ui
             stackedWidget_->insertWidget(SETTINGS, settingsTab_);
         }
 
-        connect(clTabButton_, SIGNAL(toggled(bool)), this, SLOT(allClicked()), Qt::QueuedConnection);
-        connect(settingsTabButton_, SIGNAL(toggled(bool)), this, SLOT(settingsClicked()), Qt::QueuedConnection);
-        connect(recentsButton_, SIGNAL(toggled(bool)), this, SLOT(recentsClicked()), Qt::QueuedConnection);
-        connect(livechatsButton_, SIGNAL(toggled(bool)), this, SLOT(liveChatsClicked()), Qt::QueuedConnection);
         connect(Logic::getContactListModel(), SIGNAL(needSwitchToRecents()), this, SLOT(switchToRecents()));
         connect(Logic::getRecentsModel(), SIGNAL(selectContact(QString)), this, SLOT(select(QString)), Qt::DirectConnection);
         connect(Logic::getUnknownsModel(), SIGNAL(selectContact(QString)), this, SLOT(select(QString)), Qt::DirectConnection);
-        clTabButton_->setFocusPolicy(Qt::NoFocus);
-        clTabButton_->setCursor(Qt::PointingHandCursor);
-        settingsTabButton_->setFocusPolicy(Qt::NoFocus);
-        settingsTabButton_->setCursor(Qt::PointingHandCursor);
-        recentsButton_->setCursor(Qt::PointingHandCursor);
-        recentsButton_->setFocusPolicy(Qt::NoFocus);
-        livechatsButton_->setCursor(Qt::PointingHandCursor);
-        livechatsButton_->setFocusPolicy(Qt::NoFocus);
-        Testing::setAccessibleName(recentsButton_, "RecentTabButton");
 
         if (regim_ == Logic::MembersWidgetRegim::CONTACT_LIST)
         {
@@ -806,7 +614,7 @@ namespace Ui
         if (_search)
         {
             stackedWidget_->setCurrentIndex(SEARCH);
-            Logic::getCurrentSearchModel(regim_)->setFocus();
+			searchModel_->setFocus();
         }
         else
         {
@@ -819,20 +627,10 @@ namespace Ui
         return stackedWidget_->currentIndex() == SEARCH;
     }
 
-    bool ContactList::isContactListMode() const
-    {
-        return stackedWidget_->currentIndex() == ALL;
-    }
-
-    bool ContactList::shouldHideSearch() const
-    {
-        return currentTab_ == SETTINGS || currentTab_ == LIVE_CHATS;
-    }
-
     QString ContactList::getAimid(const QModelIndex& _current) const
     {
         QString aimid;
-        if (Logic::is_delete_members_regim(regim_))
+        if (Logic::is_members_regim(regim_) || Logic::is_video_conference_regim(regim_))
         {
             auto cont = _current.data().value<Data::ChatMemberInfo*>();
             if (!cont)
@@ -886,7 +684,7 @@ namespace Ui
                 if (!dlg.IsContact_)
                     mess_id = dlg.SearchedMsgId_;
             }
-            select(aimid, mess_id);
+            select(aimid, mess_id, mess_id);
         }
 
         emit itemClicked(aimid);
@@ -931,6 +729,14 @@ namespace Ui
     void ContactList::searchResult()
     {
         QModelIndex i = searchView_->selectionModel()->currentIndex();
+
+        auto searchModel =  qobject_cast<Logic::SearchModelDLG*>(searchModel_);
+        if (searchModel && searchModel->contactsCount() == 1)
+        {
+            auto init_ind = searchModel->get_abs_index(0);
+            i = searchModel->index(init_ind);
+        }
+
         QModelIndex temp;
         searchResults(i, temp);
     }
@@ -953,7 +759,10 @@ namespace Ui
 
         if (!(QApplication::mouseButtons() & Qt::RightButton || tapAndHoldModifier()))
         {
-            selectionChanged(_current);
+            if (!(qobject_cast<const Logic::UnknownsModel *>(_current.model()) && Logic::getUnknownsModel()->isServiceItem(_current)))
+            {
+                selectionChanged(_current);
+            }
         }
     }
 
@@ -961,18 +770,18 @@ namespace Ui
     {
         if (qobject_cast<const Logic::RecentsModel*>(_current.model()) && Logic::getRecentsModel()->isServiceItem(_current))
         {
-            if (QApplication::mouseButtons() & Qt::LeftButton && Logic::getRecentsModel()->isUnknownsButton(_current))
+            if ((QApplication::mouseButtons() & Qt::LeftButton || QApplication::mouseButtons() == Qt::NoButton) && Logic::getRecentsModel()->isUnknownsButton(_current))
             {
                 emit Utils::InterConnector::instance().unknownsGoSeeThem();
             }
-            else if (QApplication::mouseButtons() & Qt::LeftButton && Logic::getRecentsModel()->isFavoritesGroupButton(_current))
+            else if ((QApplication::mouseButtons() & Qt::LeftButton || QApplication::mouseButtons() == Qt::NoButton) && Logic::getRecentsModel()->isFavoritesGroupButton(_current))
             {
                 Logic::getRecentsModel()->toggleFavoritesVisible();
             }
             return;
         }
 
-        if (qobject_cast<const Logic::UnknownsModel *>(_current.model()) && (QApplication::mouseButtons() & Qt::LeftButton))
+        if (qobject_cast<const Logic::UnknownsModel *>(_current.model()) && (QApplication::mouseButtons() & Qt::LeftButton || QApplication::mouseButtons() == Qt::NoButton))
         {
             const auto rect = recentsView_->visualRect(_current);
             const auto pos1 = recentsView_->mapFromGlobal(QCursor::pos());
@@ -981,9 +790,19 @@ namespace Ui
                 QPoint pos(pos1.x(), pos1.y() - rect.y());
                 if (Logic::getUnknownsModel()->isServiceItem(_current))
                 {
-                    if (unknownsDelegate_->isInDeleteAllFrame(pos))
+                    const auto &buttonRect = ::ContactList::DeleteAllFrame();
+                    const auto fullRect = rect.united(buttonRect);
+                    if (QRect(buttonRect.x(), fullRect.y(), buttonRect.width(), fullRect.height()).contains(pos))
                     {
-                        emit Utils::InterConnector::instance().unknownsDeleteThemAll();
+                        if (Utils::GetConfirmationWithTwoButtons(QT_TRANSLATE_NOOP("popup_window", "Cancel"),
+                                                                 QT_TRANSLATE_NOOP("popup_window", "Yes"),
+                                                                 QT_TRANSLATE_NOOP("popup_window", "Are you sure you want to delete all unknown contacts?"),
+                                                                 QT_TRANSLATE_NOOP("popup_window", "Close all"),
+                                                                 nullptr))
+                        {
+                            emit Utils::InterConnector::instance().unknownsDeleteThemAll();
+                            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::unknowns_closeall);
+                        }
                         return;
                     }
                 }
@@ -994,12 +813,15 @@ namespace Ui
                     {
                         if (unknownsDelegate_->isInAddContactFrame(pos) && Logic::getUnknownsModel()->unreads(_current.row()) == 0)
                         {
-                            emit Utils::InterConnector::instance().profileSettingsUnknownAdd(aimId);
+                            Logic::getContactListModel()->addContactToCL(aimId);
+                            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::unknowns_add_user);
                             return;
                         }
                         else if (unknownsDelegate_->isInRemoveContactFrame(pos))
                         {
-                            emit Utils::InterConnector::instance().profileSettingsUnknownRemove(aimId);
+                            Logic::getContactListModel()->removeContactFromCL(aimId);
+                            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::unknowns_close);
+
                             return;
                         }
                     }
@@ -1062,26 +884,19 @@ namespace Ui
     {
         if (regim_ == Logic::MembersWidgetRegim::CONTACT_LIST)
         {
-            if (currentTab_ == ALL)
+            if (qobject_cast<Logic::SearchModelDLG*>(searchModel_))
             {
-                GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::open_chat_search_cl);
-            }
-            else
-            {
-                if (qobject_cast<Logic::SearchModelDLG*>(Logic::getCurrentSearchModel(regim_)))
+                auto dlg = _current.data().value<Data::DlgState>();
+                if (!dlg.IsContact_)
                 {
-                    auto dlg = _current.data().value<Data::DlgState>();
-                    if (!dlg.IsContact_)
-                    {
-                        if (isSearchInDialog_)
-                            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::cl_search_dialog_open);
-                        else
-                            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::cl_search_openchatmessage);
-                        return;
-                    }
+                    if (isSearchInDialog_)
+                        GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::cl_search_dialog_openmessage);
+                    else
+                        GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::cl_search_openmessage);
+                    return;
                 }
-                GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::open_chat_search_recents);
             }
+            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::open_chat_search_recents);
         }
     }
 
@@ -1090,9 +905,9 @@ namespace Ui
 		searchResults(_current, QModelIndex());
 	}
 
-	void ContactList::changeTab(CurrentTab _currTab)
+	void ContactList::changeTab(CurrentTab _currTab, bool silent)
 	{
-        if (getPictureOnlyView() && _currTab != RECENTS)
+        if (getPictureOnlyView() && (_currTab != RECENTS && _currTab != SETTINGS))
             return;
 
         if (_currTab != RECENTS)
@@ -1112,16 +927,11 @@ namespace Ui
                 emit Utils::InterConnector::instance().popPagesToRoot();
             }
 
+            prevTab_ = currentTab_;
             currentTab_ = _currTab;
             updateTabState(regim_ == Logic::MembersWidgetRegim::CONTACT_LIST);
         }
-        else
-        {
-            updateCheckedButtons();
-        }
 
-        if (_currTab == SETTINGS)
-            settingsTab_->settingsProfileClicked();
         else if (currentTab_ != LIVE_CHATS)
         {
             if (recentsView_->model() == Logic::getRecentsModel())
@@ -1129,6 +939,9 @@ namespace Ui
             else
                 Logic::getUnknownsModel()->sendLastRead();
         }
+
+        if (!silent)
+            emit tabChanged(currentTab_);
     }
 
     void ContactList::triggerTapAndHold(bool _value)
@@ -1281,6 +1094,9 @@ namespace Ui
                     {
                         Ui::GetDispatcher()->uploadSharedFile(aimId, url.toLocalFile());
                         Ui::GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::filesharing_dnd_recents);
+                        auto cd = Utils::InterConnector::instance().getContactDialog();
+                        if (cd)
+                            cd->onSendMessage(aimId);
                     }
                 }
                 else if (url.isValid())
@@ -1290,6 +1106,9 @@ namespace Ui
                     QString text = url.toString();
                     collection.set_value_as_string("message", text.toUtf8().data(), text.toUtf8().size());
                     Ui::GetDispatcher()->post_message_to_core("send_message", collection.get());
+                    auto cd = Utils::InterConnector::instance().getContactDialog();
+                    if (cd)
+                        cd->onSendMessage(aimId);
                 }
             }
         };
@@ -1351,13 +1170,13 @@ namespace Ui
             recentsDelegate_->setDragIndex(QModelIndex());
             unknownsDelegate_->setDragIndex(QModelIndex());
         }
-        else if (currentTab_  == ALL)
+        else if (currentTab_ == ALL)
         {
             QModelIndex index = QModelIndex();
             if (!_pos.isNull())
             {
                 index = contactListView_->indexAt(_pos);
-                Data::Contact* data  = qvariant_cast<Data::Contact*>(Logic::getContactListModel()->data(index, Qt::DisplayRole));
+                Data::Contact* data = qvariant_cast<Data::Contact*>(Logic::getContactListModel()->data(index, Qt::DisplayRole));
                 if (data)
                 {
                     auto role = Logic::getContactListModel()->getYourRole(data->AimId_);
@@ -1375,35 +1194,17 @@ namespace Ui
         }
     }
 
-    void ContactList::showContactList()
-    {
-        changeTab(ALL);
-    }
-
     void ContactList::recentsClicked()
     {
         if (currentTab_ == RECENTS)
             emit Utils::InterConnector::instance().activateNextUnread();
         else
-            changeTab(RECENTS);
-    }
-
-    void ContactList::liveChatsClicked()
-    {
-        changeTab(LIVE_CHATS);
-        Logic::GetLiveChatsModel()->initIfNeeded();
-        emit Utils::InterConnector::instance().liveChatsShow();
-        GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::livechats_page_open);
+            switchToRecents();
     }
 
     void ContactList::switchToRecents()
     {
         changeTab(RECENTS);
-    }
-
-    void ContactList::allClicked()
-    {
-        changeTab(ALL);
     }
 
     void ContactList::settingsClicked()
@@ -1419,30 +1220,11 @@ namespace Ui
         }
 
         stackedWidget_->setCurrentIndex(currentTab_);
-        updateCheckedButtons();
 
         if (regim_ == Logic::MembersWidgetRegim::CONTACT_LIST)
             emit Utils::InterConnector::instance().makeSearchWidgetVisible(currentTab_ != SETTINGS && currentTab_ != LIVE_CHATS);
 
         recentOrderChanged();
-    }
-
-    void ContactList::updateCheckedButtons()
-    {
-        clTabButton_->blockSignals(true);
-        settingsTabButton_->blockSignals(true);
-        recentsButton_->blockSignals(true);
-        livechatsButton_->blockSignals(true);
-
-        clTabButton_->setChecked(currentTab_ == ALL);
-        settingsTabButton_->setChecked(currentTab_ == SETTINGS);
-        recentsButton_->setChecked(currentTab_ == RECENTS);
-        livechatsButton_->setChecked(currentTab_ == LIVE_CHATS);
-
-        clTabButton_->blockSignals(false);
-        settingsTabButton_->blockSignals(false);
-        recentsButton_->blockSignals(false);
-        livechatsButton_->blockSignals(false);
     }
 
     void ContactList::guiSettingsChanged()
@@ -1453,17 +1235,27 @@ namespace Ui
 
     void ContactList::searchUpOrDownPressed(bool _isUpPressed)
     {
+        auto searchModel = searchModel_;
+        if (!searchModel)
+            return;
+
         auto inc = _isUpPressed ? -1 : 1;
 
         QModelIndex i = searchView_->selectionModel()->currentIndex();
-        i = Logic::getCurrentSearchModel(regim_)->index(i.row() + inc);
-        if (!i.isValid())
-            return;
+
+        i = searchModel->index(i.row() + inc);
+        
+        while (searchModel->isServiceItem(i.row()))
+        {
+            i = searchModel->index(i.row() + 1);
+            if (!i.isValid())
+                return;
+        }
 
         searchView_->selectionModel()->blockSignals(true);
         searchView_->selectionModel()->setCurrentIndex(i, QItemSelectionModel::ClearAndSelect);
         searchView_->selectionModel()->blockSignals(false);
-        Logic::getCurrentSearchModel(regim_)->emitChanged(i.row() - inc, i.row());
+        searchModel->emitChanged(i.row() - inc, i.row());
         searchView_->scrollTo(i);
     }
 
@@ -1479,7 +1271,7 @@ namespace Ui
 
 	void ContactList::onSendMessage(QString _contact)
 	{
-		switchTab(_contact);
+        switchToRecents();
 	}
 
 	void ContactList::recentOrderChanged()
@@ -1572,21 +1364,26 @@ namespace Ui
             current_view->selectionModel()->blockSignals(false);
     }
 
-    void ContactList::select(QString _aimId, qint64 _message_id)
+    void ContactList::select(QString _aimId, qint64 _message_id, qint64 _quote_id)
     {
         const auto isSameContact = Logic::getContactListModel()->selectedContact() == _aimId;
 
         if (regim_ == Logic::CONTACT_LIST)
             Logic::getContactListModel()->setCurrent(_aimId, _message_id);
+        else if (regim_ == Logic::CONTACT_LIST_POPUP)
+            Logic::getContactListModel()->setCurrent(_aimId, _message_id, true);
 
         changeSelected(_aimId, true);
         changeSelected(_aimId, false);
 
-        emit itemSelected(_aimId, _message_id);
+        emit itemSelected(_aimId, _message_id, _quote_id);
 
-        if (isSearchMode() && regim_ == Logic::CONTACT_LIST)
+        if (isSearchMode() && regim_ == Logic::CONTACT_LIST && _message_id == -1 && _quote_id == -1)
         {
             emit searchEnd();
+
+            if (!Logic::getContactListModel()->isNotAuth(_aimId))
+                emit Utils::InterConnector::instance().unknownsGoBack();
         }
 
         if (currentTab_ == SETTINGS)
@@ -1598,12 +1395,13 @@ namespace Ui
 
     void ContactList::searchResultsFromModel()
     {
-        auto pat = Logic::getCurrentSearchModel(regim_)->getCurrentPattern();
+        auto pat = searchModel_->getCurrentPattern();
         if (pat == lastSearchPattern_)
             return;
 
         lastSearchPattern_ = pat;
-        auto init_ind = 0;
+        searchView_->clearSelection();
+        /*auto init_ind = 0;
         auto model = qobject_cast<Logic::SearchModelDLG*>(Logic::getCurrentSearchModel(regim_));
         if (model)
         {
@@ -1618,7 +1416,7 @@ namespace Ui
         searchView_->selectionModel()->setCurrentIndex(i, QItemSelectionModel::ClearAndSelect);
         searchView_->selectionModel()->blockSignals(false);
         Logic::getCurrentSearchModel(regim_)->emitChanged(i.row() - 1, i.row());
-        searchView_->scrollTo(i);
+        searchView_->scrollTo(i);*/
     }
 
     void ContactList::showContactsPopupMenu(QString aimId, bool _is_chat)
@@ -1633,25 +1431,26 @@ namespace Ui
             popupMenu_->clear();
         }
 
-        if (Logic::is_delete_members_regim(regim_))
+        if (Logic::is_members_regim(regim_) || Logic::is_select_members_regim(regim_))
             return;
 
         if (!_is_chat)
         {
 #ifndef STRIP_VOIP
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_callmenu_100.png")), QT_TRANSLATE_NOOP("context_menu","Call"), makeData("contacts/call", aimId));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/callmenu_100.png")), QT_TRANSLATE_NOOP("context_menu","Call"), makeData("contacts/call", aimId));
 #endif //STRIP_VOIP
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/profile_100.png")), QT_TRANSLATE_NOOP("context_menu", "Profile"), makeData("contacts/Profile", aimId));
         }
-        popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_profile_100.png")), QT_TRANSLATE_NOOP("context_menu", "Profile"), makeData("contacts/Profile", aimId));
-        popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_ignore_100.png")), QT_TRANSLATE_NOOP("context_menu", "Ignore"), makeData("contacts/ignore", aimId));
+
+        popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/ignore_100.png")), QT_TRANSLATE_NOOP("context_menu", "Ignore"), makeData("contacts/ignore", aimId));
         if (!_is_chat)
         {
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_spam_100.png")), QT_TRANSLATE_NOOP("context_menu", "Report spam"), makeData("contacts/spam", aimId));
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_delete_100.png")), QT_TRANSLATE_NOOP("context_menu", "Delete"), makeData("contacts/remove", aimId));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/spam_100.png")), QT_TRANSLATE_NOOP("context_menu", "Report spam"), makeData("contacts/spam", aimId));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/delete_100.png")), QT_TRANSLATE_NOOP("context_menu", "Delete"), makeData("contacts/remove", aimId));
         }
         else
         {
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_delete_100.png")), QT_TRANSLATE_NOOP("context_menu", "Leave and delete"), makeData("contacts/remove", aimId));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/delete_100.png")), QT_TRANSLATE_NOOP("context_menu", "Leave and delete"), makeData("contacts/remove", aimId));
         }
 
         popupMenu_->popup(QCursor::pos());
@@ -1680,16 +1479,16 @@ namespace Ui
 
         if (dlg.UnreadCount_ != 0)
         {
-            auto icon = QIcon(Utils::parse_image_name(":/resources/dialog_markread_100.png"));
+            auto icon = QIcon(Utils::parse_image_name(":/resources/context_menu/markread_100.png"));
             popupMenu_->addActionWithIcon(icon, QT_TRANSLATE_NOOP("context_menu", "Mark as read"), makeData("recents/mark_read", aimId));
             //            Testing::setAccessibleName(icon, "recents/mark_read");
         }
         if (Logic::getContactListModel()->isMuted(dlg.AimId_))
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_unmute_100.png")), QT_TRANSLATE_NOOP("context_menu", "Turn on notifications"), makeData("recents/unmute", aimId));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/unmute_100.png")), QT_TRANSLATE_NOOP("context_menu", "Turn on notifications"), makeData("recents/unmute", aimId));
         else
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_mute_100.png")), QT_TRANSLATE_NOOP("context_menu", "Turn off notifications"), makeData("recents/mute", aimId));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/mute_100.png")), QT_TRANSLATE_NOOP("context_menu", "Turn off notifications"), makeData("recents/mute", aimId));
 
-        auto ignore_icon = QIcon(Utils::parse_image_name(":/resources/dialog_ignore_100.png"));
+        auto ignore_icon = QIcon(Utils::parse_image_name(":/resources/context_menu/ignore_100.png"));
         //      Testing::setAccessibleName(ignore_icon, "recents/ignore_icon");
         /*auto ignore_action = */popupMenu_->addActionWithIcon(ignore_icon, QT_TRANSLATE_NOOP("context_menu", "Ignore"), makeData("recents/ignore", aimId));
         //    Testing::setAccessibleName(ignore_action, "recents/ignore_action");
@@ -1699,12 +1498,12 @@ namespace Ui
         //bool is_group = (item && item->is_chat());
 
         if (Logic::getRecentsModel()->isFavorite(aimId))
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_unfavorite_100.png")), QT_TRANSLATE_NOOP("context_menu", "Remove from favorites"), makeData("recents/unfavorite", aimId));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/unfavorite_100.png")), QT_TRANSLATE_NOOP("context_menu", "Remove from favorites"), makeData("recents/unfavorite", aimId));
         else
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_closechat_100.png")), QT_TRANSLATE_NOOP("context_menu", "Close"), makeData("recents/close", aimId));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/closechat_100.png")), QT_TRANSLATE_NOOP("context_menu", "Close"), makeData("recents/close", aimId));
 
         if (Logic::getRecentsModel()->totalUnreads() != 0)
-            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/dialog_markread_all_100.png")), QT_TRANSLATE_NOOP("context_menu", "Mark all read"), makeData("recents/read_all"));
+            popupMenu_->addActionWithIcon(QIcon(Utils::parse_image_name(":/resources/context_menu/markread_all_100.png")), QT_TRANSLATE_NOOP("context_menu", "Mark all read"), makeData("recents/read_all"));
 
         popupMenu_->popup(QCursor::pos());
     }
@@ -1749,6 +1548,7 @@ namespace Ui
         else if (command == "contacts/call")
         {
             Ui::GetDispatcher()->getVoipController().setStartV(aimId.toUtf8(), false);
+            GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::call_from_cl_menu);
         }
         else if (command == "contacts/Profile")
         {
@@ -1766,15 +1566,15 @@ namespace Ui
         else if (command == "contacts/remove")
         {
             QString text = QT_TRANSLATE_NOOP("popup_window", Logic::getContactListModel()->isChat(aimId)
-                                             ? "Are you sure you want to leave chat?" : "Are you sure you want to delete contact?");
+                ? "Are you sure you want to leave chat?" : "Are you sure you want to delete contact?");
 
             auto confirm = Utils::GetConfirmationWithTwoButtons(
-                                                                QT_TRANSLATE_NOOP("popup_window", "Cancel"),
-                                                                QT_TRANSLATE_NOOP("popup_window", "Yes"),
-                                                                text,
-                                                                Logic::getContactListModel()->getDisplayName(aimId),
-                                                                NULL
-                                                                );
+                QT_TRANSLATE_NOOP("popup_window", "Cancel"),
+                QT_TRANSLATE_NOOP("popup_window", "Yes"),
+                text,
+                Logic::getContactListModel()->getDisplayName(aimId),
+                NULL
+            );
 
             if (confirm)
             {
@@ -1790,11 +1590,6 @@ namespace Ui
         }
     }
 
-    void ContactList::switchTab(QString aimId)
-    {
-        changeTab(RECENTS);
-    }
-
     void ContactList::autoScroll()
     {
         if (scrolledView_)
@@ -1804,67 +1599,6 @@ namespace Ui
         }
     }
 
-    void ContactList::showNoContactsYet(QWidget *_parent, QWidget *_list, QLayout *_layout)
-    {
-        if (noContactsYetShown_)
-            return;
-        if (!noContactsYet_)
-        {
-            noContactsYetShown_ = true;
-            _list->setMaximumHeight(Utils::scale_value(50));
-            noContactsYet_ = new QWidget(_parent);
-            noContactsYet_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
-            _layout->addWidget(noContactsYet_);
-            {
-                auto mainLayout = new QVBoxLayout(noContactsYet_);
-                mainLayout->setAlignment(Qt::AlignCenter);
-                mainLayout->setContentsMargins(Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0));
-                mainLayout->setSpacing(Utils::scale_value(0));
-                {
-                    auto noContactsWidget = new QWidget(noContactsYet_);
-                    auto noContactsLayout = new QVBoxLayout(noContactsWidget);
-                    noContactsWidget->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
-                    noContactsLayout->setAlignment(Qt::AlignCenter);
-                    noContactsLayout->setContentsMargins(Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0));
-                    noContactsLayout->setSpacing(Utils::scale_value(20));
-                    {
-                        auto noContactsPlaceholder = new QWidget(noContactsWidget);
-                        noContactsPlaceholder->setObjectName("noContacts");
-                        noContactsPlaceholder->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
-                        noContactsPlaceholder->setFixedHeight(Utils::scale_value(160));
-                        noContactsLayout->addWidget(noContactsPlaceholder);
-                    }
-                    {
-                        auto noContactLabel = new QLabel(noContactsWidget);
-                        noContactLabel->setObjectName("noContactsLabel");
-                        noContactLabel->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
-                        noContactLabel->setAlignment(Qt::AlignCenter);
-                        noContactLabel->setWordWrap(true);
-                        noContactLabel->setText(QT_TRANSLATE_NOOP("placeholders", "Looks like you have no contacts yet"));
-                        noContactsLayout->addWidget(noContactLabel);
-                    }
-                    mainLayout->addWidget(noContactsWidget);
-                }
-            }
-
-            emit Utils::InterConnector::instance().showPlaceholder(Utils::PlaceholdersType::PlaceholdersType_FindFriend);
-        }
-    }
-
-    void ContactList::hideNoContactsYet(QWidget *_list, QLayout *_layout)
-    {
-        if (noContactsYet_)
-        {
-            noContactsYet_->setHidden(true);
-            _layout->removeWidget(noContactsYet_);
-            noContactsYet_ = nullptr;
-            _list->setMaximumHeight(QWIDGETSIZE_MAX);
-
-            emit Utils::InterConnector::instance().showPlaceholder(Utils::PlaceholdersType::PlaceholdersType_HideFindFriend);
-
-            noContactsYetShown_ = false;
-        }
-    }
 
     void ContactList::showNoRecentsYet(QWidget *_parent, QWidget *_list, QLayout *_layout, std::function<void()> _action)
     {
@@ -1878,16 +1612,14 @@ namespace Ui
             noRecentsYet_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
             _layout->addWidget(noRecentsYet_);
             {
-                auto mainLayout = new QVBoxLayout(noRecentsYet_);
+                auto mainLayout = Utils::emptyVLayout(noRecentsYet_);
                 mainLayout->setAlignment(Qt::AlignCenter);
-                mainLayout->setContentsMargins(Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0));
-                mainLayout->setSpacing(Utils::scale_value(0));
                 {
                     auto noRecentsWidget = new QWidget(noRecentsYet_);
                     auto noRecentsLayout = new QVBoxLayout(noRecentsWidget);
                     noRecentsWidget->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
                     noRecentsLayout->setAlignment(Qt::AlignCenter);
-                    noRecentsLayout->setContentsMargins(Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0));
+                    noRecentsLayout->setContentsMargins(0, 0, 0, 0);
                     noRecentsLayout->setSpacing(Utils::scale_value(20));
                     {
                         auto noRecentsPlaceholder = new QWidget(noRecentsWidget);
@@ -1929,84 +1661,48 @@ namespace Ui
         }
     }
 
-    void ContactList::hideNoRecentsYet(QWidget *_list, QLayout *_layout)
+    void ContactList::hideNoContactsYet()
+    {
+        if (noContactsYet_)
+        {
+            noContactsYet_->setHidden(true);
+            contactListLayout_->removeWidget(noContactsYet_);
+            noContactsYet_ = nullptr;
+            contactListView_->setMaximumHeight(QWIDGETSIZE_MAX);
+
+            emit Utils::InterConnector::instance().showPlaceholder(Utils::PlaceholdersType::PlaceholdersType_HideFindFriend);
+
+            noContactsYetShown_ = false;
+        }
+    }
+
+    void ContactList::hideNoRecentsYet()
     {
         if (noRecentsYet_)
         {
             noRecentsYet_->setHidden(true);
-            _layout->removeWidget(noContactsYet_);
+            recentsLayout_->removeWidget(noContactsYet_);
             noRecentsYet_ = nullptr;
-            _list->setHidden(false);
+            recentsView_->setHidden(false);
             noRecentsYetShown_ = false;
         }
     }
 
-    void ContactList::showNoSearchResults(QWidget *_parent, QWidget *_list, QLayout *_layout)
+    void ContactList::hideSearchSpinner()
     {
-        _list->setHidden(true);
-
-        if (noSearchResultsShown_)
-            return;
-
-        noSearchResultsShown_ = true;
-        if (!noSearchResults_)
+        if (searchSpinnerShown_)
         {
-            _list->setHidden(true);
-            noSearchResults_ = new QWidget(_parent);
-            noSearchResults_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
-            _layout->addWidget(noSearchResults_);
-            {
-                auto mainLayout = new QVBoxLayout(noSearchResults_);
-                mainLayout->setAlignment(Qt::AlignCenter);
-                mainLayout->setContentsMargins(Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0));
-                mainLayout->setSpacing(Utils::scale_value(0));
-                {
-                    auto noSearchResultsWidget = new QWidget(noSearchResults_);
-                    auto noSearchLayout = new QVBoxLayout(noSearchResultsWidget);
-                    noSearchResultsWidget->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
-                    noSearchLayout->setAlignment(Qt::AlignCenter);
-                    noSearchLayout->setContentsMargins(Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0));
-                    noSearchLayout->setSpacing(Utils::scale_value(20));
-                    {
-                        auto noSearchResultsPlaceholder = new QWidget(noSearchResultsWidget);
-                        noSearchResultsPlaceholder->setObjectName("noSearchResults");
-                        noSearchResultsPlaceholder->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
-                        noSearchResultsPlaceholder->setFixedHeight(Utils::scale_value(160));
-                        noSearchLayout->addWidget(noSearchResultsPlaceholder);
-                    }
-                    {
-                        auto noSearchResultsLabel = new QLabel(noSearchResultsWidget);
-                        noSearchResultsLabel->setObjectName("noSearchResultsLabel");
-                        noSearchResultsLabel->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
-                        noSearchResultsLabel->setAlignment(Qt::AlignCenter);
-                        noSearchResultsLabel->setText(QT_TRANSLATE_NOOP("placeholders", "No messages found"));
-                        noSearchLayout->addWidget(noSearchResultsLabel);
-                    }
-
-                    mainLayout->addWidget(noSearchResultsWidget);
-                }
-            }
-        }
-        else
-        {
-            _list->setHidden(true);
-            noSearchResults_->setHidden(false);
+            searchSpinner_->setHidden(true);
+            searchLayout_->removeWidget(searchSpinner_);
+            searchSpinner_ = nullptr;
+            searchView_->setHidden(false);
+            searchSpinnerShown_ = false;
         }
     }
 
-    void ContactList::hideNoSearchResults(QWidget *_list, QLayout *_layout)
+    void ContactList::showSearchSpinner()
     {
-        if (noSearchResultsShown_)
-        {
-            noSearchResults_->setHidden(true);
-            _list->setHidden(false);
-            noSearchResultsShown_ = false;
-        }
-    }
-
-    void ContactList::showSearchSpinner(QWidget *_parent, QWidget *_list, QLayout *_layout)
-    {
-        _list->setHidden(true);
+        searchView_->setHidden(true);
 
         if (searchSpinnerShown_)
             return;
@@ -2014,21 +1710,19 @@ namespace Ui
         if (!searchSpinner_)
         {
             searchSpinnerShown_ = true;
-            _list->setHidden(true);
-            searchSpinner_ = new QWidget(_parent);
+            searchView_->setHidden(true);
+            searchSpinner_ = new QWidget(searchPage_);
             searchSpinner_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
-            _layout->addWidget(searchSpinner_);
+            searchLayout_->addWidget(searchSpinner_);
             {
-                auto mainLayout = new QVBoxLayout(searchSpinner_);
+                auto mainLayout = Utils::emptyVLayout(searchSpinner_);
                 mainLayout->setAlignment(Qt::AlignCenter);
-                mainLayout->setContentsMargins(Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0));
-                mainLayout->setSpacing(Utils::scale_value(0));
                 {
                     auto searchSpinnerWidget = new QWidget(searchSpinner_);
                     auto searchSpinnerLayout = new QVBoxLayout(searchSpinnerWidget);
                     searchSpinnerWidget->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
                     searchSpinnerLayout->setAlignment(Qt::AlignCenter);
-                    searchSpinnerLayout->setContentsMargins(Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0));
+                    searchSpinnerLayout->setContentsMargins(0, 0, 0, 0);
                     searchSpinnerLayout->setSpacing(Utils::scale_value(20));
                     {
                         auto spinner = new QMovie(":/resources/gifs/r_spiner200.gif");
@@ -2046,52 +1740,112 @@ namespace Ui
         }
     }
 
-    void ContactList::hideSearchSpinner(QWidget *_list, QLayout *_layout)
-    {
-        if (searchSpinnerShown_)
-        {
-            searchSpinner_->setHidden(true);
-            _layout->removeWidget(searchSpinner_);
-            searchSpinner_ = nullptr;
-            _list->setHidden(false);
-            searchSpinnerShown_ = false;
-        }
-    }
-
-    void ContactList::hideNoContactsYet()
-    {
-        hideNoContactsYet(contactListView_, contactListLayout_);
-    }
-
-    void ContactList::hideNoRecentsYet()
-    {
-        hideNoRecentsYet(recentsView_, recentsLayout_);
-    }
-
-    void ContactList::hideSearchSpinner()
-    {
-        hideSearchSpinner(searchView_, searchLayout_);
-    }
-
-    void ContactList::showSearchSpinner()
-    {
-        showSearchSpinner(searchPage_, searchView_, searchLayout_);
-    }
-
     void ContactList::hideNoSearchResults()
     {
-        hideNoSearchResults(searchView_, searchLayout_);
+        if (noSearchResultsShown_)
+        {
+            noSearchResults_->setHidden(true);
+            searchView_->setHidden(false);
+            noSearchResultsShown_ = false;
+        }
     }
 
     void ContactList::showNoSearchResults()
     {
         if (Logic::getSearchModelDLG()->count() == 0)
-            showNoSearchResults(searchPage_, searchView_, searchLayout_);
+        {
+            searchView_->setHidden(true);
+
+            if (noSearchResultsShown_)
+                return;
+
+            noSearchResultsShown_ = true;
+            if (!noSearchResults_)
+            {
+                searchView_->setHidden(true);
+                noSearchResults_ = new QWidget(searchPage_);
+                noSearchResults_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
+                searchLayout_->addWidget(noSearchResults_);
+                {
+                    auto mainLayout = Utils::emptyVLayout(noSearchResults_);
+                    mainLayout->setAlignment(Qt::AlignCenter);
+                    {
+                        auto noSearchResultsWidget = new QWidget(noSearchResults_);
+                        auto noSearchLayout = new QVBoxLayout(noSearchResultsWidget);
+                        noSearchResultsWidget->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
+                        noSearchLayout->setAlignment(Qt::AlignCenter);
+                        noSearchLayout->setContentsMargins(0, 0, 0, 0);
+                        noSearchLayout->setSpacing(Utils::scale_value(20));
+                        {
+                            auto noSearchResultsPlaceholder = new QWidget(noSearchResultsWidget);
+                            noSearchResultsPlaceholder->setObjectName("noSearchResults");
+                            noSearchResultsPlaceholder->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
+                            noSearchResultsPlaceholder->setFixedHeight(Utils::scale_value(160));
+                            noSearchLayout->addWidget(noSearchResultsPlaceholder);
+                        }
+                        {
+                            auto noSearchResultsLabel = new QLabel(noSearchResultsWidget);
+                            noSearchResultsLabel->setObjectName("noSearchResultsLabel");
+                            noSearchResultsLabel->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
+                            noSearchResultsLabel->setAlignment(Qt::AlignCenter);
+                            noSearchResultsLabel->setText(QT_TRANSLATE_NOOP("placeholders", "No messages found"));
+                            noSearchLayout->addWidget(noSearchResultsLabel);
+                        }
+
+                        mainLayout->addWidget(noSearchResultsWidget);
+                    }
+                }
+            }
+            else
+            {
+                searchView_->setHidden(true);
+                noSearchResults_->setHidden(false);
+            }
+        }
     }
 
     void ContactList::showNoContactsYet()
     {
-        showNoContactsYet(contactListPage_, contactListView_, contactListLayout_);
+        if (noContactsYetShown_)
+            return;
+        if (!noContactsYet_)
+        {
+            noContactsYetShown_ = true;
+            contactListView_->setMaximumHeight(Utils::scale_value(50));
+            noContactsYet_ = new QWidget(contactListPage_);
+            noContactsYet_->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
+            contactListLayout_->addWidget(noContactsYet_);
+            {
+                auto mainLayout = Utils::emptyVLayout(noContactsYet_);
+                mainLayout->setAlignment(Qt::AlignCenter);
+                {
+                    auto noContactsWidget = new QWidget(noContactsYet_);
+                    auto noContactsLayout = new QVBoxLayout(noContactsWidget);
+                    noContactsWidget->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
+                    noContactsLayout->setAlignment(Qt::AlignCenter);
+                    noContactsLayout->setContentsMargins(0, 0, 0, 0);
+                    noContactsLayout->setSpacing(Utils::scale_value(20));
+                    {
+                        auto noContactsPlaceholder = new QWidget(noContactsWidget);
+                        noContactsPlaceholder->setObjectName("noContacts");
+                        noContactsPlaceholder->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
+                        noContactsPlaceholder->setFixedHeight(Utils::scale_value(160));
+                        noContactsLayout->addWidget(noContactsPlaceholder);
+                    }
+                    {
+                        auto noContactLabel = new QLabel(noContactsWidget);
+                        noContactLabel->setObjectName("noContactsLabel");
+                        noContactLabel->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed);
+                        noContactLabel->setAlignment(Qt::AlignCenter);
+                        noContactLabel->setWordWrap(true);
+                        noContactLabel->setText(QT_TRANSLATE_NOOP("placeholders", "Looks like you have no contacts yet"));
+                        noContactsLayout->addWidget(noContactLabel);
+                    }
+                    mainLayout->addWidget(noContactsWidget);
+                }
+            }
+            emit Utils::InterConnector::instance().showPlaceholder(Utils::PlaceholdersType::PlaceholdersType_FindFriend);
+        }
     }
 
     void ContactList::showNoRecentsYet()
@@ -2101,7 +1855,7 @@ namespace Ui
 
         showNoRecentsYet(recentsPage_, recentsView_, recentsLayout_, [this]()
                          {
-                             changeTab(CurrentTab::ALL);
+                             emit Utils::InterConnector::instance().contacts();
                              Ui::GetDispatcher()->post_stats_to_core(core::stats::stats_event_names::cl_empty_write_msg);
                          });
     }
@@ -2156,17 +1910,6 @@ namespace Ui
         searchView_->setItemDelegate(_delegate);
     }
 
-    void ContactList::setTransparent(bool _transparent)
-    {
-        if (_transparent)
-            Utils::ApplyStyle(stackedWidget_, CL_TRANSPARENT);
-    }
-
-    void ContactList::clearSettingsSelection()
-    {
-        settingsTab_->cleanSelection();
-    }
-
     void ContactList::selectSettingsVoipTab()
     {
         settingsTab_->settingsVoiceVideoClicked();
@@ -2185,32 +1928,51 @@ namespace Ui
         recentsDelegate_->setPictOnlyView(pictureOnlyView_);
         unknownsDelegate_->setPictOnlyView(pictureOnlyView_);
         recentsView_->setFlow(QListView::TopToBottom);
+        settingsTab_->setCompactMode(_isPictureOnly);
 
-        Logic::getRecentsModel()->setFavoritesHeadVisible(!pictureOnlyView_);
         Logic::getUnknownsModel()->setDeleteAllVisible(!pictureOnlyView_);
 
         if (pictureOnlyView_)
-        {
-            changeTab(RECENTS);
             setSearchMode(false);
-            if (!Logic::getRecentsModel()->isFavoritesVisible())
-                Logic::getRecentsModel()->toggleFavoritesVisible();
-        }
-        recentOrderChanged();
-    }
 
-    void ContactList::setButtonsVisibility(bool _isShow)
-    {
-         buttonsFrame_->setVisible(_isShow);
+        recentOrderChanged();
     }
 
     void ContactList::setItemWidth(int _newWidth)
     {
-        fixedItemWidth_ = _newWidth;
         recentsDelegate_->setFixedWidth(_newWidth);
         searchItemDelegate_->setFixedWidth(_newWidth);
         unknownsDelegate_->setFixedWidth(_newWidth);
         clDelegate_->setFixedWidth(_newWidth);
+    }
+
+    void ContactList::openThemeSettings()
+    {
+        prevTab_ = currentTab_;
+        currentTab_ = SETTINGS;
+        updateTabState(regim_ == Logic::MembersWidgetRegim::CONTACT_LIST);
+        settingsTab_->settingsThemesClicked();
+
+        if (recentsView_->model() == Logic::getRecentsModel())
+            Logic::getRecentsModel()->sendLastRead();
+        else
+            Logic::getUnknownsModel()->sendLastRead();
+
+        emit tabChanged(currentTab_);
+    }
+
+    void ContactList::setSnaps(HorScrollableView* _snaps)
+    {
+        _snaps->setParent(recentsView_);
+        _snaps->move(0, 0);
+        _snaps->stackUnder(recentsView_->getScrollBar());
+        snaps_ = _snaps;
+        connect(snaps_, SIGNAL(enter()), this, SLOT(snapsIn()), Qt::QueuedConnection);
+    }
+
+    void ContactList::snapsIn()
+    {
+        recentsView_->getScrollBar()->fadeOut();
     }
 
     QString ContactList::getSelectedAimid() const
@@ -2263,17 +2025,55 @@ namespace Ui
             emit searchEnd();
         }
     }
+
+    void ContactList::myProfileBack()
+    {
+        changeTab((CurrentTab)prevTab_);
+    }
+
+    void ContactList::snapsBack()
+    {
+        changeTab((CurrentTab)prevTab_);
+    }
+
+    void ContactList::recentsScrolled(int value)
+    {
+        if (snaps_)
+            snaps_->move(0, -value);
+    }
+
+    void ContactList::recentsScrollActionTriggered(int value)
+    {
+        recentsView_->verticalScrollBar()->setSingleStep(Utils::scale_value(RECENTS_HEIGHT));
+    }
+
+	void ContactList::setIndexWidget(int index, QWidget* widget)
+	{
+		searchView_->setIndexWidget(searchModel_->index(index, 0), widget);
+	}
 }
 
 namespace Logic
 {
-    bool is_delete_members_regim(int _regim)
+    bool is_members_regim(int _regim)
     {
-        return _regim == Logic::MembersWidgetRegim::DELETE_MEMBERS || _regim == Logic::MembersWidgetRegim::IGNORE_LIST;
+        return _regim == Logic::MembersWidgetRegim::MEMBERS_LIST || _regim == Logic::MembersWidgetRegim::IGNORE_LIST;
     }
 
     bool is_admin_members_regim(int _regim)
     {
         return _regim == Logic::MembersWidgetRegim::ADMIN_MEMBERS;
     }
+
+    bool is_select_members_regim(int _regim)
+    {
+        return _regim == Logic::MembersWidgetRegim::SELECT_MEMBERS
+            || _regim == Logic::MembersWidgetRegim::VIDEO_CONFERENCE;
+    }
+
+    bool is_video_conference_regim(int _regim)
+    {
+        return _regim == Logic::MembersWidgetRegim::VIDEO_CONFERENCE;
+    }
+
 }

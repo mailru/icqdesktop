@@ -11,13 +11,16 @@ namespace Ui
     class MainWindow;
 }
 
+class MacToolbar;
+
 class MacSupport
 {
 private:
     QMenuBar *mainMenu_;
     std::vector<QMenu *> extendedMenus_;
     std::vector<QAction *> extendedActions_;
-    
+    MacToolbar *toolbar_;
+
 public:
     MacSupport(Ui::MainWindow * mainWindow);
     virtual ~MacSupport();
@@ -25,6 +28,8 @@ public:
     void enableMacUpdater();
     void enableMacCrashReport();
     void enableMacPreview(WId wid);
+    
+    MacToolbar* toolbar();
     
     void listenSleepAwakeEvents();
     
@@ -67,13 +72,11 @@ public:
     
     void activateWindow(unsigned long long view = 0);
     
-    void registerDelegate();
+    void registerAppDelegate();
     
     static void showEmojiPanel();
     
-    static QPoint viewPosition(WId wid);
-    
-    static QString saveFileName(const QString &caption, const QString &dir, const QString &filter);
+    static void saveFileName(const QString &caption, const QString &dir, const QString &filter, std::function<void (QString& _filename, QString& _directory)> _callback, const QString& _ext, QString& lastDirectory, std::function<void ()> _cancel_callback = std::function<void ()>());
     
 private:
     void setupDockClickHandler();

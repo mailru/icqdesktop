@@ -20,12 +20,6 @@ namespace voip_manager
         kNotificationType_CallDestroyed,
         kNotificationType_CallPeerListChanged,
 
-        kNotificationType_PhoneCallCreated,
-        kNotificationType_PhoneCallAccepted,
-        kNotificationType_PhoneCallConnected,
-        kNotificationType_PhoneCallDisconnected,
-        kNotificationType_PhoneCallDestroyed,
-
         kNotificationType_QualityChanged,
 
         kNotificationType_MediaLocAudioChanged,
@@ -54,6 +48,9 @@ namespace voip_manager
         kNotificationType_MinimalBandwidthChanged,
         kNotificationType_MaskEngineEnable,
         kNotificationType_LoadMask,
+
+        kNotificationType_ConnectionDestroyed,
+		kNotificationType_MainVideoLayoutChanged,
     };
 
     struct VoipProxySettings
@@ -128,6 +125,8 @@ namespace voip_manager
         std::string account;
         std::string contact;
 
+        void* hwnd;
+
         voip2::ButtonType type;
     };
 
@@ -141,8 +140,9 @@ namespace voip_manager
 
     struct LayoutChanged
     {
-        bool              tray;
+        bool  tray;
         voip2::LayoutType layout_type;
+        void* hwnd;
     };
 
     struct FrameSize
@@ -174,7 +174,11 @@ namespace voip_manager
     {
         Contact  contact;
         unsigned call_count;
+        unsigned connection_count;
         bool     incoming;
+
+        // Affected window for call with this contact.
+        std::vector<void*> windows;
 
         ContactEx() : call_count(0), incoming(false)
         {
@@ -196,11 +200,17 @@ namespace voip_manager
         std::vector<voip_manager::device_description> devices;
     };
 
+    struct VideoEnable
+    {
+        bool enable;
+        Contact  contact;
+    };
+
     enum { kAvatarRequestId          = 0xb00b1e               };
     enum { kAvatarDefaultSize        = 140                    };
 	enum { kAvatarRequestSize        = 650                    };
     enum { kNickTextW                = kAvatarDefaultSize * 2 };
-    enum { kNickTextH                = 32                     };
+    enum { kNickTextH                = 36                     };
     enum { kDetachedWndAvatarSize    = 180                    };
     enum { kLogoFromBoundOffset      = 15                     };
     enum { kUseVoipProtocolAsDefault = 1                      };
@@ -242,9 +252,15 @@ namespace voip_manager
         void* hwnd;
         WindowBitmap watermark;
         WindowBitmap cameraStatus;
+        WindowBitmap calling;
         bool  isPrimary;
         bool  isSystem;
         float scale;
+
+        BitmapDescription normalButton;
+        BitmapDescription highlightedButton;
+        BitmapDescription pressedButton;
+        BitmapDescription disabledButton;
     };
 
     struct EnableParams
@@ -256,6 +272,40 @@ namespace voip_manager
 	{
 		std::string name;
 		bool		result;
+	};
+
+    struct WindowState
+    {
+        void* hwnd;
+        bool value;
+    };
+
+    struct ContactsList
+    {
+        std::vector<Contact> contacts;
+        std::vector<void*>   windows;
+        bool                 isActive;
+    };
+
+    enum ConferenceLayout
+    {
+        ConferenceAllTheSame = 0,
+        ConferenceOneIsBig,    
+    };
+
+	enum MainVideoLayoutType
+	{
+		MVL_OUTGOING = 0,
+		MVL_CONFERENCE,
+		MVL_SIGNLE_CALL	
+	};
+
+	struct MainVideoLayout
+	{
+		void* hwnd;
+		MainVideoLayoutType type;	
+		MainVideoLayout() : hwnd(nullptr), type(MVL_OUTGOING) {};
+		MainVideoLayout(void* hwnd_, MainVideoLayoutType type_) : hwnd(hwnd_), type(type_) {};
 	};
 
     class ICallManager
@@ -273,11 +323,7 @@ namespace voip_manager
         virtual bool        call_have_established_connection ()                     = 0;
         virtual bool        call_have_call      (const Contact& contact)            = 0;
         virtual void        call_request_calls  ()                                  = 0;
-
-        virtual bool        phone_call_start    (const Contact& contact)            = 0;
-        virtual bool        phone_call_stop     ()                                  = 0;
-        virtual bool        phone_call_send_dtmf(int num)                           = 0;
-
+                
         virtual void        mute_incoming_call_sounds(bool mute)                    = 0;
 
 		virtual void        minimal_bandwidth_switch()								= 0;
@@ -315,7 +361,7 @@ namespace voip_manager
         virtual void window_set_bitmap   (const WindowBitmap& bmp) = 0;
         virtual void window_set_bitmap   (const UserBitmap& bmp) = 0;
 
-        virtual void window_switch_layout(void* hwnd) = 0;
+        virtual void window_set_conference_layout(void* hwnd, voip_manager::ConferenceLayout layout) = 0;
         virtual void window_switch_aspect(const std::string& contact, void* hwnd) = 0;
 
         virtual void window_set_offsets  (void* hwnd, unsigned l, unsigned t, unsigned r, unsigned b) = 0;
@@ -344,7 +390,7 @@ namespace voip_manager
         virtual bool local_video_enabled ()                  = 0;
         virtual bool local_audio_enabled ()                  = 0;
 
-        virtual bool remote_video_enabled()                  = 0;
+        //virtual bool remote_video_enabled()                  = 0;
         virtual bool remote_video_enabled(const std::string& account, const std::string& contact) = 0;
 
         virtual bool remote_audio_enabled()                  = 0;

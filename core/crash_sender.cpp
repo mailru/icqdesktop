@@ -21,7 +21,8 @@ namespace core
     {
         const std::string& get_hockeyapp_url()
         {
-            static std::string hockeyapp_url = "https://rink.hockeyapp.net/api/2/apps/" + hockey_app_id + "/crashes/upload";
+            auto app_id = build::is_agent() ? agent_hockey_app_id : hockey_app_id;
+            static std::string hockeyapp_url = "https://rink.hockeyapp.net/api/2/apps/" + app_id + "/crashes/upload";
             return hockeyapp_url;
         }
 
@@ -39,7 +40,7 @@ namespace core
             {
                 boost::system::error_code e;
                 auto size = boost::filesystem::file_size(dump_name, e);
-                if (size < 1024 * 1024) // 1 mb
+                if (size < 10 * 1024 * 1024) // 10 mb
                     post_request.push_post_form_filedata(L"attachment0", dump_name);
                 return post_request.post();
             }
@@ -77,7 +78,7 @@ namespace core
             {
                 send_thread_.reset(new async_executer());
 
-                auto user_proxy = g_core->get_user_proxy_settings();
+                auto user_proxy = g_core->get_proxy_settings();
 
                 std::weak_ptr<report_sender> wr_this = shared_from_this();
                 send_thread_->run_async_function([wr_this, user_proxy]

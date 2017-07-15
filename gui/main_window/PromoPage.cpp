@@ -89,8 +89,8 @@ namespace Ui
         }
         else
         {
-            painter.setPen(QColor("transparent"));
-            painter.setBrush(QBrush("#bcbcbc"));
+            painter.setPen(Qt::transparent);
+            painter.setBrush(QBrush("#d7d7d7"));
             painter.drawEllipse(0, 0, width(), height());
         }
     }
@@ -140,18 +140,14 @@ namespace Ui
         QPushButton *nextButton = nullptr;
         QPushButton *skipButton = nullptr;
         
-        auto layout = new QVBoxLayout(this);
-        layout->setMargin(0);
-        layout->setSpacing(0);
+        auto layout = Utils::emptyVLayout(this);
         layout->setAlignment(Qt::AlignCenter);
         
         auto content = new QWidget(this);
-        auto contentLayout = new QVBoxLayout(content);
-        contentLayout->setMargin(0);
-        contentLayout->setSpacing(0);
+        auto contentLayout = Utils::emptyVLayout(content);
         contentLayout->setAlignment(Qt::AlignBottom | Qt::AlignCenter);
         content->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
-        content->setStyleSheet("background-color:#ebebeb;");
+        content->setStyleSheet("background-color: #ebebeb;");
         {
             promoImage = new PromoImage(content);
             Utils::ApplyStyle(promoImage, QString("padding:0; margin:0; border-image:url();"));
@@ -163,9 +159,8 @@ namespace Ui
         layout->addWidget(content);
         
         auto controls = new QWidget(this);
-        auto controlsLayout = new QVBoxLayout(controls);
+        auto controlsLayout = Utils::emptyVLayout(controls);
         controlsLayout->setContentsMargins(0, Utils::scale_value(16), 0, Utils::scale_value(24));
-        controlsLayout->setSpacing(0);
         controlsLayout->setAlignment(Qt::AlignTop | Qt::AlignCenter);
         controls->setSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
         controls->setStyleSheet("background-color:#f8f8f8;");
@@ -194,20 +189,16 @@ namespace Ui
         }
         {
             auto promoDescription = new QWidget(controls);
-            auto promoDescriptionLayout = new QVBoxLayout(promoDescription);
-            promoDescriptionLayout->setMargin(0);
-            promoDescriptionLayout->setSpacing(0);
+            auto promoDescriptionLayout = Utils::emptyVLayout(promoDescription);
             promoDescriptionLayout->setAlignment(Qt::AlignCenter);
             promoDescription->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
             {
                 auto sub = new QWidget(promoDescription);
-                auto subLayout = new QVBoxLayout(sub);
-                subLayout->setMargin(0);
-                subLayout->setSpacing(0);
+                auto subLayout = Utils::emptyVLayout(sub);
                 subLayout->setAlignment(Qt::AlignCenter);
                 sub->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
                 {
-                    promoTopic = new TextEmojiWidget(sub, Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), Utils::scale_value(24), CommonStyle::getTextCommonColor(), Utils::scale_value(26));
+                    promoTopic = new TextEmojiWidget(sub, Fonts::appFontScaled(24), CommonStyle::getTextCommonColor(), Utils::scale_value(26));
                     promoTopic->setSizePolicy(QSizePolicy::Policy::Preferred, promoTopic->sizePolicy().verticalPolicy());
                     promoTopic->setText(pages[currentPage].topic_);
                     subLayout->addWidget(promoTopic);
@@ -216,13 +207,11 @@ namespace Ui
             }
             {
                 auto sub = new QWidget(promoDescription);
-                auto subLayout = new QVBoxLayout(sub);
-                subLayout->setMargin(0);
-                subLayout->setSpacing(0);
+                auto subLayout = Utils::emptyVLayout(sub);
                 subLayout->setAlignment(Qt::AlignCenter);
                 sub->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
                 {
-                    promoText1 = new TextEmojiWidget(sub, Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), Utils::scale_value(16), QColor("#696969"), Utils::scale_value(36));
+                    promoText1 = new TextEmojiWidget(sub, Fonts::appFontScaled(16), QColor("#767676"), Utils::scale_value(36));
                     promoText1->setSizePolicy(QSizePolicy::Policy::Preferred, promoText1->sizePolicy().verticalPolicy());
                     promoText1->setText(pages[currentPage].text1_);
                     subLayout->addWidget(promoText1);
@@ -231,13 +220,11 @@ namespace Ui
             }
             {
                 auto sub = new QWidget(promoDescription);
-                auto subLayout = new QVBoxLayout(sub);
-                subLayout->setMargin(0);
-                subLayout->setSpacing(0);
+                auto subLayout = Utils::emptyVLayout(sub);
                 subLayout->setAlignment(Qt::AlignCenter);
                 sub->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
                 {
-                    promoText2 = new TextEmojiWidget(sub, Fonts::defaultAppFontFamily(), Fonts::defaultAppFontWeight(), Utils::scale_value(16), QColor("#696969"), Utils::scale_value(18));
+                    promoText2 = new TextEmojiWidget(sub, Fonts::appFontScaled(16), QColor("#767676"), Utils::scale_value(18));
                     promoText2->setSizePolicy(QSizePolicy::Policy::Preferred, promoText2->sizePolicy().verticalPolicy());
                     promoText2->setText(pages[currentPage].text2_);
                     subLayout->addWidget(promoText2);
@@ -252,9 +239,7 @@ namespace Ui
             }
             {
                 auto sub = new QWidget(promoDescription);
-                auto subLayout = new QVBoxLayout(sub);
-                subLayout->setMargin(0);
-                subLayout->setSpacing(0);
+                auto subLayout = Utils::emptyVLayout(sub);
                 subLayout->setAlignment(Qt::AlignCenter);
                 sub->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
                 {
@@ -278,9 +263,7 @@ namespace Ui
         }
         {
             auto sub = new QWidget(controls);
-            auto subLayout = new QVBoxLayout(sub);
-            subLayout->setMargin(0);
-            subLayout->setSpacing(0);
+            auto subLayout = Utils::emptyVLayout(sub);
             subLayout->setAlignment(Qt::AlignCenter);
             sub->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
             {
@@ -289,7 +272,7 @@ namespace Ui
                 skipButton->setFlat(true);
                 skipButton->setText(pages[currentPage].skip_);
                 skipButton->setCursor(Qt::PointingHandCursor);
-                Utils::ApplyStyle(skipButton, "background-color:transparent; border-style:none; font-size:16dip; color:#696969; padding:0; margin:0;");
+                Utils::ApplyStyle(skipButton, "background-color:transparent; border-style:none; font-size:16dip; color:#767676; padding:0; margin:0;");
                 subLayout->addWidget(skipButton);
             }
             controlsLayout->addWidget(sub);

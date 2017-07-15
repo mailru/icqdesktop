@@ -3,6 +3,7 @@
 #include "ChatMembersModel.h"
 #include "ContactItem.h"
 #include "AbstractSearchModel.h"
+#include "ContactListModel.h"
 
 #include "../../cache/avatars/AvatarStorage.h"
 #include "../../utils/utils.h"
@@ -82,13 +83,46 @@ namespace Logic
             auto searchPatterns = Utils::GetPossibleStrings(_p, fixed_patterns_count);
             for (auto item : chatMembersModel_->members_)
             {
-                for (int i = 0; i < fixed_patterns_count; ++i)
+                bool founded = false;
+                auto displayName = Logic::getContactListModel()->getDisplayName(item.AimId_);
+                unsigned i = 0;
+                for (; i < fixed_patterns_count; ++i)
+                {
+                    QString pattern;
+                    if (searchPatterns.empty())
+                    {
+                        pattern = _p;
+                    }
+                    else
+                    {
+                        for (auto iter = searchPatterns.begin(); iter != searchPatterns.end(); ++iter)
+                            pattern += iter->at(i);
+                    }
+
+                    if (item.AimId_.contains(pattern)
+                        || displayName.toLower().contains(pattern)
+                        || item.NickName_.toLower().contains(pattern) 
+                        || item.FirstName_.toLower().contains(pattern)
+                        || item.LastName_.toLower().contains(pattern))
+                    {
+                        match_.emplace_back(item);
+                        founded = true;
+                        break;
+                    }
+                }
+                while (!searchPatterns.empty() && searchPatterns.begin()->size() > i && !founded)
                 {
                     QString pattern;
                     for (auto iter = searchPatterns.begin(); iter != searchPatterns.end(); ++iter)
-                        pattern += iter->at(i);
+                    {
+                        if (iter->size() > i)
+                            pattern += iter->at(i);
+                    }
+
+                    pattern = pattern.toLower();
 
                     if (item.AimId_.contains(pattern)
+                        || displayName.toLower().contains(pattern)
                         || item.NickName_.toLower().contains(pattern) 
                         || item.FirstName_.toLower().contains(pattern)
                         || item.LastName_.toLower().contains(pattern))
@@ -96,6 +130,7 @@ namespace Logic
                         match_.emplace_back(item);
                         break;
                     }
+                    ++i;
                 }
             }
         }
@@ -141,6 +176,11 @@ namespace Logic
             }
             ++i;
         }
+    }
+
+    bool SearchMembersModel::isServiceItem(int i) const
+    {
+        return false;
     }
 
     SearchMembersModel* getSearchMemberModel()

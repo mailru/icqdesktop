@@ -14,7 +14,7 @@ namespace Ui
         virtual ~ImageContainer();
 
     public:
-        void swapImagePack(std::vector<std::shared_ptr<QImage> >& _images);
+        void swapImagePack(std::vector<std::shared_ptr<QImage> >& _images, const QSize& imageDrawSize);
         void setKerning(int _kerning);
 
     private:
@@ -28,6 +28,7 @@ namespace Ui
         std::vector<std::shared_ptr<QImage> > images_;
         int kerning_;
         QRect rcDraw_;
+        QSize imageDrawSize_;
     };
 
     class SecureCallWnd : public QMenu 

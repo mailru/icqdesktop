@@ -28,7 +28,7 @@ scheduler::scheduler()
                 if (current_time - timer_task->last_execute_time_ >= std::chrono::milliseconds(timer_task->timeout_msec_))
                 {
                     timer_task->last_execute_time_ = current_time;
-                    g_core->excute_core_context(timer_task->function_);
+                    g_core->execute_core_context(timer_task->function_);
                 }
             }
         }

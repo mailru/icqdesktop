@@ -12,10 +12,11 @@ namespace installer
 {
     namespace logic
     {
-        const std::wstring profile_folder = L"ICQ-Profile";
+        const std::wstring profile_folder = (build::is_icq() ? L"ICQ-Profile" : L"Mra");
+        const wchar_t* im_name_agent = L"Agent";
+        const wchar_t* im_name_icq = L"ICQ";
 
         exported_data::exported_data()
-            : exported_account_(nullptr)
         {
         }
 
@@ -26,16 +27,16 @@ namespace installer
 
         std::wstring exported_data::get_profile_folder() const
         {
-            std::wstringstream icq_profile_path;
+            std::wstringstream product_profile_path;
 
             wchar_t app_data[1024] = { 0 };
 
             if (::SHGetSpecialFolderPath(NULL, app_data, CSIDL_APPDATA, TRUE))
             {
-                icq_profile_path << app_data << L"\\" << profile_folder;
+                product_profile_path << app_data << L"\\" << profile_folder;
             }
 
-            return icq_profile_path.str();
+            return product_profile_path.str();
         }
 
         std::wstring exported_data::get_options_database_filename() const
@@ -104,7 +105,11 @@ namespace installer
                 file_names.push_back(L"avatar_2222.jpg");
             }
 
-            std::wstring avatars_folder = _profile_folder + L"\\Avatars\\" + (LPCWSTR) _login_data.GetProtocolUID() + L"###ICQ";
+            std::wstring avatars_folder = _profile_folder + L"\\Avatars\\" + (LPCWSTR) _login_data.GetProtocolUID();
+            if (build::is_icq())
+            {
+                avatars_folder += L"###ICQ";
+            }
 
             for (const auto& _file : file_names)
             {
@@ -144,12 +149,112 @@ namespace installer
             return nick;
         }
 
-        
+
+        void read_muted_chats(MRABase& _base, const MAKFC_CString& _database_key, OUT std::list<std::string>& _chats)
+        {
+            _base.ReadMutedChats((LPCWSTR) _database_key, _chats);
+        }
+
+
+        void merge_account(accounts_list& _accounts_list, std::shared_ptr<wim_account> _account)
+        {
+//             static bool agent_account_exist = false;
+// 
+//             if (_account->type_ == logic::wim_account::account_type::atAgent)
+//             {
+//                 if (agent_account_exist)
+//                     return;
+// 
+//                 agent_account_exist = true;
+//             }
+// 
+//             _accounts_list.push_back(_account);
+
+
+            for (auto _existed_account : _accounts_list)
+            {
+                if (_existed_account->type_ == _account->type_ && _existed_account->login_ == _account->login_)
+                {
+                    return;
+                }
+            }
+
+            _accounts_list.push_back(_account);
+        }
+
+        std::string exported_data::read_guid()
+        {
+            CRegKey icq_key;
+            if (ERROR_SUCCESS != icq_key.Open(HKEY_CURRENT_USER, legacy::cs_mra_key, KEY_READ) != ERROR_SUCCESS)
+                return std::string();
+
+            wchar_t guid[1024];
+            DWORD val = 1023;
+
+            if (ERROR_SUCCESS == icq_key.QueryStringValue(L"GUID", guid, &val))
+            {
+                return MAKFC_CString(guid).NetStrA(CP_UTF8);
+            }
+
+            icq_key.Close();
+
+            return std::string();
+        }
+
+        void exported_data::convert_auth_params(MRABase& _base, MAKFC_CLoginData& _login_data_conv, bool _is_root_login)
+        {
+            bool is_icq_login = ((_is_root_login && build::is_icq()) || (_login_data_conv.m_sIMName == im_name_icq));
+            bool is_agent_login = ((_is_root_login && build::is_agent()) || (_login_data_conv.m_sIMName == im_name_agent));
+
+            if (is_icq_login)
+            {
+                std::shared_ptr<wim_auth_parameters> auth_par = load_auth_params_from_db(_base, _login_data_conv);
+
+                if (auth_par)
+                {
+                    auto converted_params = convert_from_8x(*auth_par, _login_data_conv);
+                    converted_params->nick_ = get_nick(_base, _login_data_conv.GetLogin(), auth_par->m_database_key);
+                    converted_params->database_key_ = auth_par->m_database_key;
+                    read_avatar(_login_data_conv, get_profile_folder(), converted_params->avatar_);
+                    converted_params->type_ = wim_account::account_type::atIcq;
+
+                    read_muted_chats(_base, auth_par->m_database_key, converted_params->muted_chats_);
+
+                    merge_account(accounts_list_, converted_params);
+                }
+            }
+            else if (is_agent_login)
+            {
+                auto converted_params = std::make_shared<wim_account>();
+                converted_params->login_ = _login_data_conv.GetLogin().NetStrA(CP_UTF8);
+                converted_params->database_key_ = (LPCWSTR) _login_data_conv.GetLogin();
+                converted_params->nick_ = get_nick(_base, _login_data_conv.GetLogin(), _login_data_conv.GetLogin());
+                read_avatar(_login_data_conv, get_profile_folder(), converted_params->avatar_);
+
+                read_muted_chats(_base,  _login_data_conv.GetLogin(), converted_params->muted_chats_);
+
+                if (_login_data_conv.GetLoginType() != MAKFC_CLoginData::TLoginType::LT_Token)
+                {
+                    converted_params->password_md5_ = _login_data_conv.m_password_md5;
+                }
+                else
+                {
+                    converted_params->token_ = _login_data_conv.GetToken().NetStrA(CP_UTF8);
+                }
+
+                converted_params->type_ = wim_account::account_type::atAgent;
+                converted_params->guid_ = read_guid();
+
+                merge_account(accounts_list_, converted_params);
+            }
+        }
+
         void exported_data::read_accounts(MRABase& _base)
         {
             accounts_list_.reserve(10);
             
-            CHandle key_file(::CreateFile(get_key_file_name().c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+            CHandle key_file(::CreateFile(get_key_file_name().c_str(), GENERIC_READ, 
+                FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
             if (key_file.m_h == INVALID_HANDLE_VALUE)
                 return;
 
@@ -164,36 +269,22 @@ namespace installer
             {
                 auto login_data_conv = login_data;
                 login_data_conv.SetLogin(login_data.GetLogin().Mid(4), login_data.GetProtocolUID(), login_data.m_nLoginType);
-                                                               
-                auto auth_par = load_auth_params_from_db(_base, login_data_conv);
-                if (auth_par)
-                {
-                    auto converted_params = convert_from_8x(*auth_par, login_data_conv);
-                    converted_params->nick_ = get_nick(_base, login_data_conv.GetLogin(), auth_par->m_database_key);
-                    converted_params->database_key_ = auth_par->m_database_key;
-                    read_avatar(login_data_conv, get_profile_folder(), converted_params->avatar_);
 
-                    accounts_list_.push_back(converted_params);
-                }
+                convert_auth_params(_base, login_data_conv, true);
 
                 for (const MAKFC_CLoginData* login_data_child : login_data.m_imLogins)
                 {
                     MAKFC_CLoginData login_data_child_conv(*login_data_child);
                     login_data_child_conv.UnPackLogin();
 
-                    auth_par = load_auth_params_from_db(_base, login_data_child_conv);
-                    if (auth_par)
-                    {
-                        auto converted_params_child = convert_from_8x(*auth_par, login_data_child_conv);
-                        converted_params_child->nick_ = get_nick(_base, login_data_child_conv.GetLogin(), auth_par->m_database_key);
-                        converted_params_child->database_key_ = auth_par->m_database_key;
-                        read_avatar(login_data_child_conv, get_profile_folder(), converted_params_child->avatar_);
-                        accounts_list_.push_back(converted_params_child);
-                    }
+                    convert_auth_params(_base, login_data_child_conv, false);
                 }
             }
 
-
+            std::sort(accounts_list_.begin(), accounts_list_.end(), [](const std::shared_ptr<wim_account>& _a1, const std::shared_ptr<wim_account>& _a2)->bool
+            {
+                return (_a1->type_ < _a2->type_);
+            });
         }
 
 #define HOTKEY_ENTER		1
@@ -207,7 +298,7 @@ namespace installer
             auto settings = std::make_shared<settings_8x>();
 
             CRegKey icq_key;
-            if (ERROR_SUCCESS != icq_key.Open(HKEY_CURRENT_USER, STR_CS_ICQ_MRA_KEY, KEY_READ) != ERROR_SUCCESS)
+            if (ERROR_SUCCESS != icq_key.Open(HKEY_CURRENT_USER, legacy::cs_mra_key, KEY_READ) != ERROR_SUCCESS)
                 return;
 
             DWORD val = 0;
@@ -282,6 +373,8 @@ namespace installer
                 settings->auto_run_ = !!val;
 
             settings_ = settings;
+
+            icq_key.Close();
         }
 
         void exported_data::read(bool _accounts, bool _settings)
@@ -290,8 +383,7 @@ namespace installer
                 return;
 
             MRABase base;
-            if (!base.Open(get_options_database_filename()))
-                return;
+            base.Open(get_options_database_filename());
 
             read_accounts(base);
 
@@ -309,51 +401,140 @@ namespace installer
             return accounts_list_;
         }
         
-        void exported_data::set_exported_account(std::shared_ptr<wim_account> _account)
+        void exported_data::add_exported_account(std::shared_ptr<wim_account> _account)
         {
-            exported_account_ = _account;
+            if (build::is_icq())
+            {
+                if (_account->type_ == wim_account::account_type::atIcq)
+                    exported_accounts_.push_front(_account);
+                else
+                    exported_accounts_.push_back(_account);
+            }
+            else if (build::is_agent())
+            {
+                if (_account->type_ == wim_account::account_type::atIcq)
+                    exported_accounts_.push_back(_account);
+                else
+                    exported_accounts_.push_front(_account);
+            }
+            
         }
 
-        void exported_data::store_exported_account(const QString& _file_name, bool _is_from_8x)
+
+        void exported_data::store_exported_accounts(const QString& _folder_name, bool _is_from_8x)
         {
-            if (!exported_account_)
+            if (exported_accounts_.empty())
                 return;
 
-            rapidjson::Document doc(rapidjson::Type::kObjectType);
+            bool is_first = true;
 
-            auto& a = doc.GetAllocator();
+            std::set<std::string> muted_chats;
 
-            doc.AddMember("login", exported_account_->login_, a);
-            doc.AddMember("aimid", exported_account_->aimid_, a);
-            doc.AddMember("atoken", exported_account_->token_, a);
-            doc.AddMember("sessionkey", exported_account_->session_key_, a);
-            doc.AddMember("devid", exported_account_->devid_, a);
-            doc.AddMember("expiredin", exported_account_->exipired_in_, a);
-            doc.AddMember("timeoffset", exported_account_->time_offset_, a);
-            doc.AddMember("aimsid", exported_account_->aim_sid_, a);
-            doc.AddMember("fetchurl", exported_account_->fetch_url_, a);
-
-            if (_is_from_8x)
-                doc.AddMember(settings_need_show_promo, true, a);
-            
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-            doc.Accept(writer);
-
-            std::string json_string = buffer.GetString();
-
-            QFile file(_file_name);
-            if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
-                return;
-                
-            if (!(json_string.length() == file.write(json_string.c_str(), json_string.length())))
+            for (auto _exported_account : exported_accounts_)
             {
+                rapidjson::Document doc(rapidjson::Type::kObjectType);
+
+                auto& a = doc.GetAllocator();
+
+                doc.AddMember("login", _exported_account->login_, a);
+                doc.AddMember("aimid", _exported_account->aimid_, a);
+
+                if (_exported_account->type_ == wim_account::account_type::atIcq)
+                {
+                    doc.AddMember("atoken", _exported_account->token_, a);
+                    doc.AddMember("sessionkey", _exported_account->session_key_, a);
+                    doc.AddMember("devid", _exported_account->devid_, a);
+                    doc.AddMember("expiredin", _exported_account->exipired_in_, a);
+                    doc.AddMember("timeoffset", _exported_account->time_offset_, a);
+                    doc.AddMember("aimsid", _exported_account->aim_sid_, a);
+                    doc.AddMember("fetchurl", _exported_account->fetch_url_, a);
+                }
+                else
+                {
+                    if (!_exported_account->token_.empty())
+                    {
+                        doc.AddMember("agenttoken", _exported_account->token_, a);
+                    }
+
+                    doc.AddMember("productguid", _exported_account->guid_, a);
+                }
+
+                if (!_exported_account->password_md5_.empty())
+                {
+                    QByteArray password_d5((const char *) &_exported_account->password_md5_[0], _exported_account->password_md5_.size());
+                    doc.AddMember("password_md5", std::string((const char*) password_d5.toHex()), a);
+                }
+
+                if (_is_from_8x)
+                    doc.AddMember(settings_need_show_promo, true, a);
+
+
+                rapidjson::StringBuffer buffer;
+                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+                doc.Accept(writer);
+
+                std::string json_string = buffer.GetString();
+
+                const QString file_name = _folder_name + "/" + (is_first ? auth_export_file_name : auth_export_file_name_merge);
+
+                QFile file(file_name);
+                if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    return;
+
+                if (!(json_string.length() == file.write(json_string.c_str(), json_string.length())))
+                {
+                }
+
+                file.close();
+
+                is_first = false;
+
+                if (_exported_account->muted_chats_.size())
+                {
+                    for (const std::string& _chat : _exported_account->muted_chats_)
+                    {
+                        muted_chats.insert(_chat);
+                    }
+                }
             }
 
-            file.close();
+            // store muted chats
+            if (!muted_chats.empty())
+            {
+                rapidjson::Document doc(rapidjson::Type::kArrayType);
+
+                auto& a = doc.GetAllocator();
+
+                for (const std::string& _chat : muted_chats)
+                {
+                    rapidjson::Value val_chat;
+                    val_chat.SetString(_chat, a);
+
+                    doc.PushBack(val_chat, a);
+                }
+
+                rapidjson::StringBuffer buffer;
+                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+                doc.Accept(writer);
+
+                std::string json_string = buffer.GetString();
+
+                const QString file_name = _folder_name + "/" + muted_chats_export_file_name;
+
+                QFile file(file_name);
+                if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    return;
+
+                if (!(json_string.length() == file.write(json_string.c_str(), json_string.length())))
+                {
+                }
+
+                file.close();
+
+            }
         }
 
-        void exported_data::store_exported_settings(const QString& _file_name, bool _is_from_8x)
+        void exported_data::store_exported_ui_settings(const QString& _file_name, bool /*_is_from_8x*/)
         {
             if (!settings_)
                 return;
@@ -371,6 +552,33 @@ namespace installer
             doc.AddMember(settings_show_video_and_images, settings_->enable_preview_, a);
             doc.AddMember(settings_language, settings_->language_, a);
             doc.AddMember(settings_notify_new_messages, settings_->notify_messages_, a);
+                        
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+            doc.Accept(writer);
+
+            std::string json_string = buffer.GetString();
+
+            QFile file(_file_name);
+            if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                return;
+
+            if (!(json_string.length() == file.write(json_string.c_str(), json_string.length())))
+            {
+            }
+
+            file.close();
+        }
+
+        void exported_data::store_exported_core_settings(const QString& _file_name, bool _is_from_8x)
+        {
+            if (!settings_)
+                return;
+
+            rapidjson::Document doc(rapidjson::Type::kObjectType);
+
+            auto& a = doc.GetAllocator();
+
             if (_is_from_8x)
                 doc.AddMember(settings_need_show_promo, true, a);
                         
@@ -407,7 +615,7 @@ namespace installer
         installer::error set_8x_update_downloaded()
         {
             CRegKey icq_key;
-            if (ERROR_SUCCESS != icq_key.Open(HKEY_CURRENT_USER, STR_CS_ICQ_MRA_KEY, KEY_SET_VALUE) != ERROR_SUCCESS)
+            if (ERROR_SUCCESS != icq_key.Open(HKEY_CURRENT_USER, legacy::cs_mra_key, KEY_SET_VALUE) != ERROR_SUCCESS)
             {
                 return installer::error(errorcode::open_registry_key);
             }

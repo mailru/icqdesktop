@@ -17,13 +17,6 @@
 
 UI_COMPLEX_MESSAGE_NS_BEGIN
 
-namespace
-{
-    int32_t getShareButtonRightMargin();
-
-    bool isShareButtonMarginsEnabled();
-}
-
 ComplexMessageItemLayout::ComplexMessageItemLayout(ComplexMessageItem *parent)
     : QLayout(parent)
     , Item_(parent)
@@ -34,15 +27,6 @@ ComplexMessageItemLayout::ComplexMessageItemLayout(ComplexMessageItem *parent)
 
 ComplexMessageItemLayout::~ComplexMessageItemLayout()
 {
-}
-
-int32_t ComplexMessageItemLayout::evaluateStatusLineWidth() const
-{
-    const auto statusWidth = (
-        MessageStyle::getTimeMargin() +
-        MessageStatusWidget::getMaxWidth());
-
-    return statusWidth;
 }
 
 QRect ComplexMessageItemLayout::evaluateAvatarRect(const QRect &senderContentLtr) const
@@ -61,7 +45,6 @@ QRect ComplexMessageItemLayout::evaluateAvatarRect(const QRect &senderContentLtr
 
 QRect ComplexMessageItemLayout::evaluateBlocksBubbleGeometry(
     const bool isBubbleRequired,
-    const bool isShareButtonEnabled,
     const QRect &blocksContentLtr,
     const QRect &blocksGeometry) const
 {
@@ -80,12 +63,13 @@ QRect ComplexMessageItemLayout::evaluateBlocksBubbleGeometry(
         bubbleGeometry = blocksGeometry;
     }
 
-    auto bubblePadding = evaluateBlocksContentRectMargins(isShareButtonEnabled);
+    auto bubblePadding = evaluateBlocksContentRectMargins();
 
     if (!isBubbleRequired)
     {
         bubblePadding.setTop(0);
         bubblePadding.setLeft(0);
+        bubblePadding.setRight(0);
         bubblePadding.setBottom(0);
     }
 
@@ -103,7 +87,6 @@ QRect ComplexMessageItemLayout::evaluateBlocksBubbleGeometry(
 
 QRect ComplexMessageItemLayout::evaluateBlocksContainerLtr(
     const bool isBubbleRequired,
-    const bool isShareButtonEnabled,
     const QRect &avatarRect,
     const QRect &senderContentLtr) const
 {
@@ -128,15 +111,15 @@ QRect ComplexMessageItemLayout::evaluateBlocksContainerLtr(
 
     auto top = senderContentLtr.top();
 
-    const auto &margins = evaluateBlocksContentRectMargins(isShareButtonEnabled);
+    const auto &margins = evaluateBlocksContentRectMargins();
 
     if (isBubbleRequired)
     {
         left += margins.left();
         top += margins.top();
+        right -= margins.right();
     }
 
-    right -= margins.right();
     assert(right > left);
 
     QRect blocksContainerLtr;
@@ -149,26 +132,9 @@ QRect ComplexMessageItemLayout::evaluateBlocksContainerLtr(
     return blocksContainerLtr;
 }
 
-QMargins ComplexMessageItemLayout::evaluateBlocksContentRectMargins(const bool isShareButtonEnabled) const
+QMargins ComplexMessageItemLayout::evaluateBlocksContentRectMargins() const
 {
     auto margins = Style::getDefaultBlockBubbleMargins();
-
-    if (isShareButtonMarginsEnabled() && isShareButtonEnabled)
-    {
-        assert(Item_->ShareButton_);
-
-        const auto &btn = *Item_->ShareButton_;
-
-        const auto fullShareButtonWidth = (
-            Style::getShareButtonLeftMargin() +
-            btn.sizeHint().width());
-
-        const auto extendedRightMargin = (
-            margins.right() +
-            fullShareButtonWidth);
-
-        margins.setRight(extendedRightMargin);
-    }
 
     assert(Item_);
     const auto &blocks = Item_->Blocks_;
@@ -210,22 +176,16 @@ QRect ComplexMessageItemLayout::evaluateBlockLtr(
     const QRect &blocksContentLtr,
     IItemBlock *block,
     const int32_t blockY,
-    const int32_t statusWidth,
     const bool isBubbleRequired)
 {
     assert(blocksContentLtr.width() > 0);
     assert(blocksContentLtr.height() == 0);
     assert(block);
     assert(blockY >= 0);
-    assert(statusWidth > 0);
 
     auto blocksContentWidth = blocksContentLtr.width();
 
-   if (block->hasRightStatusPadding())
-   {
-       blocksContentWidth -= statusWidth;
-       assert(blocksContentWidth > 0);
-   }
+    assert(blocksContentWidth > 0);
 
     QRect blockLtr(
         blocksContentLtr.left(),
@@ -282,42 +242,44 @@ QRect ComplexMessageItemLayout::evaluateSenderContentLtr(const QRect &widgetCont
     return senderContentLtr;
 }
 
-int32_t ComplexMessageItemLayout::evaluateWidgetContentLeftMargin() const
-{
-    auto margin = MessageStyle::getLeftMargin(isOutgoing());
-
-    return margin;
-}
-
 QRect ComplexMessageItemLayout::evaluateWidgetContentLtr(const int32_t widgetWidth) const
 {
     assert(widgetWidth > 0);
 
-    const auto widgetContentLeftMargin = evaluateWidgetContentLeftMargin();
+    auto widgetContentLeftMargin = MessageStyle::getLeftMargin(isOutgoing());
     assert(widgetContentLeftMargin > 0);
 
-    const auto widgetContentRightMargin = evaluateWidgetContentRightMargin();
+    const auto widgetContentRightMargin = MessageStyle::getRightMargin(isOutgoing());
     assert(widgetContentRightMargin > 0);
 
     auto widgetContentWidth = widgetWidth;
     widgetContentWidth -= widgetContentLeftMargin;
     widgetContentWidth -= widgetContentRightMargin;
+    widgetContentWidth -= MessageStyle::getTimeMaxWidth();
 
-    const QRect result(
+    if (Item_->getMaxWidth() > 0 )
+    {
+        int maxWidth = Item_->getMaxWidth();
+        if (!isOutgoing())
+            maxWidth += MessageStyle::getAvatarSize() + MessageStyle::getAvatarRightMargin();
+
+        if (maxWidth < widgetContentWidth)
+        {
+            if (isOutgoing())
+                widgetContentLeftMargin += (widgetContentWidth - maxWidth);
+
+            widgetContentWidth = maxWidth;
+        }
+    }
+
+    QRect result(
         widgetContentLeftMargin,
         MessageStyle::getTopMargin(Item_->hasTopMargin()),
         widgetContentWidth,
         0);
 
+
     return result;
-}
-
-int32_t ComplexMessageItemLayout::evaluateWidgetContentRightMargin() const
-{
-    const auto margin = MessageStyle::getRightMargin(isOutgoing());
-    assert(margin > 0);
-
-    return margin;
 }
 
 void ComplexMessageItemLayout::setGeometry(const QRect &r)
@@ -394,11 +356,6 @@ QRect ComplexMessageItemLayout::getBlockSeparatorRect(const IItemBlock *block) c
 
     auto separatorRectHeight = Style::getBlocksSeparatorVertMargins();
 
-    const auto &pen = Style::getBlocksSeparatorPen();
-    separatorRectHeight += pen.width();
-
-    separatorRectHeight *= 2;
-
     const auto separatorRectWidth = blockGeometry.width();
 
     QRect separatorRect(
@@ -440,15 +397,14 @@ QRect ComplexMessageItemLayout::getShareButtonGeometry(
     {
         assert(BubbleRect_.width() > 0);
         buttonX =
-            BubbleRect_.right() + 1 -
-            buttonSize.width() -
-            getShareButtonRightMargin();
+            BubbleRect_.right() + 1 +
+            MessageStyle::getTimeMarginX();
     }
     else
     {
         buttonX =
             blockGeometry.right() + 1 +
-            MessageStyle::getTimeMargin();
+            MessageStyle::getTimeMarginX();
     }
 
     const auto buttonY = blockGeometry.top();
@@ -527,8 +483,6 @@ QRect ComplexMessageItemLayout::setBlocksGeometry(
 {
     const auto topY = blocksContentLtr.top();
 
-    const auto statusWidth = evaluateStatusLineWidth();
-
     auto blocksHeight = 0;
     auto blocksWidth = 0;
     auto blocksLeft = blocksContentLtr.left();
@@ -542,15 +496,15 @@ QRect ComplexMessageItemLayout::setBlocksGeometry(
 
         const auto blockSeparatorHeight = (
             addSeparator ?
-                getBlockSeparatorRect(block).height() :
-                Utils::scale_value(2));
+            getBlockSeparatorRect(block).height() :
+            (isBubbleRequired ? Utils::scale_value(0) : 0));
 
         const auto blockY = (
             topY +
             blocksHeight +
             blockSeparatorHeight);
 
-        const auto blockLtr = evaluateBlockLtr(blocksContentLtr, block, blockY, statusWidth, isBubbleRequired);
+        const auto blockLtr = evaluateBlockLtr(blocksContentLtr, block, blockY, isBubbleRequired);
 
         const auto blockGeometry = block->setBlockGeometry(blockLtr);
 
@@ -581,7 +535,7 @@ void ComplexMessageItemLayout::setGeometryInternal(const int32_t widgetWidth)
 {
     assert(widgetWidth > 0);
 
-    const auto widgetContentLtr = evaluateWidgetContentLtr(widgetWidth);
+    auto widgetContentLtr = evaluateWidgetContentLtr(widgetWidth);
 
     const auto enoughSpace = (widgetContentLtr.width() > 0);
     if (!enoughSpace)
@@ -595,9 +549,7 @@ void ComplexMessageItemLayout::setGeometryInternal(const int32_t widgetWidth)
 
     const auto isBubbleRequired = Item_->isBubbleRequired();
 
-    const auto isShareButtonEnabled = Item_->containsShareableBlocks();
-
-    const auto blocksContainertLtr = evaluateBlocksContainerLtr(isBubbleRequired, isShareButtonEnabled,  AvatarRect_, senderContentLtr);
+    const auto blocksContainertLtr = evaluateBlocksContainerLtr(isBubbleRequired, AvatarRect_, senderContentLtr);
 
     const auto blocksGeometry = setBlocksGeometry(isBubbleRequired, blocksContainertLtr);
 
@@ -605,12 +557,11 @@ void ComplexMessageItemLayout::setGeometryInternal(const int32_t widgetWidth)
 
     const auto bubbleRect = evaluateBlocksBubbleGeometry(
         isBubbleRequired,
-        isShareButtonEnabled,
         blocksContainertLtr,
         blocksGeometry);
     assert(bubbleRect.height() >= MessageStyle::getMinBubbleHeight());
 
-    setStatusGeometry(isBubbleRequired, bubbleRect, blocksGeometry);
+    setTimeGeometry(isBubbleRequired, bubbleRect, blocksGeometry);
 
     setSenderGeometry(AvatarRect_, widgetContentLtr);
 
@@ -654,66 +605,41 @@ void ComplexMessageItemLayout::setSenderGeometry(
     sender.setVisible(true);
 }
 
-void ComplexMessageItemLayout::setStatusGeometry(
+void ComplexMessageItemLayout::setTimeGeometry(
     const bool isBubbleRequired,
     const QRect &bubbleGeometry,
     const QRect &blocksGeometry)
 {
-    if (!Item_->Status_)
+    if (!Item_->TimeWidget_)
     {
         return;
     }
 
-    auto &status = *Item_->Status_;
+    auto &time = *Item_->TimeWidget_;
 
-    const auto statusWidgetSize = status.sizeHint();
+    const auto timeWidgetSize = time.sizeHint();
 
-    auto statusX = 0;
+    auto timeX = 0;
 
-    if (isBubbleRequired)
-    {
-        assert(!bubbleGeometry.isEmpty());
+    //assert(!blocksGeometry.isEmpty());
+    timeX = (
+        bubbleGeometry.right() + 1 +
+        MessageStyle::getTimeMarginX());
 
-        const auto fullStatusLineWidth = evaluateStatusLineWidth();
-
-        statusX = (
-            bubbleGeometry.right() + 1 -
-            fullStatusLineWidth);
-    }
-    else
-    {
-        assert(!blocksGeometry.isEmpty());
-        statusX = (
-            bubbleGeometry.right() + 1);
-    }
-
-    const auto statusY = (
+    const auto timeY = (
         bubbleGeometry.bottom() + 1 -
-        MessageStyle::getTimeMargin() -
-        statusWidgetSize.height());
+        MessageStyle::getTimeMarginY() -
+        timeWidgetSize.height());
 
-    const QRect statusGeometry(
-        statusX,
-        statusY,
-        MessageStatusWidget::getMaxWidth(),
-        statusWidgetSize.height());
+    const QRect timeGeometry(
+        timeX,
+        timeY,
+        MessageStyle::getTimeMaxWidth(),
+        timeWidgetSize.height());
 
-    status.setGeometry(statusGeometry);
+    time.setGeometry(timeGeometry);
 
-    status.show();
-}
-
-namespace
-{
-    int32_t getShareButtonRightMargin()
-    {
-        return Utils::scale_value(16);
-    }
-
-    bool isShareButtonMarginsEnabled()
-    {
-        return false;
-    }
+    time.show();
 }
 
 UI_COMPLEX_MESSAGE_NS_END

@@ -23,7 +23,7 @@ namespace common
 
     std::wstring get_product_data_path()
     {
-        return (::common::get_user_profile() + L"/" + L"ICQ");
+        return (::common::get_user_profile() + (build::is_icq() ? L"/ICQ" : L"/Mail.Ru/Agent"));
     }
 }
 #endif // _WIN32

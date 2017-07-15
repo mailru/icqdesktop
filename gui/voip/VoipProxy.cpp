@@ -14,17 +14,21 @@
 #include "../../core/Voip/VoipSerialization.h"
 #include "../cache/avatars/AvatarStorage.h"
 #include "../controls/TextEmojiWidget.h"
+#include "../my_info.h"
 
 #ifdef __APPLE__
     #include "macos/VideoFrameMacos.h"
 #endif
 
 #define INCLUDE_USER_NAME         1
-#define INCLUDE_USER_NAME_IN_CONF 0
+#define INCLUDE_USER_NAME_IN_CONF 1
 #define INCLUDE_REMOTE_CAMERA_OFF 0
 #define INCLUDE_AVATAR            1
+#define INCLUDE_BLUR_BACKGROUND   1
 #define INCLUDE_WATERMARK         1
 #define INCLUDE_CAMERA_OFF_STATUS 1
+
+#define AVATAR_VIDE_SIZE          360
 
 namespace
 {
@@ -40,6 +44,105 @@ namespace
     }
 }
 
+void addImageToCollection(Ui::gui_coll_helper& collection, const std::string& dir, const std::string& name, const std::string& filenamePrefix, const std::string& filenamePostfix, int outputWidth = 0, int outputHeight = 0)
+{
+    std::stringstream resourceStr;
+    resourceStr << ":/resources/" + (!dir.empty() ? dir + "/" : "") << filenamePrefix << Utils::scale_bitmap_with_value(100) << filenamePostfix << ".png";
+    QImage image(resourceStr.str().c_str());
+
+    if (outputHeight > 0 && outputWidth > 0)
+    {
+        QImage bigImage(outputWidth, outputHeight, QImage::Format_ARGB32);
+        bigImage.fill(Qt::transparent);
+
+        {
+            QPainter painter(&bigImage);
+
+            QSize position = (bigImage.size() - image.size()) / 2;
+            painter.drawImage(QPoint(position.width(), position.height()), image);
+        }
+
+        image = bigImage.copy();
+    }
+
+    auto dataSize = image.byteCount();
+    auto dataPtr = image.bits();
+    auto sz = image.size();
+
+    assert(dataSize && dataPtr);
+    if (dataSize && dataPtr)
+    {
+        core::ifptr<core::istream> stream(collection->create_stream());
+        stream->write(dataPtr, dataSize);
+
+        collection.set_value_as_stream(name, stream.get());
+        collection.set_value_as_int(name + "_height", sz.height());
+        collection.set_value_as_int(name + "_width", sz.width());
+    }
+}
+
+void addTextToCollection(Ui::gui_coll_helper& collection, const std::string& name, const std::string& textString)
+{
+    QFont font = Fonts::appFont(Utils::scale_bitmap_with_value(14));
+    font.setStyleStrategy(QFont::PreferAntialias);
+
+    const QString text = QT_TRANSLATE_NOOP("voip_pages", textString.c_str());
+
+    QFontMetrics fm(font);
+    const QSize textSz = fm.size(Qt::TextSingleLine, text);
+
+    const int nickW = Utils::scale_bitmap_with_value(textSz.width());
+    const int nickH = Utils::scale_bitmap_with_value(textSz.height());
+
+    assert(nickW && nickH);
+    if (nickW && nickH)
+    {
+        QPainter painter;
+        painter.save();
+
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::TextAntialiasing);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+
+        QPixmap pm(nickW, nickH);
+        pm.fill(Qt::transparent);
+
+        const QPen pen(QColor("#767676"));
+
+        painter.begin(&pm);
+        painter.setPen(pen);
+        painter.setFont(font);
+
+        if (textSz.width() > nickW)
+        {
+            painter.drawText(QRect(0, 0, nickW, nickH), Qt::TextSingleLine | Qt::AlignLeft | Qt::AlignVCenter, text);
+        }
+        else
+        {
+            painter.drawText(QRect(0, 0, nickW, nickH), Qt::TextSingleLine | Qt::AlignHCenter | Qt::AlignVCenter, text);
+        }
+        painter.end();
+
+        QImage image = pm.toImage();
+
+        auto dataSize = image.byteCount();
+        auto dataPtr = image.bits();
+        auto sz = image.size();
+
+        if (dataSize && dataPtr)
+        {
+            core::ifptr<core::istream> stream(collection->create_stream());
+            stream->write(dataPtr, dataSize);
+
+            collection.set_value_as_stream(name.c_str(), stream.get());
+            collection.set_value_as_int(name + "_height", sz.height());
+            collection.set_value_as_int(name + "_width",  sz.width());
+        }
+
+        painter.restore();
+    }
+}
+
 #define STRING_ID(x) __hash((x))
 
 voip_proxy::VoipController::VoipController(Ui::core_dispatcher& _dispatcher)
@@ -49,6 +152,7 @@ voip_proxy::VoipController::VoipController(Ui::core_dispatcher& _dispatcher)
     , haveEstablishedConnection_(false)
     , iTunesWasPaused_(false)
     , maskEngineEnable_(false)
+	, voipIsKilled_(false)
 {
     cipherState_.state= voip_manager::CipherState::kCipherStateUnknown;
 
@@ -105,7 +209,10 @@ voip_proxy::VoipController::VoipController(Ui::core_dispatcher& _dispatcher)
     connect(this, SIGNAL(onVoipMaskEngineEnable(bool)),
         this, SLOT(updateVoipMaskEngineEnable(bool)));
 
-    maskManager_.reset(new voip_masks::MaskManager(_dispatcher, this));
+    connect(this, SIGNAL(onVoipCallCreated(const voip_manager::ContactEx&)),
+        this, SLOT(onCallCreate(const voip_manager::ContactEx&)));
+
+    resetMaskManager();
 }
 
 voip_proxy::VoipController::~VoipController()
@@ -119,11 +226,14 @@ void voip_proxy::VoipController::_updateCallTime()
     emit onVoipCallTimeChanged(callTimeElapsed_, true);
 }
 
-
-void voip_proxy::VoipController::setAvatars(int _size, const char*_contact)
+void voip_proxy::VoipController::setAvatars(int _size, const char*_contact, bool forPreview)
 {
     Ui::gui_coll_helper collection(dispatcher_.create_collection(), true);
     _loadUserBitmaps(collection, _contact, _size);
+    if (forPreview)
+    {
+        collection.set_value_as_string("contact", PREVIEW_RENDER_NAME);
+    }
     dispatcher_.post_message_to_core("voip_call", collection.get());
 }
 
@@ -232,6 +342,31 @@ void voip_proxy::VoipController::_loadUserBitmaps(Ui::gui_coll_helper& _collecti
             packAvatar(image, "");
         }
 
+        if (INCLUDE_BLUR_BACKGROUND) {
+            const int avatarSize = Utils::scale_bitmap_with_value(voip_manager::kAvatarDefaultSize);
+
+            // In conference we have 3/4 aspect.
+            QImage image(QSize(avatarSize, avatarSize * 3.0f / 4.0f), QImage::Format_ARGB32);
+            image.fill(Qt::transparent);
+
+            QPainter painter(&image);
+
+            QGraphicsBlurEffect* blur = new QGraphicsBlurEffect();
+            blur->setBlurRadius(8);
+
+            QGraphicsScene scene;
+            QGraphicsPixmapItem item;
+            int cropHeight = (rawAvatar.height() - rawAvatar.width() * 3.0f / 4.0f);
+            item.setPixmap(QPixmap::fromImage(rawAvatar.copy(0, cropHeight / 2, rawAvatar.width(), rawAvatar.height() - cropHeight)));
+            item.setGraphicsEffect(blur);
+            scene.addItem(&item);
+            scene.render(&painter, QRectF(), QRectF());
+
+            painter.fillRect(rawAvatar.rect(), QBrush(QColor(255, 255, 255, 255 / 10)));
+
+            packAvatar(image, "background_");
+        }
+
         if (INCLUDE_REMOTE_CAMERA_OFF) {// no remote video avatar
             const int avatarNoRemoteVideoSz = Utils::scale_bitmap_with_value(160);
             const int xyOffset = (Utils::scale_bitmap_with_value(voip_manager::kAvatarDefaultSize) - avatarNoRemoteVideoSz) / 2;
@@ -253,20 +388,25 @@ void voip_proxy::VoipController::_loadUserBitmaps(Ui::gui_coll_helper& _collecti
             painter.setClipPath(path);
 
             painter.drawImage(QRect(xyOffset, xyOffset, avatarNoRemoteVideoSz, avatarNoRemoteVideoSz), rawAvatar);
+            QColor noVideoColor("#000000");
+            noVideoColor.setAlphaF(0.5);
             painter.fillRect(QRect(0, 0, Utils::scale_bitmap_with_value(voip_manager::kAvatarDefaultSize),
-                Utils::scale_bitmap_with_value(voip_manager::kAvatarDefaultSize)), QColor(0, 0, 0, 150));
+                Utils::scale_bitmap_with_value(voip_manager::kAvatarDefaultSize)), noVideoColor);
             packAvatar(image, "rem_camera_offline_");
         }
     }
 
     {// signs
-        QPainter painter;
+		QString tmpContact;
 
-        painter.setRenderHint(QPainter::Antialiasing);
-        painter.setRenderHint(QPainter::TextAntialiasing);
-        painter.setRenderHint(QPainter::SmoothPixmapTransform);
-
-        QString tmpContact(Logic::getContactListModel()->getDisplayName(_contact.c_str()));
+		if (Ui::MyInfo()->aimId() == QString::fromStdString(_contact))
+		{
+			tmpContact = Ui::MyInfo()->friendlyName();
+		}
+		else
+		{
+			tmpContact = (Logic::getContactListModel()->getDisplayName(_contact.c_str()));
+		}
         if (tmpContact.isEmpty())
         {
             tmpContact = _contact.c_str();
@@ -274,7 +414,14 @@ void voip_proxy::VoipController::_loadUserBitmaps(Ui::gui_coll_helper& _collecti
 
         if (INCLUDE_USER_NAME)
         {// normal
-            QFont font = Fonts::appFont(Utils::scale_bitmap_with_value(24));
+            QPainter painter;
+
+            painter.setRenderHint(QPainter::Antialiasing);
+            painter.setRenderHint(QPainter::TextAntialiasing);
+            painter.setRenderHint(QPainter::SmoothPixmapTransform);
+
+            const auto fontSize = 15;
+            QFont font = Fonts::appFont(Utils::scale_bitmap_with_value(fontSize));
             font.setStyleStrategy(QFont::PreferAntialias);
 
             QFontMetrics fm(font);
@@ -285,18 +432,18 @@ void voip_proxy::VoipController::_loadUserBitmaps(Ui::gui_coll_helper& _collecti
             QPixmap pm(nickW, nickH);
             pm.fill(Qt::transparent);
 
-            const QPen pen(Qt::black);
+            const QPen pen(QColor("#000000"));
 
             painter.begin(&pm);
             painter.setPen(pen);
             painter.setFont(font);
 
             Ui::CompiledText compiledText;
-            Ui::CompiledText::compileText(tmpContact, compiledText, false);
+            Ui::CompiledText::compileText(tmpContact, compiledText, false, false);
 
             // Align to center.
-            int xOffset = std::max((nickW - compiledText.width(painter)) / 2, 0);
-            int yOffset = std::max((nickH - compiledText.height(painter)) / 2, 0) + Utils::scale_bitmap_with_value(24);
+            int xOffset = std::max((nickW - compiledText.width(fm)) / 2, 0);
+            int yOffset = std::max(nickH - Utils::scale_bitmap_with_value(fontSize) / 2, 0);
             compiledText.draw(painter, xOffset, yOffset, nickW);
 
             painter.end();
@@ -306,11 +453,18 @@ void voip_proxy::VoipController::_loadUserBitmaps(Ui::gui_coll_helper& _collecti
 
         if (INCLUDE_USER_NAME_IN_CONF)
         {// header
-            const QSize border = QSize(Utils::scale_bitmap_with_value(2), Utils::scale_bitmap_with_value(2));
+            QPainter painter;
 
-            QFont font = Fonts::appFont(Utils::scale_bitmap_with_value(12), Fonts::FontWeight::Semibold);
+            painter.setRenderHint(QPainter::Antialiasing);
+            painter.setRenderHint(QPainter::TextAntialiasing);
+            painter.setRenderHint(QPainter::SmoothPixmapTransform);
+
+            const QSize border = QSize(Utils::scale_bitmap_with_value(10), 0);
+
+            QFont font = Fonts::appFont(Utils::scale_bitmap_with_value(15));
             font.setStyleStrategy(QFont::PreferAntialias);
-            const QPen pen(QColor(255, 255, 255, 230));
+            QColor confUserName("#000000");
+            const QPen pen(confUserName);
 
             QSize textSz;
             { // measure text size
@@ -325,17 +479,29 @@ void voip_proxy::VoipController::_loadUserBitmaps(Ui::gui_coll_helper& _collecti
             }
 
             { // draw
-                QPixmap pm(textSz.width() + border.width() * 2, textSz.height() + border.height() * 2);
-                pm.fill(QColor(0, 0, 0, 0));
+                // Make too long header.
+                QImage image(textSz.width() + border.width() * 2 + Utils::scale_bitmap(1920), Utils::scale_bitmap_with_value(32), QImage::Format_ARGB32);
+                
+                //pm.fill(QColor(255, 255, 255, 255));
 
-                painter.begin(&pm);
+                QColor headerBackground("#ffffff");
+                headerBackground.setAlphaF(0.7);
+
+                //pm.fill(headerBackground);
+                painter.begin(&image);
+
+                painter.setCompositionMode(QPainter::CompositionMode_Clear);
+                painter.fillRect(image.rect(), Qt::black);
+                painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+                painter.fillRect(image.rect(), headerBackground);
+                
                 painter.setPen(pen);
                 painter.setFont(font);
 
-                painter.drawText(QRect(border.width(), border.height(), textSz.width(), textSz.height()), Qt::TextSingleLine | Qt::AlignLeft | Qt::AlignVCenter, tmpContact);
+                painter.drawText(QRect(border.width(), border.height(), textSz.width(), image.height()), Qt::TextSingleLine | Qt::AlignLeft | Qt::AlignVCenter, tmpContact);
                 painter.end();
 
-                packAvatar(pm.toImage(), "sign_header_");
+                packAvatar(image, "sign_header_");
             }
         }
     }
@@ -360,6 +526,7 @@ void voip_proxy::VoipController::handlePacket(core::coll_helper& _collParams)
     }
     else if (sigType == "voip_reset_complete")
     {
+		voipIsKilled_ = true;
         emit onVoipResetComplete();
     }
     else if (sigType == "device_muted")
@@ -378,11 +545,14 @@ void voip_proxy::VoipController::handlePacket(core::coll_helper& _collParams)
     }
     else if (sigType == "call_peer_list_changed")
     {
-        std::vector<voip_manager::Contact> contacts;
+        voip_manager::ContactsList contacts;
         contacts << _collParams;
 
-        activePeerList_.swap(contacts);
-        emit onVoipCallNameChanged(activePeerList_);
+        if (contacts.isActive)
+        {
+            activePeerList_ = contacts;
+        }
+        emit onVoipCallNameChanged(contacts);
     }
     else if (sigType == "voip_window_add_complete")
     {
@@ -470,6 +640,18 @@ void voip_proxy::VoipController::handlePacket(core::coll_helper& _collParams)
 
         emit onVoipMouseTapped(hwnd, tapType);
     }
+    else if (sigType == "button_tap")
+    {
+        voip_manager::ButtonTap button;
+        button << _collParams;
+
+        if (button.type == voip2::ButtonType_Close)
+        {
+            setDecline(button.contact.c_str(), false);
+        }
+
+        emit onVoipButtonTapped(button);
+    }
     else if (sigType == "call_created")
     {
         voip_manager::ContactEx contactEx;
@@ -539,8 +721,9 @@ void voip_proxy::VoipController::handlePacket(core::coll_helper& _collParams)
     }
     else if (sigType == "media_rem_v_changed")
     {
-        const bool enabled = _collParams.get_value_as_bool("param");
-        emit onVoipMediaRemoteVideo(enabled);
+        voip_manager::VideoEnable videoEnable;
+        videoEnable << _collParams;
+        emit onVoipMediaRemoteVideo(videoEnable);
     }
     else if (sigType == "voip_cipher_state_changed")
     {
@@ -569,6 +752,28 @@ void voip_proxy::VoipController::handlePacket(core::coll_helper& _collParams)
 		const bool result       = _collParams.get_value_as_bool("result");
 		const std::string name = _collParams.get_value_as_string("name");
 		emit onVoipLoadMaskResult(name, result);
+	}
+    else if (sigType == "layout_changed")
+    {
+        bool bTray = _collParams.get_value_as_bool("tray");
+        std::string layout = _collParams.get_value_as_string("layout_type");
+        intptr_t hwnd = _collParams.get_value_as_int64("hwnd");
+        
+        emit onVoipChangeWindowLayout(hwnd, bTray, layout);
+    }
+	else if (sigType == "voip_main_video_layout_changed")
+	{
+		voip_manager::MainVideoLayout mainLayout;
+		mainLayout << _collParams;
+
+		if (mainLayout.type == voip_manager::MVL_OUTGOING)
+		{
+			callTimeTimer_.stop();
+			callTimeElapsed_ = 0;
+			emit onVoipCallTimeChanged(callTimeElapsed_, false);
+		}
+
+		emit onVoipMainVideoLayoutChanged(mainLayout);
 	}
 }
 
@@ -724,6 +929,11 @@ void voip_proxy::VoipController::setStartA(const char* _contact, bool _attach)
         return;
     }
 
+    if (_attach)
+    {
+        setAvatars(AVATAR_VIDE_SIZE, _contact);
+    }
+
     Ui::gui_coll_helper collection(dispatcher_.create_collection(), true);
     collection.set_value_as_string("type", "voip_call_start");
     collection.set_value_as_qstring("contact", _contact);
@@ -739,6 +949,11 @@ void voip_proxy::VoipController::setStartV(const char* _contact, bool _attach)
     if (!_contact)
     {
         return;
+    }
+
+    if (_attach)
+    {
+        setAvatars(AVATAR_VIDE_SIZE, _contact);
     }
 
     Ui::gui_coll_helper collection(dispatcher_.create_collection(), true);
@@ -777,87 +992,26 @@ void voip_proxy::VoipController::setWindowAdd(quintptr _hwnd, bool _primaryWnd, 
 
         if (INCLUDE_CAMERA_OFF_STATUS && _primaryWnd)
         {
-            QFont font = Fonts::appFont(Utils::scale_bitmap_with_value(14));
-            font.setStyleStrategy(QFont::PreferAntialias);
+            addTextToCollection(collection, "camera_status", "turned off the camera");
+            addTextToCollection(collection, "calling", "calling");
 
-            const QString text = QT_TRANSLATE_NOOP("voip_pages", "turned off the camera");
-
-            QFontMetrics fm(font);
-            const QSize textSz = fm.size( Qt::TextSingleLine, text);
-
-            const int nickW = Utils::scale_bitmap_with_value(textSz.width());
-            const int nickH = Utils::scale_bitmap_with_value(textSz.height());
-
-            assert(nickW && nickH);
-            if (nickW && nickH)
-            {
-                QPainter painter;
-                painter.save();
-
-                painter.setRenderHint(QPainter::Antialiasing);
-                painter.setRenderHint(QPainter::TextAntialiasing);
-                painter.setRenderHint(QPainter::SmoothPixmapTransform);
-
-                QPixmap pm(nickW, nickH);
-                pm.fill(Qt::transparent);
-
-                const QPen pen(QColor(0x69, 0x69, 0x69));
-
-                painter.begin(&pm);
-                painter.setPen(pen);
-                painter.setFont(font);
-
-                if (textSz.width() > nickW)
-                {
-                    painter.drawText(QRect(0, 0, nickW, nickH), Qt::TextSingleLine | Qt::AlignLeft | Qt::AlignVCenter, text);
-                }
-                else
-                {
-                    painter.drawText(QRect(0, 0, nickW, nickH), Qt::TextSingleLine | Qt::AlignHCenter | Qt::AlignVCenter, text);
-                }
-                painter.end();
-
-                QImage image = pm.toImage();
-
-                auto dataSize = image.byteCount();
-                auto dataPtr = image.bits();
-                auto sz = image.size();
-
-                if (dataSize && dataPtr)
-                {
-                    core::ifptr<core::istream> stream(collection->create_stream());
-                    stream->write(dataPtr, dataSize);
-
-                    collection.set_value_as_stream ("camera_status", stream.get());
-                    collection.set_value_as_int    ("camera_status_height", sz.height());
-                    collection.set_value_as_int    ("camera_status_width", sz.width());
-                }
-
-                painter.restore();
-            }
         }
 
         if (INCLUDE_WATERMARK && _primaryWnd)
         {
-            std::stringstream resourceStr;
-            resourceStr << ":/resources/video_panel/icq_logo_watermark_" << Utils::scale_bitmap_with_value(100) << ".png";
-            QImage watermark(resourceStr.str().c_str());
-
-            auto dataSize = watermark.byteCount();
-            auto dataPtr = watermark.bits();
-            auto sz        = watermark.size();
-
-            assert(dataSize && dataPtr);
-            if (dataSize && dataPtr)
-            {
-                core::ifptr<core::istream> stream(collection->create_stream());
-                stream->write(dataPtr, dataSize);
-
-                collection.set_value_as_stream ("watermark", stream.get());
-                collection.set_value_as_int    ("watermark_height", sz.height());
-                collection.set_value_as_int    ("watermark_width", sz.width());
-            }
+            addImageToCollection(collection, "video_panel", "watermark", "icq_logo_watermark_", "");
         }
+
+        // Added buttons.
+        {
+            int w = Utils::scale_bitmap_with_value(32);
+            int h = Utils::scale_bitmap_with_value(32);
+            addImageToCollection(collection, "basic_elements", "normalButton", "close_a_", "",       w, h);
+            addImageToCollection(collection, "basic_elements", "highlightedButton", "close_b_" , "", w, h);
+            addImageToCollection(collection, "basic_elements", "pressedButton", "close_b_", "",      w, h); // TODO
+            addImageToCollection(collection, "basic_elements", "disabledButton", "close_b_", "",     w, h);
+        }
+
         dispatcher_.post_message_to_core("voip_call", collection.get());
 
         if (!_systemWnd)
@@ -865,7 +1019,7 @@ void voip_proxy::VoipController::setWindowAdd(quintptr _hwnd, bool _primaryWnd, 
             setWindowOffsets(_hwnd, Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(0), Utils::scale_value(_panelHeight) * Utils::scale_bitmap(1));
         }
 
-		setWindowBackground(_hwnd, (char)255, (char)255, (char)255, (char)255);
+		setWindowBackground(_hwnd, (char)-1, (char)-1, (char)-1, (char)-1);
     }
 }
 
@@ -906,11 +1060,11 @@ void voip_proxy::VoipController::_checkIgnoreContact(QString _contact)
 
     if (
         std::find_if(
-            activePeerList_.begin(), activePeerList_.end(), [&contactName](const voip_manager::Contact& _contact)
+            activePeerList_.contacts.begin(), activePeerList_.contacts.end(), [&contactName](const voip_manager::Contact& _contact)
             {
                 return _contact.contact == contactName;
             }
-            ) != activePeerList_.end()
+            ) != activePeerList_.contacts.end()
         )
     {
         setHangup();
@@ -932,6 +1086,8 @@ void voip_proxy::VoipController::onStartCall(bool _bOutgoing)
 #endif
 
     connect(Logic::getContactListModel(), SIGNAL(ignore_contact(QString)), this, SLOT(_checkIgnoreContact(QString)));
+    connect(Logic::GetAvatarStorage(), SIGNAL(avatarChanged(QString)), this, SLOT(avatarChanged(QString)));
+
 }
 
 void voip_proxy::VoipController::onEndCall()
@@ -946,6 +1102,7 @@ void voip_proxy::VoipController::onEndCall()
 #endif
 
     disconnect(Logic::getContactListModel(), SIGNAL(ignore_contact(QString)), this, SLOT(_checkIgnoreContact(QString)));
+    disconnect(Logic::GetAvatarStorage(), SIGNAL(avatarChanged(QString)), this, SLOT(avatarChanged(QString)));
 }
 
 void voip_proxy::VoipController::switchMinimalBandwithMode()
@@ -975,12 +1132,12 @@ void voip_proxy::VoipController::setWindowBackground(quintptr _hwnd, char r, cha
 
 void voip_proxy::VoipController::updateUserAvatar(const voip_manager::ContactEx& _contactEx)
 {
-	setAvatars(360, _contactEx.contact.contact.c_str());
+	setAvatars(AVATAR_VIDE_SIZE, _contactEx.contact.contact.c_str());
 }
 
-void voip_proxy::VoipController::updateUserAvatar(const std::string& /*_account*/, const std::string& _contact)
+void voip_proxy::VoipController::updateUserAvatar(const std::string& _account, const std::string& _contact)
 {
-	setAvatars(360, _contact.c_str());
+	setAvatars(AVATAR_VIDE_SIZE, _contact.c_str());
 }
 
 void voip_proxy::VoipController::loadMask(const std::string& maskPath)
@@ -1024,6 +1181,11 @@ void voip_proxy::VoipController::initMaskEngine() const
     dispatcher_.post_message_to_core("voip_call", collection.get());
 }
 
+void voip_proxy::VoipController::resetMaskManager()
+{
+    maskManager_.reset(new voip_masks::MaskManager(dispatcher_, this));
+}
+
 const std::vector<voip_proxy::device_desc>& voip_proxy::VoipController::deviceList(EvoipDevTypes type)
 {
     auto arrayIndex = type - 1;
@@ -1037,6 +1199,55 @@ const std::vector<voip_proxy::device_desc>& voip_proxy::VoipController::deviceLi
     static std::vector<voip_proxy::device_desc> emptyList;
 
     return emptyList;
+}
+
+
+void voip_proxy::VoipController::setWindowConferenceLayout(quintptr _hwnd, voip_manager::ConferenceLayout& layout)
+{
+    Ui::gui_coll_helper collection(dispatcher_.create_collection(), true);
+    collection.set_value_as_string("type", "voip_window_set_conference_layout");
+    collection.set_value_as_int64("handle", _hwnd);
+    collection.set_value_as_int("layout", layout);
+
+    dispatcher_.post_message_to_core("voip_call", collection.get());
+}
+
+void voip_proxy::VoipController::onCallCreate(const voip_manager::ContactEx& _contactEx)
+{
+    setAvatars(360, _contactEx.contact.account.c_str(), true);
+}
+
+void voip_proxy::VoipController::avatarChanged(QString aimId)
+{
+    auto currentContact = aimId.toStdString();
+    auto foundContact = std::find_if(activePeerList_.contacts.begin(), activePeerList_.contacts.end(), [&currentContact](const voip_manager::Contact& contact) {
+        return currentContact == contact.contact;
+    });
+    
+    // Update only own avatar.
+    if (foundContact != activePeerList_.contacts.end() && (activePeerList_.contacts.size() > 1 || !connectedPeerList_.empty()))
+    {
+        setAvatars(360, currentContact.c_str(), false);
+    }
+    else if (aimId == Ui::MyInfo()->aimId())
+    {
+        setAvatars(360, currentContact.c_str(), true);
+    }
+}
+
+const std::vector<voip_manager::Contact>& voip_proxy::VoipController::currentCallContacts()
+{
+    return activePeerList_.contacts;
+}
+
+bool voip_proxy::VoipController::isVoipKilled()
+{
+	return voipIsKilled_;
+}
+
+bool voip_proxy::VoipController::hasEstablishCall()
+{
+    return !connectedPeerList_.empty();
 }
 
 

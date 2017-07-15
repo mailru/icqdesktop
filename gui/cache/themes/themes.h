@@ -15,8 +15,6 @@ class theme
     QPixmap thumb_;
     QPixmap image_;
     bool tile_;
-    QColor spinner_color_;
-    QColor edges_color_;
     bool isImageLoaded_;
     theme(int);
 public:
@@ -72,25 +70,12 @@ public:
 
     static QColor colorFromString(const char* _colorString);
 
-    struct contact_list_item
-    {
-        QColor bg_color_;
-        QColor name_color_;
-        QColor message_color_;
-        QColor sender_color_;
-        QColor time_color_;
-        void unserialize(Ui::gui_coll_helper& _coll);
-    } contact_list_item_;
-
     struct bubble
     {
         QColor bg1_color_;
         QColor bg2_color_;
-        QColor text_color_;
         QColor time_color_;
-        QColor link_color_;
         QColor info_color_;
-        QColor info_link_color_;
         void unserialize(Ui::gui_coll_helper& _coll);
     };
     bubble incoming_bubble_;
@@ -122,28 +107,12 @@ public:
         void unserialize(Ui::gui_coll_helper& _coll);
     } contact_name_;
 
-    struct new_messages
-    {
-        QColor bg_color_;
-        QColor text_color_;
-        void unserialize(Ui::gui_coll_helper& _coll);
-    } new_messages_;
-
     struct new_messages_plate
     {
         QColor bg_color_;
         QColor text_color_;
         void unserialize(Ui::gui_coll_helper& _coll);
     } new_messages_plate_;
-
-    struct new_messages_bubble
-    {
-        QColor bg_color_;
-        QColor bg_hover_color_;
-        QColor bg_pressed_color_;
-        QColor text_color_;
-        void unserialize(Ui::gui_coll_helper& _coll);
-    } new_messages_bubble_;
 
     struct typing
     {

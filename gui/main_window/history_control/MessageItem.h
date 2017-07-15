@@ -20,7 +20,7 @@ namespace Ui
 	class TextEmojiWidget;
 	class PictureWidget;
 	class ContextMenu;
-    class MessageStatusWidget;
+    class MessageTimeWidget;
 
 	class MessageData
 	{
@@ -120,8 +120,6 @@ namespace Ui
 		void setId(qint64 id, const QString& _aimId);
         qint64 getId() const override;
 
-		void setNotificationKeys(const QStringList& _keys);
-		const QStringList& getNotificationKeys();
 		void waitForAvatar(bool _wait);
 		void setAvatarVisible(const bool);
 		void setMessage(const QString& _message);
@@ -136,6 +134,8 @@ namespace Ui
             const bool _isInit = false);
 
         virtual bool setLastRead(const bool _isLastRead) override;
+
+        virtual void setDeliveredToServer(const bool _delivered) override;
 
         virtual bool isOutgoing() const override;
 
@@ -164,17 +164,24 @@ namespace Ui
         virtual QSize sizeHint() const override;
 
         virtual void onVisibilityChanged(const bool _isVisible) override;
+        virtual void onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect) override;
         
         Data::Quote getQuote(bool force = false) const;
+        
+        void forwardRoutine();
+
+        void setNotAuth(const bool _isNotAuth);
+        bool isNotAuth();
+
+		virtual void setQuoteSelection() override;
 
     public Q_SLOTS:
         bool updateData();
 
 	private Q_SLOTS:
-		void deliveredToServer(QString);
-        void readByClient(QString _aimid, qint64 _id);
         void avatarClicked();
 		void menu(QAction*);
+        void onRecreateAvatarRect();
 
 	protected:
         virtual void leaveEvent(QEvent*) override;
@@ -267,13 +274,11 @@ namespace Ui
 
         bool ClickedOnAvatar_;
 
-        bool isConnectedToDeliveryEvent_;
-        bool isConnectedReadEvent_;
-
-        MessageStatusWidget *TimeWidget_;
+        MessageTimeWidget *TimeWidget_;
 
         MessageItemLayout *Layout_;
         int startSelectY_;
         bool isSelection_;
+        bool isNotAuth_;
 	};
 }

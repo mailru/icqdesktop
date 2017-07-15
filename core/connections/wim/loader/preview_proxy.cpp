@@ -143,7 +143,7 @@ bool link_meta::has_preview_uri() const
     return !preview_uri_.empty();
 }
 
-Str2StrMap format_get_preview_params(
+str_2_str_map format_get_preview_params(
     const std::string &_uri_to_preview,
     const int32_t_opt _width,
     const int32_t_opt _height,
@@ -155,7 +155,7 @@ Str2StrMap format_get_preview_params(
     assert(_favicon_size > favicon_size::min);
     assert(_favicon_size < favicon_size::max);
 
-    Str2StrMap result;
+    str_2_str_map result;
 
     result.emplace("url", wim_packet::escape_symbols(_uri_to_preview));
 
@@ -188,9 +188,9 @@ Str2StrMap format_get_preview_params(
     return result;
 }
 
-Str2StrMap format_get_url_content_params(const std::string &_uri)
+str_2_str_map format_get_url_content_params(const std::string &_uri)
 {
-    Str2StrMap result;
+    str_2_str_map result;
 
     result.emplace("url", wim_packet::escape_symbols(_uri));
 

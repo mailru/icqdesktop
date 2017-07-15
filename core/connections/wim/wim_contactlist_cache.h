@@ -85,9 +85,8 @@ namespace core
         {
             bool changed_;
             bool need_update_search_cache_;
+            bool need_update_avatar_;
             void set_need_update_cache(bool _need_update_search_cache);
-
-            std::string last_search_patterns_;
 
             std::list<std::shared_ptr<cl_group>> groups_;
 
@@ -99,8 +98,9 @@ namespace core
             std::map<std::string, std::shared_ptr<cl_buddy>> tmp_cache_;
             std::map< std::string, std::shared_ptr<cl_buddy> > contacts_index_;
             std::map<std::string, int32_t> search_priority_;
+            std::string last_search_patterns_;
             
-            contactlist() : changed_(false), need_update_search_cache_(false) {}
+            contactlist() : changed_(false), need_update_search_cache_(false), need_update_avatar_(false) {}
 
             void update_cl(const contactlist& _cl);
             void update_ignorelist(const ignorelist_cache& _ignorelist);
@@ -108,7 +108,8 @@ namespace core
             void set_changed(bool _is_changed) {changed_ = _is_changed;}
             bool is_changed() const {return changed_;}
 
-            bool get_need_update_search_cache() const { return need_update_search_cache_; };
+            inline bool get_need_update_search_cache() const { return need_update_search_cache_; };
+            inline bool get_need_update_avatar(bool reset) { auto need = need_update_avatar_; if (reset) need_update_avatar_ = false; return need; }
 
             bool exist(const std::string& contact) { return contacts_index_.find(contact) != contacts_index_.end(); }
 
@@ -128,7 +129,6 @@ namespace core
             void update_presence(const std::string& _aimid, std::shared_ptr<cl_presence> _presence);
             void merge_from_diff(const std::string& _type, std::shared_ptr<contactlist> _diff, std::shared_ptr<std::list<std::string>> removedContacts);
             
-
             int32_t get_contacts_count() const;
             int32_t get_phone_contacts_count() const;
             int32_t get_groupchat_contacts_count() const;

@@ -115,6 +115,24 @@ namespace Emoji
         {
             auto pixelRatio = qApp->primaryScreen()->devicePixelRatio();
             
+            QFont font(QStringLiteral("AppleColorEmoji"), sizeToSearch - Utils::scale_value(6));
+            QFontMetrics metrics(font);
+            QString s = Utils::SChar(_main, _ext).ToQString();
+            
+            QImage imageOut(QSize(sizeToSearch * pixelRatio, sizeToSearch * pixelRatio), QImage::Format_ARGB32);
+            imageOut.fill(Qt::transparent);
+            imageOut.setDevicePixelRatio(pixelRatio);
+            
+            QPainter painter(&imageOut);
+            painter.setFont(font);
+            painter.drawText(QRect(0, 0, sizeToSearch, sizeToSearch), Qt::AlignCenter, s);
+            painter.end();
+            
+            image = imageOut;
+
+            /*
+            auto pixelRatio = qApp->primaryScreen()->devicePixelRatio();
+            
             QImage imageOut(QSize(sizeToSearch * pixelRatio, sizeToSearch * pixelRatio), QImage::Format_ARGB32);
             imageOut.fill(Qt::transparent);
             imageOut.setDevicePixelRatio(pixelRatio);
@@ -125,6 +143,7 @@ namespace Emoji
             painter.end();
             
             image = imageOut;
+            */
         }
         else
         {

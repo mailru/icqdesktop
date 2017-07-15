@@ -5,12 +5,17 @@
 #include "../core_dispatcher.h"
 #include "../../core/Voip/VoipManagerDefines.h"
 #include "../main_window/MainWindow.h"
-
+#include "SelectionContactsForConference.h"
+#include "../main_window/contact_list/ContactList.h"
+#include "../main_window/contact_list/ChatMembersModel.h"
+#include "../main_window/contact_list/ContactListModel.h"
+#include "../main_window/MainPage.h"
+#include "../my_info.h"
 
 #define DEFAULT_ANIMATION_TIME  500
 
-const QString vertSoundBg = "QWidget { background : #ffffffff; }";
-const QString horSoundBg = "QWidget { background : rgba(0,0,0,0%); }";
+const QString vertSoundBg = "QWidget { background : #ffffff; }";
+const QString horSoundBg = "QWidget { background : transparent; }";
 
 const QString sliderGreenH =
 "QSlider:handle:horizontal { background: solid #579e1c; width: 8dip; height: 8dip; margin-top: -11dip; margin-bottom: -11dip; border-radius: 4dip; }"
@@ -86,6 +91,17 @@ bool Ui::ResizeEventFilter::eventFilter(QObject* _obj, QEvent* _e)
     return QObject::eventFilter(_obj, _e);
 }
 
+void Ui::ResizeEventFilter::addPanel(BaseVideoPanel* _panel)
+{
+	panels_.push_back(_panel);
+}
+
+void  Ui::ResizeEventFilter::removePanel(BaseVideoPanel* _panel)
+{
+	panels_.erase(std::remove(panels_.begin(), panels_.end(), _panel), panels_.end());
+}
+
+
 
 Ui::ShadowWindowParent::ShadowWindowParent(QWidget* parent) : shadow_(nullptr)
 {
@@ -104,6 +120,11 @@ Ui::ShadowWindowParent::ShadowWindowParent(QWidget* parent) : shadow_(nullptr)
 		shadow_->move(pos.x() - shadowWidth, pos.y() - shadowWidth);
 		shadow_->resize(parent->rect().width() + 2 * shadowWidth, parent->rect().height() + 2 * shadowWidth);
 	}
+}
+
+Ui::ShadowWindowParent::~ShadowWindowParent()
+{
+    delete shadow_;
 }
 
 void Ui::ShadowWindowParent::showShadow()
@@ -137,13 +158,13 @@ void Ui::ShadowWindowParent::setActive(bool _value)
 
 Ui::AspectRatioResizebleWnd::AspectRatioResizebleWnd()
     : QWidget(NULL)
-    , firstTimeUseAspectRatio_(true)
+    //, firstTimeUseAspectRatio_(true)
     , useAspect_(true)
     , aspectRatio_(0.0f)
 {
     selfResizeEffect_ = new UIEffects(*this);
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipFrameSizeChanged(const voip_manager::FrameSize&)), this, SLOT(onVoipFrameSizeChanged(const voip_manager::FrameSize&)), Qt::DirectConnection);
-    QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallCreated(const voip_manager::ContactEx&)), this, SLOT(onVoipCallCreated(const voip_manager::ContactEx&)), Qt::DirectConnection);
+    //QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallCreated(const voip_manager::ContactEx&)), this, SLOT(onVoipCallCreated(const voip_manager::ContactEx&)), Qt::DirectConnection);
 }
 
 Ui::AspectRatioResizebleWnd::~AspectRatioResizebleWnd()
@@ -183,6 +204,7 @@ void Ui::AspectRatioResizebleWnd::onVoipFrameSizeChanged(const voip_manager::Fra
     {
         const float wasAr = aspectRatio_;
         aspectRatio_ = _fs.aspect_ratio;
+        fitMinimalSizeToAspect();
         applyFrameAspectRatio(wasAr);
         
 #ifdef __APPLE__
@@ -265,7 +287,7 @@ void Ui::AspectRatioResizebleWnd::applyFrameAspectRatio(float _wasAr)
             endRc.setLeft(endRc.right() - w);
         }
 
-        if (firstTimeUseAspectRatio_)
+        //if (firstTimeUseAspectRatio_)
         {
             {
                 const int bestW = 0.6f * screenRect.width();
@@ -291,7 +313,7 @@ void Ui::AspectRatioResizebleWnd::applyFrameAspectRatio(float _wasAr)
                     endRc.setBottom(endRc.top() + bestH);
                 }
             }
-            firstTimeUseAspectRatio_ = false;
+            //firstTimeUseAspectRatio_ = false;
         }
 
         selfResizeEffect_->geometryTo(endRc, 500);
@@ -310,12 +332,21 @@ void Ui::AspectRatioResizebleWnd::keyReleaseEvent(QKeyEvent* _e)
 void Ui::AspectRatioResizebleWnd::useAspect()
 {
     useAspect_ = true;
+    fitMinimalSizeToAspect();
     applyFrameAspectRatio(0.0f);
+#ifdef __APPLE__
+    platform_macos::setAspectRatioForWindow(*this, aspectRatio_);
+#endif
 }
 
 void Ui::AspectRatioResizebleWnd::unuseAspect()
 {
     useAspect_ = false;
+    setMinimumSize(originMinSize_);
+       
+#ifdef __APPLE__
+    platform_macos::unsetAspectRatioForWindow(*this);
+#endif
 }
 
 #ifdef _WIN32
@@ -422,13 +453,32 @@ bool Ui::AspectRatioResizebleWnd::nativeEvent(const QByteArray&, void* _message,
     return false;
 }
 
-void Ui::AspectRatioResizebleWnd::onVoipCallCreated(const voip_manager::ContactEx& _contactEx)
+void Ui::AspectRatioResizebleWnd::saveMinSize(const QSize& size)
 {
-    if (_contactEx.call_count == 1)
+    originMinSize_ = size;
+}
+
+void Ui::AspectRatioResizebleWnd::fitMinimalSizeToAspect()
+{
+    int height = originMinSize_.width() / aspectRatio_;
+    int width  = originMinSize_.height() * aspectRatio_;
+
+    if (height < originMinSize_.height())
     {
-        firstTimeUseAspectRatio_ = true;
+        setMinimumSize(width, originMinSize_.height());
+    } else
+    {
+        setMinimumSize(originMinSize_.width(), height);
     }
 }
+
+//void Ui::AspectRatioResizebleWnd::onVoipCallCreated(const voip_manager::ContactEx& _contactEx)
+//{
+//    if (_contactEx.connection_count == 1)
+//    {
+//        firstTimeUseAspectRatio_ = true;
+//    }
+//}
 
 Ui::UIEffects::UIEffects(QWidget& _obj)
     : fadeEffect_(new QGraphicsOpacityEffect(&_obj))
@@ -469,9 +519,10 @@ void Ui::UIEffects::fadeOut(unsigned _interval)
         animation_->setDuration(_interval);
         animation_->setEndValue(0.01);
         animation_->start();
-        fadedIn_ = false;
     }
 #endif
+
+    fadedIn_ = false;
 }
 
 void Ui::UIEffects::fadeIn(unsigned _interval)
@@ -485,9 +536,15 @@ void Ui::UIEffects::fadeIn(unsigned _interval)
         animation_->setDuration(_interval);
         animation_->setEndValue(1.0);
         animation_->start();
-        fadedIn_ = true;
     }
 #endif
+
+    fadedIn_ = true;
+}
+
+bool Ui::UIEffects::isFadedIn()
+{
+    return fadedIn_;
 }
 
 Ui::BaseVideoPanel::BaseVideoPanel(QWidget* parent, Qt::WindowFlags f) :
@@ -526,6 +583,11 @@ void Ui::BaseVideoPanel::fadeOut(unsigned int duration)
 bool Ui::BaseVideoPanel::isGrabMouse()
 {
     return grabMouse;
+}
+
+bool Ui::BaseVideoPanel::isFadedIn()
+{
+    return effect_ && effect_->isFadedIn();
 }
 
 
@@ -578,7 +640,7 @@ void Ui::BaseBottomVideoPanel::updatePosition(const QWidget& parent)
 
 Ui::PanelBackground::PanelBackground(QWidget* parent) : QWidget(parent)
 {
-    setStyleSheet("background-color: rgba(100, 0, 0, 100%)");
+    setStyleSheet("background-color: #640000;");
     auto videoPanelEffect_ = new UIEffects(*this);
     videoPanelEffect_->fadeOut(0);
 }
@@ -681,6 +743,7 @@ Ui::VolumeControl::VolumeControl
     
     btn_ = new QPushButtonEx(this);
     btn_->setCursor(QCursor(Qt::PointingHandCursor));
+    btn_->setAttribute(Qt::WA_NoMousePropagation);
     
     slider_ = new QSliderEx(horizontal_ ? Qt::Horizontal : Qt::Vertical, this);
     slider_->setCursor(QCursor(Qt::PointingHandCursor));
@@ -693,16 +756,14 @@ Ui::VolumeControl::VolumeControl
     QBoxLayout* layout;
     if (horizontal_)
     {
-        layout = new QHBoxLayout();
+        layout = Utils::emptyHLayout();
         layout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     }
     else
     {
-        layout = new QVBoxLayout();
+        layout = Utils::emptyVLayout();
         layout->setAlignment(Qt::AlignBottom | Qt::AlignHCenter);
     }
-    
-    layout->setContentsMargins(0, 0, 0, 0);
     
     if (horizontal_)
     {
@@ -739,8 +800,7 @@ Ui::VolumeControl::VolumeControl
         slider_->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding));
     }
     
-    auto horLayout = new QHBoxLayout();
-    horLayout->setContentsMargins(0, 0, 0, 0);
+    auto horLayout = Utils::emptyHLayout();
     horLayout->addWidget(widg);
     setLayout(horLayout);
     
@@ -758,6 +818,19 @@ Ui::VolumeControl::VolumeControl
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipVolumeChanged(const std::string&,int)), this, SLOT(onVoipVolumeChanged(const std::string&,int)), Qt::DirectConnection);
     
     connect(btn_, &QPushButton::clicked, this, &VolumeControl::clicked);
+    
+#ifdef __APPLE__
+    // This is hack: We have problem with layout under Mac.
+    // We need to update style of button a little later.
+    // TODO: find better solution.
+    QTimer::singleShot(1, [=]()
+    {
+        if (onChangeStyle_ != NULL && btn_)
+        {
+            onChangeStyle_(*btn_, audioPlaybackDeviceMuted_ || actualVol_ <= 0.0001f);
+        }
+    });
+#endif
 }
 
 Ui::VolumeControl::~VolumeControl()
@@ -940,9 +1013,7 @@ Ui::VolumeGroup::VolumeGroup (QWidget* parent, bool onMainPage, const std::funct
     hVolumeControl = new VolumeControlHorizontal(parent, onMainPage, horSoundBg, _onChangeStyle);
     vVolumeControl = new VolumeControl(parent, false, onMainPage, vertSoundBg, _onChangeStyle);
 
-    setLayout(new QHBoxLayout());
-    layout()->setSpacing(0);
-    layout()->setContentsMargins(0, 0, 0, 0);
+    setLayout(Utils::emptyHLayout());
     layout()->setAlignment(Qt::AlignVCenter);
     
     auto fakeWidget = new QWidget(this);
@@ -1002,6 +1073,7 @@ void Ui::VolumeGroup::forceShowSlider()
 void Ui::VolumeGroup::moveEvent(QMoveEvent * event)
 {
     hVolumeControl->move(x(), y() - hVolumeControl->getAnchorPoint().y());
+    updateSliderPosition();
 }
 
 QWidget* Ui::VolumeGroup::verticalVolumeWidget()
@@ -1034,4 +1106,182 @@ void Ui::VolumeGroup::updateSliderPosition()
         
         vVolumeControl->move(p2);
     }
+}
+
+
+Ui::TransparentPanel::TransparentPanel(QWidget* _parent, BaseVideoPanel* _eventWidget) : BaseVideoPanel(_parent),
+    eventWidget_(_eventWidget)
+{
+    setAttribute(Qt::WA_NoSystemBackground, true);
+    setAttribute(Qt::WA_TranslucentBackground, true);
+
+    QHBoxLayout* rootLayout = Utils::emptyHLayout();
+    rootLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    setLayout(rootLayout);
+
+#ifndef __APPLE__
+    backgroundWidget_ = new PanelBackground(this);
+    backgroundWidget_->updateSizeFromParent();
+#endif
+
+    auto rootWidget_ = new QWidget(this);
+    rootWidget_->setContentsMargins(0, 0, 0, 0);
+    rootWidget_->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+    layout()->addWidget(rootWidget_);
+}
+
+
+Ui::TransparentPanel::~TransparentPanel()
+{
+
+}
+
+void Ui::TransparentPanel::updatePosition(const QWidget& parent)
+{
+    move(eventWidget_->pos());
+    setFixedSize(eventWidget_->size());
+}
+
+void Ui::TransparentPanel::resizeEvent(QResizeEvent * event)
+{
+    if (backgroundWidget_)
+    {
+        backgroundWidget_->updateSizeFromParent();
+    }
+}
+
+void Ui::TransparentPanel::mouseMoveEvent(QMouseEvent* _e)
+{
+    resendMouseEventToPanel(_e);
+}
+
+void Ui::TransparentPanel::mouseReleaseEvent(QMouseEvent * event)
+{
+    resendMouseEventToPanel(event);
+}
+
+void Ui::TransparentPanel::mousePressEvent(QMouseEvent * event)
+{
+    resendMouseEventToPanel(event);
+}
+
+template <typename E> void Ui::TransparentPanel::resendMouseEventToPanel(E* event_)
+{
+    if (eventWidget_->isVisible() && (eventWidget_->rect().contains(event_->pos()) || eventWidget_->isGrabMouse()))
+    {
+        QApplication::sendEvent(eventWidget_, event_);
+    }
+}
+
+
+Ui::FullVideoWindowPanel::FullVideoWindowPanel(QWidget* parent) :
+#ifndef __APPLE__
+    Ui::BaseVideoPanel(parent, Qt::Window | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint)
+#else
+    Ui::BaseVideoPanel(parent, Qt::Window | Qt::FramelessWindowHint /* | Qt::WindowDoesNotAcceptFocus*/ | Qt::NoDropShadowWindowHint)
+#endif
+{
+    setAttribute(Qt::WA_NoSystemBackground, true);
+    setAttribute(Qt::WA_TranslucentBackground, true);
+}
+
+void Ui::FullVideoWindowPanel::updatePosition(const QWidget& parent)
+{
+#ifdef __APPLE__
+    //auto rc = platform_macos::getWindowRect(*parentWidget());
+    QRect parentRect = platform_macos::getWidgetRect(*parentWidget());
+    platform_macos::setWindowPosition(*this,
+        QRect(parentRect.left(),
+            parentRect.top(),
+            parentRect.width(),
+            parentRect.height()));
+#else
+    auto rc = parentWidget()->geometry();
+    setFixedSize(rc.width(), rc.height());
+	move(rc.x(), rc.y());
+#endif
+}
+
+void Ui::FullVideoWindowPanel::resizeEvent(QResizeEvent *event)
+{
+    emit(onResize());
+}
+
+
+void showAddUserToVideoConverenceDialog(QObject* parent, QWidget* parentWindow, 
+    std::function< void(Ui::SelectionContactsForConference*) > connectSignal,
+    std::function< void() > disconnectSignal)
+{
+    emit Utils::InterConnector::instance().searchEnd();
+    Logic::getContactListModel()->clearChecked();
+
+    Logic::ChatMembersModel model(parent);
+    Ui::ContactsForVideoConference modelAll(parent, model);
+
+    Ui::ConferenceSearchMember usersSearchModel;
+    usersSearchModel.setChatMembersModel(&modelAll);
+
+    Ui::SelectionContactsForConference contactsWidget(
+        &model,
+        &modelAll,
+        QT_TRANSLATE_NOOP("voip_pages", "Add to call"),
+        parentWindow,
+        usersSearchModel);
+
+    connectSignal(&contactsWidget);
+
+    contactsWidget.setMaximumSelectedCount(4);
+
+    if (contactsWidget.show() == QDialog::Accepted)
+    {
+        auto selectedContacts = Logic::getContactListModel()->GetCheckedContacts();
+        Logic::getContactListModel()->clearChecked();
+
+        for (const Logic::ContactItem& contact : selectedContacts)
+        {
+            Ui::GetDispatcher()->getVoipController().setStartV(contact.get_aimid().toUtf8(), true);
+        }
+    }
+
+    disconnectSignal();
+
+    Logic::getContactListModel()->clearChecked();
+}
+
+void Ui::showAddUserToVideoConverenceDialogVideoWindow(QObject* parent, FullVideoWindowPanel* parentWindow)
+{
+    showAddUserToVideoConverenceDialog(parent, parentWindow, [parentWindow](Ui::SelectionContactsForConference* dialog)
+        {
+            QObject::connect(parentWindow, &FullVideoWindowPanel::onResize, dialog, &Ui::SelectionContactsForConference::updateSize);
+        },
+        [parentWindow]()
+        {
+            parentWindow->disconnect();
+        }
+    );
+}
+
+void Ui::showAddUserToVideoConverenceDialogMainWindow(QObject* parent, QWidget* parentWindow)
+{
+    showAddUserToVideoConverenceDialog(parent, parentWindow, [](Ui::SelectionContactsForConference* dialog) {}, []() {});
+}
+
+
+Ui::PureClickedWidget::PureClickedWidget(QWidget* parent)
+	: QWidget(parent)
+	, Enabled_(true)
+{
+}
+
+void Ui::PureClickedWidget::setEnabled(bool value)
+{
+	Enabled_ = value;
+	update();
+}
+
+void Ui::PureClickedWidget::mouseReleaseEvent(QMouseEvent *e)
+{
+	if (Enabled_)
+		emit clicked();
+	QWidget::mouseReleaseEvent(e);
 }

@@ -23,7 +23,9 @@ namespace core
         std::string get_update_server()
         {
 #ifdef _WIN32
-            return "https://mra.mail.ru/icq10_win_update/";
+            return build::is_icq()
+                ? "https://mra.mail.ru/icq10_win_update/"
+                : "https://mra.mail.ru/mra10_win_update/";
 #else
 #ifdef __x86_64__
             return "https://mra.mail.ru/icq10_linux_update_x64/";
@@ -94,7 +96,7 @@ namespace core
                 params.login_ = g_core->get_root_login();
                 params.must_stop_ = std::bind(&updater::must_stop, this);
 
-                auto proxy = g_core->get_user_proxy_settings();
+                auto proxy = g_core->get_proxy_settings();
 
                 thread_->run_async_function(
                     [params, proxy]
@@ -120,7 +122,8 @@ namespace core
             if (http_code != 200)
                 return -1;
 
-            auto response = request.get_response();
+            auto response = dynamic_cast<tools::binary_stream*>(request.get_response().get());
+            assert(response);
 
             if (!response->available())
                 return -1;
@@ -185,7 +188,8 @@ namespace core
             if (http_code != 200)
                 return -1;
 
-            auto response = request.get_response();
+            auto response = dynamic_cast<tools::binary_stream*>(request.get_response().get());
+            assert(response);
 
             if (!response->available())
                 return -1;
@@ -224,7 +228,7 @@ namespace core
                 return -1;
 
             wchar_t temp_file_name[1024];
-            if (!::GetTempFileName(temp_path, L"icqsetup", 0, temp_file_name))
+            if (!::GetTempFileName(temp_path, build::is_icq() ? L"icqsetup" : L"magentsetup", 0, temp_file_name))
                 return -1;
 
             _data.save_2_file(temp_file_name);

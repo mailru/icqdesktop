@@ -8,21 +8,13 @@
 
 namespace Ui
 {
-
-    int32_t MessageStatusWidget::getMaxWidth()
-    {
-        return Utils::scale_value(30);
-    }
-
-    MessageStatusWidget::MessageStatusWidget(HistoryControlPageItem *messageItem)
+    MessageTimeWidget::MessageTimeWidget(HistoryControlPageItem *messageItem)
         : QWidget(messageItem)
-        , IsMessageBubbleVisible_(true)
-        , IsOutgoing_(true)
     {
         setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
 
-    void MessageStatusWidget::setTime(const int32_t timestamp)
+    void MessageTimeWidget::setTime(const int32_t timestamp)
     {
         TimeText_ =
             QDateTime::fromTime_t(timestamp)
@@ -42,14 +34,14 @@ namespace Ui
         update();
     }
 
-    QSize MessageStatusWidget::sizeHint() const
+    QSize MessageTimeWidget::sizeHint() const
     {
         assert(!TimeTextSize_.isEmpty());
 
         return TimeTextSize_;
     }
 
-    void MessageStatusWidget::paintEvent(QPaintEvent *)
+    void MessageTimeWidget::paintEvent(QPaintEvent *)
     {
         QPainter p(this);
 
@@ -57,8 +49,10 @@ namespace Ui
 
         auto cursorX = 0;
 
+        QColor c(getTimeColor());
+        c.setAlphaF(0.8);
         p.setFont(MessageStyle::getTimeFont());
-        p.setPen(getTimeColor());
+        p.setPen(QPen(c));
 
         const auto textBaseline = height;
 
@@ -66,7 +60,7 @@ namespace Ui
         p.drawText(cursorX, textBaseline, TimeText_);
     }
 
-    QColor MessageStatusWidget::getTimeColor() const
+    QColor MessageTimeWidget::getTimeColor() const
     {
         auto curTheme = Ui::get_qt_theme_settings()->themeForContact(aimId_);
         if (!curTheme)
@@ -74,21 +68,6 @@ namespace Ui
             return MessageStyle::getTimeColor();
         }
 
-        if (IsMessageBubbleVisible_)
-        {
-            if (IsOutgoing_)
-            {
-                return curTheme->outgoing_bubble_.time_color_;
-            }
-
-            return curTheme->incoming_bubble_.time_color_;
-        }
-
         return curTheme->preview_stickers_.time_color_;
-    }
-
-    void MessageStatusWidget::setMessageBubbleVisible(const bool _visible)
-    {
-        IsMessageBubbleVisible_ = _visible;
     }
 }

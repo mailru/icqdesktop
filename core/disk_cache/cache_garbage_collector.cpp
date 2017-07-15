@@ -35,7 +35,7 @@ void cleanup_dir(const std::wstring &_path)
          dir_entry != dir_end;
          ++dir_entry )
     {
-        const auto file_name_path = dir_entry->path().filename().c_str();
+        //const auto file_name_path = dir_entry->path().filename().c_str();
         //const auto filename = (
         //    platform::is_windows() ?
         //        tools::from_utf16(file_name_path) :

@@ -14,6 +14,7 @@ namespace Logic
         virtual void emitChanged(int _first, int _last) = 0;
         virtual void searchPatternChanged(QString _p) = 0;
         virtual void setSelectEnabled(bool) { };
+        virtual bool isServiceItem(int i) const = 0;
     
         void setSort(bool _isClSorting);
         bool isClSorting() const;

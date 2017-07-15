@@ -78,6 +78,8 @@ StickerBlock::StickerBlock(ComplexMessageItem *parent,  const HistoryControl::St
 
     Placeholder_ = Themes::GetPixmap(Themes::PixmapResourceId::StickerHistoryPlaceholder);
     LastSize_ = Placeholder_->GetSize();
+
+    QuoteAnimation_.setSemiTransparent();
 }
 
 StickerBlock::~StickerBlock()
@@ -109,11 +111,6 @@ QString StickerBlock::getSourceText() const
 QString StickerBlock::formatRecentsText() const
 {
     return QT_TRANSLATE_NOOP("contact_list", "Sticker");
-}
-
-bool StickerBlock::hasRightStatusPadding() const
-{
-    return true;
 }
 
 bool StickerBlock::isSelected() const
@@ -160,7 +157,7 @@ QRect StickerBlock::setBlockGeometry(const QRect &ltr)
     return Geometry_;
 }
 
-void StickerBlock::drawBlock(QPainter &p)
+void StickerBlock::drawBlock(QPainter &p, const QRect& _rect, const QColor& quate_color)
 {
     p.save();
 
@@ -182,6 +179,17 @@ void StickerBlock::drawBlock(QPainter &p)
                 offset, 0,
                 LastSize_.width(), LastSize_.height()),
             Sticker_);
+
+		if (quate_color.isValid())
+		{
+			p.setBrush(QBrush(quate_color));
+			p.drawRoundRect(
+				QRect(
+				offset, 0,
+				LastSize_.width(), LastSize_.height()),
+				Utils::scale_value(8),
+				Utils::scale_value(8));
+		}
     }
 
     if (isSelected())

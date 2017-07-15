@@ -24,16 +24,11 @@ namespace Ui
 
     namespace
     {
-
-        QBrush getBodyHoveredBrush();
-
         int32_t getIconRightPadding();
 
         int32_t getIconTopPadding();
 
         int32_t getTextBaselineY();
-
-        int32_t getTimeLeftMargin(bool isOutgoing);
 
     }
 
@@ -42,7 +37,7 @@ namespace Ui
         , EventInfo_(eventInfo)
         , IsAvatarHovered_(false)
         , IsBubbleHovered_(false)
-        , StatusWidget_(nullptr)
+        , TimeWidget_(nullptr)
         , lastRead_(false)
         , id_(-1)
     {
@@ -56,7 +51,7 @@ namespace Ui
         , EventInfo_(eventInfo)
         , IsAvatarHovered_(false)
         , IsBubbleHovered_(false)
-        , StatusWidget_(new MessageStatusWidget(this))
+        , TimeWidget_(new MessageTimeWidget(this))
         , lastRead_(false)
         , id_(-1)
     {
@@ -81,9 +76,8 @@ namespace Ui
         Icon_ = eventInfo->loadIcon(false);
         HoverIcon_ = eventInfo->loadIcon(true);
 
-        StatusWidget_->setContact(EventInfo_->getContactAimid());
-        StatusWidget_->setOutgoing(isOutgoing());
-        StatusWidget_->setTime(EventInfo_->getTimestamp());
+        TimeWidget_->setContact(EventInfo_->getContactAimid());
+        TimeWidget_->setTime(EventInfo_->getTimestamp());
     }
 
     QString VoipEventItem::formatRecentsText() const
@@ -216,11 +210,7 @@ namespace Ui
 
         int theme_id = get_qt_theme_settings()->themeIdForContact(EventInfo_->getContactAimid());//theme()->get_id();
 
-        const auto bodyBrush = (
-            IsBubbleHovered_ ?
-                getBodyHoveredBrush() :
-                Ui::MessageStyle::getBodyBrush(isOutgoing(), false, theme_id)
-        );
+        const auto bodyBrush = Ui::MessageStyle::getBodyBrush(isOutgoing(), IsBubbleHovered_, theme_id);
 
         p.fillPath(Bubble_, bodyBrush);
 
@@ -257,7 +247,7 @@ namespace Ui
             cursorX += MessageStyle::getBubbleHorPadding();
         }
 
-        if (StatusWidgetGeometry_.isValid())
+        if (TimeWidgetGeometry_.isValid())
         {
             auto eventText = (
                 IsBubbleHovered_ ?
@@ -267,7 +257,7 @@ namespace Ui
             const auto eventTextFont = MessageStyle::getTextFont();
 
             auto textWidth = (
-                StatusWidgetGeometry_.left() -
+                TimeWidgetGeometry_.left() -
                 getIconRightPadding() -
                 cursorX);
             textWidth = std::max(0, textWidth);
@@ -301,7 +291,8 @@ namespace Ui
         QMargins margins(
             MessageStyle::getLeftMargin(isOutgoing()),
             MessageStyle::getTopMargin(hasTopMargin()),
-            MessageStyle::getRightMargin(isOutgoing()),
+            MessageStyle::getRightMargin(isOutgoing()) +
+            MessageStyle::getTimeMaxWidth(),
             (lastRead_ ? (MessageStyle::getLastReadAvatarSize() + 2 * MessageStyle::getLastReadAvatarMargin()) : (0) )
         );
 
@@ -320,28 +311,26 @@ namespace Ui
             Bubble_ = QPainterPath();
         }
 
-        const auto statusWidgetSize = StatusWidget_->sizeHint();
+        const auto timeWidgetSize = TimeWidget_->sizeHint();
 
-        auto statusX = BubbleRect_.right();
-        statusX -= MessageStyle::getTimeMargin();
-        statusX -= statusWidgetSize.width();
-        statusX -= getTimeLeftMargin(isOutgoing());
+        auto timeX = BubbleRect_.right();
+        timeX += MessageStyle::getTimeMarginX();
 
-        auto statusY = BubbleRect_.bottom();
-        statusY -= MessageStyle::getTimeMargin();
-        statusY -= statusWidgetSize.height();
+        auto timeY = BubbleRect_.bottom();
+        timeY -= MessageStyle::getTimeMarginY();
+        timeY -= timeWidgetSize.height();
 
-        QRect statusWidgetGeometry(
-            statusX,
-            statusY,
-            statusWidgetSize.width(),
-            statusWidgetSize.height()
+        QRect timeWidgetGeometry(
+            timeX,
+            timeY,
+            timeWidgetSize.width(),
+            timeWidgetSize.height()
         );
 
-        StatusWidget_->setGeometry(statusWidgetGeometry);
-        StatusWidget_->show();
+        TimeWidget_->setGeometry(timeWidgetGeometry);
+        TimeWidget_->show();
 
-        StatusWidgetGeometry_ = statusWidgetGeometry;
+        TimeWidgetGeometry_ = timeWidgetGeometry;
 
         HistoryControlPageItem::resizeEvent(event);
     }
@@ -421,26 +410,20 @@ namespace Ui
 
     void VoipEventItem::updateStyle()
     {
-        if (StatusWidget_)
-            StatusWidget_->update();
+        if (TimeWidget_)
+            TimeWidget_->update();
         update();
     }
 
+	void VoipEventItem::setQuoteSelection()
+	{
+		/// TODO-quote
+		assert(0);
+	}
+
     QColor VoipEventItem::getTextColor(const bool isHovered)
     {
-        QColor textColor = (isHovered ? 0xffffff : MessageStyle::getTextColor());
-        auto theme = get_qt_theme_settings()->themeForContact(EventInfo_->getContactAimid());
-        if (theme && !isHovered)
-        {
-            if (isOutgoing())
-            {
-                textColor = theme->outgoing_bubble_.text_color_;
-            }
-            else
-            {
-                textColor = theme->incoming_bubble_.text_color_;
-            }
-        }
+        QColor textColor = (isHovered ? "#ffffff" : MessageStyle::getTextColor());
         return textColor;
     }
 
@@ -457,36 +440,9 @@ namespace Ui
             return Utils::scale_value(9);
         }
 
-        QBrush getBodyHoveredBrush()
-        {
-            QLinearGradient grad(0, 0, 1, 0);
-
-            grad.setCoordinateMode(QGradient::ObjectBoundingMode);
-
-            const QColor color0(0x57, 0x9e, 0x1c, (int32_t)(0.9 * 255));
-            grad.setColorAt(0, color0);
-
-            const QColor color1(0x57, 0x9e, 0x1c, (int32_t)(0.72 * 255));
-            grad.setColorAt(1, color1);
-
-            QBrush result(grad);
-            result.setColor(QColor(0, 0, 0, 0));
-
-            return result;
-        }
-
         int32_t getTextBaselineY()
         {
             return Utils::scale_value(21);
         }
-
-        int32_t getTimeLeftMargin(bool isOutgoing)
-        {
-#ifdef __APPLE__
-            return 0;
-#endif //__APPLE__
-            return isOutgoing ? 4 : 3;
-        }
     }
-
 }

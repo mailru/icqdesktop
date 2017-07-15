@@ -34,6 +34,7 @@ Q_SIGNALS:
         void editFocusOut();
         void ctrlFPressedInInputWidget();
         void needUpdateSizes();
+        void sizeChanged();
 
     public Q_SLOTS:
         void quote(QList<Data::Quote>);
@@ -65,7 +66,7 @@ Q_SIGNALS:
 
     public:
 
-        InputWidget(QWidget* parent);
+        InputWidget(QWidget* parent, int height = -1, const QString& styleSheet = QString(), bool messageOnly = false);
         ~InputWidget();
         void hide();
         void hideNoClear();
@@ -73,12 +74,16 @@ Q_SIGNALS:
         void disable(DisableReason reason);
         void enable();
 
+        void predefined(const QString& _contact, const QString& _text);
+
         Q_PROPERTY(int current_height READ get_current_height WRITE set_current_height)
 
         void set_current_height(int _val);
         int get_current_height() const;
 
         void setFocusOnInput();
+
+        void setFontColor(const QColor& _color);
 
     private:
         void initQuotes(const QString&);
@@ -95,6 +100,7 @@ Q_SIGNALS:
 
         input_edit* text_edit_;
         QString contact_;
+        QString predefined_;
 
         QWidget* quote_text_widget_;
         TextEditEx* quote_text_;
@@ -114,7 +120,9 @@ Q_SIGNALS:
         int active_height_;
         int need_height_;
         int active_document_height_;
+        int default_height_;
         bool is_initializing_;
+        bool message_only_;
         QMap<QString, DisableReason>  disabled_;
 
     protected:

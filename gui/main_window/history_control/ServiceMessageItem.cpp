@@ -11,52 +11,34 @@ namespace Ui
 		, overlay_(overlay)
 	{
 		setStyleSheet(Utils::LoadStyle(":/main_window/history_control/history_control.qss"));
-        this->setProperty("ServiceMessage", QVariant(true));
-        horizontal_layout_ = new QHBoxLayout(this);
-        horizontal_layout_->setSpacing(0);
-        horizontal_layout_->setContentsMargins(0, 0, 0, 0);
+        this->setProperty("ServiceMessage", true);
+        horizontal_layout_ = Utils::emptyHLayout(this);
         left_widget_ = new QWidget(this);
-        QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        sizePolicy.setHeightForWidth(left_widget_->sizePolicy().hasHeightForWidth());
-        left_widget_->setSizePolicy(sizePolicy);
-        left_widget_->setProperty("ServiceMessageCommonWidget", QVariant(true));
-        horizontal_layout_4_ = new QHBoxLayout(left_widget_);
-        horizontal_layout_4_->setSpacing(0);
-        horizontal_layout_4_->setContentsMargins(0, 0, 0, 0);
+        left_widget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        left_widget_->setProperty("ServiceMessageCommonWidget", true);
+        horizontal_layout_4_ = Utils::emptyHLayout(left_widget_);
         horizontal_layout_->addWidget(left_widget_);
         widget_ = new QWidget(this);
-        sizePolicy.setHeightForWidth(widget_->sizePolicy().hasHeightForWidth());
-        widget_->setSizePolicy(sizePolicy);
-        widget_->setProperty("DateWidget", QVariant(true));
-        horizontal_layout_2_ = new QHBoxLayout(widget_);
-        horizontal_layout_2_->setSpacing(0);
-        horizontal_layout_2_->setContentsMargins(0, 0, 0, 0);
+        widget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        widget_->setProperty("DateWidget", true);
+        horizontal_layout_2_ = Utils::emptyHLayout(widget_);
         message_ = new QLabel(widget_);
-        QSizePolicy sizePolicy1(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy1.setHorizontalStretch(0);
-        sizePolicy1.setVerticalStretch(0);
-        sizePolicy1.setHeightForWidth(message_->sizePolicy().hasHeightForWidth());
-        message_->setSizePolicy(sizePolicy1);
+        message_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         message_->setAlignment(Qt::AlignHCenter|Qt::AlignTop);
         if (platform::is_apple())
         {
             message_->setContentsMargins(0, 1, 0, 0);
         }
         message_->setWordWrap(false);
-        message_->setProperty("DateWidgetLabel", QVariant(true));
+        message_->setProperty("DateWidgetLabel", true);
         horizontal_layout_2_->addWidget(message_);
 
         horizontal_layout_->addWidget(widget_);
 
         right_widget_ = new QWidget(this);
-        sizePolicy.setHeightForWidth(right_widget_->sizePolicy().hasHeightForWidth());
-        right_widget_->setSizePolicy(sizePolicy);
-        right_widget_->setProperty("ServiceMessageCommonWidget", QVariant(true));
-        horizontal_layout_3_ = new QHBoxLayout(right_widget_);
-        horizontal_layout_3_->setSpacing(0);
-        horizontal_layout_3_->setContentsMargins(0, 0, 0, 0);
+        right_widget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        right_widget_->setProperty("ServiceMessageCommonWidget", true);
+        horizontal_layout_3_ = Utils::emptyHLayout(right_widget_);
 
         horizontal_layout_->addWidget(right_widget_);
 
@@ -109,7 +91,13 @@ namespace Ui
         right_widget_->setStyleSheet(leftRightStyleSheet);
     }
 
-	ServiceMessageItem::~ServiceMessageItem()
+	void ServiceMessageItem::setQuoteSelection()
+	{
+		/// TODO-quote
+		assert(0);
+	}
+
+    ServiceMessageItem::~ServiceMessageItem()
 	{
 	}
 

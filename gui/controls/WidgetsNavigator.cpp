@@ -80,7 +80,7 @@ namespace Ui
             {
                 auto& widgetsByIndex = widgetsAddedOrderByIndexes_[indexToDelete];
                 widgetsByIndex.erase(std::remove(widgetsByIndex.begin(), widgetsByIndex.end(), _widget), widgetsByIndex.end());
-                if (widgetsByIndex.size() == 0)
+                if (widgetsByIndex.empty())
                 {
                     widgetsAddedOrderByIndexes_.erase(indexToDelete);
                 }

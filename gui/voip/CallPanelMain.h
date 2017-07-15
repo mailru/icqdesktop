@@ -83,12 +83,7 @@ namespace Ui
             {
                 eVideoPanelHeaderItems topPartFormat;
                 unsigned topPartHeight;
-                unsigned topPartFontSize;
-
                 unsigned bottomPartHeight;
-                unsigned bottomPartPanelHeight;
-
-                unsigned rgba;
             };
 
         private Q_SLOTS:
@@ -104,8 +99,9 @@ namespace Ui
             void onSecureCallClicked();
             void onSecureCallWndOpened();
             void onSecureCallWndClosed();
+            void addUserToVideoCall();
 
-            void onVoipCallNameChanged(const std::vector<voip_manager::Contact>&);
+            void onVoipCallNameChanged(const voip_manager::ContactsList&);
             void onVoipMediaLocalVideo(bool _enabled);
             void onVoipMediaLocalAudio(bool _enabled);
             void onVoipUpdateCipherState(const voip_manager::CipherState& _state);

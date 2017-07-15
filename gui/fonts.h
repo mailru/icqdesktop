@@ -24,7 +24,6 @@ enum class FontWeight
     Light,
     Normal,
     Medium,
-    Semibold,
     Bold,
 
     Max,
@@ -57,6 +56,8 @@ QString defaultAppFontQssName();
 QString defaultAppFontQssWeight();
 
 FontWeight defaultAppFontWeight();
+
+QString SetFont(const QString& _qss);
 
 FONTS_NS_END
 

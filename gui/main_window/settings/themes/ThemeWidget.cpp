@@ -17,27 +17,19 @@ namespace Ui
         borderWidget_ = new QWidget(this);
         int w = _pixmap.width() / (platform::is_apple() ? 2 : 1);// / Utils::scale_bitmap(1);
         int h = _pixmap.height() / (platform::is_apple() ? 2 : 1);// / Utils::scale_bitmap(1);
-        setFixedWidth(w);
-        setFixedHeight(h);
-        themeButton->setFixedWidth(w);
-        themeButton->setFixedHeight(h);
+        setFixedSize(w, h);
+        themeButton->setFixedSize(w, h);
         themeButton->setCursor(Qt::PointingHandCursor);
-        borderWidget_->setFixedWidth(w);
-        borderWidget_->setFixedHeight(h);
+        borderWidget_->setFixedSize(w, h);
         
         connect(themeButton, SIGNAL(clicked()), this, SLOT(onThemePressed()));
         Utils::ApplyStyle(borderWidget_, "background-color: transparent; border-style: solid; border-color: #579e1c; border-width: 4dip;");
         
         CustomButton *mark = new CustomButton(this, ":/resources/contr_wallpaper_select_100.png");
         Utils::ApplyStyle(mark, "background-color: transparent; border-color: transparent;");
-        mark->setFixedWidth(Utils::scale_value(32));
-        mark->setFixedHeight(Utils::scale_value(32));
-        QVBoxLayout* vlayout = new QVBoxLayout();
-        QHBoxLayout* hlayout = new QHBoxLayout();
-        vlayout->setContentsMargins(0, 0, 0, 0);
-        hlayout->setContentsMargins(0, 0, 0, 0);
-        vlayout->setSpacing(0);
-        hlayout->setSpacing(0);
+        mark->setFixedSize(Utils::scale_value(32), Utils::scale_value(32));
+        QVBoxLayout* vlayout = Utils::emptyVLayout();
+        QHBoxLayout* hlayout = Utils::emptyHLayout();
         vlayout->setAlignment(Qt::AlignTop);
         hlayout->setAlignment(Qt::AlignRight);
         vlayout->addLayout(hlayout);

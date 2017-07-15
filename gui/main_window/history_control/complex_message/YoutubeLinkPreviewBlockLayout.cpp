@@ -12,23 +12,6 @@
 
 UI_COMPLEX_MESSAGE_NS_BEGIN
 
-namespace
-{
-    QSize getFaviconPlaceholderSize();
-
-    QSize getImagePreloaderSizeDip();
-
-    int32_t getPreviewWidthMax();
-
-    QSize getSiteNamePlaceholderSize();
-
-    QSize getTitlePlaceholderSize();
-
-    int32_t getTitlePlaceholderTopOffset();
-
-    int32_t getTitleTopOffset();
-}
-
 YoutubeLinkPreviewBlockLayout::YoutubeLinkPreviewBlockLayout()
 {
 }
@@ -80,8 +63,8 @@ const IItemBlockLayout::IBoxModel& YoutubeLinkPreviewBlockLayout::getBlockBoxMod
 QSize YoutubeLinkPreviewBlockLayout::getMaxPreviewSize() const
 {
     return QSize(
-        Utils::scale_value(480),
-        Style::getImageHeightMax());
+        Style::Preview::getImageWidthMax(),
+        Style::Snippet::getLinkPreviewHeightMax());
 }
 
 QRect YoutubeLinkPreviewBlockLayout::getFaviconImageRect() const
@@ -106,7 +89,7 @@ QRect YoutubeLinkPreviewBlockLayout::getSiteNameRect() const
 
 QFont YoutubeLinkPreviewBlockLayout::getTitleFont() const
 {
-    return Style::getYoutubeTitleFont();
+    return Style::Snippet::getYoutubeTitleFont();
 }
 
 QRect YoutubeLinkPreviewBlockLayout::getTitleRect() const
@@ -171,7 +154,7 @@ QSize YoutubeLinkPreviewBlockLayout::setBlockGeometryInternal(const QRect &geome
 
     auto previewContentWidth = std::min(
         geometry.width(),
-        getPreviewWidthMax());
+        Style::Preview::getImageWidthMax());
 
     if (block.getMaxPreviewWidth() != 0)
         previewContentWidth = std::min(previewContentWidth, block.getMaxPreviewWidth());
@@ -184,7 +167,7 @@ QSize YoutubeLinkPreviewBlockLayout::setBlockGeometryInternal(const QRect &geome
 
     auto titleWidth = std::min(
         geometry.width(),
-        getPreviewWidthMax());
+        Style::Preview::getImageWidthMax());
 
     const QRect titleContentLtr(
         geometry.topLeft(),
@@ -223,12 +206,12 @@ QRect YoutubeLinkPreviewBlockLayout::evaluateFaviconImageRect(const LinkPreviewB
     const auto hasTextAbove = !titleGeometry.isEmpty();
     if (hasTextAbove)
     {
-        faviconGeometry.translate(0, Style::getFaviconTopPadding());
+        faviconGeometry.translate(0, Style::Snippet::getFaviconTopPadding());
     }
 
     const auto faviconSize =
         block.isInPreloadingState() ?
-            getFaviconPlaceholderSize() :
+            Style::Snippet::getFaviconPlaceholderSize() :
             block.getFaviconSizeUnscaled();
 
     faviconGeometry.setSize(faviconSize);
@@ -242,7 +225,7 @@ QRect YoutubeLinkPreviewBlockLayout::evaluatePreviewImageRect(const LinkPreviewB
 
     auto previewImageSize = (
         block.isInPreloadingState() ?
-            getImagePreloaderSizeDip() :
+        Style::Snippet::getImagePreloaderSizeDip() :
             block.getPreviewImageSize());
 
     if (previewImageSize.isEmpty())
@@ -256,7 +239,7 @@ QRect YoutubeLinkPreviewBlockLayout::evaluatePreviewImageRect(const LinkPreviewB
 
     const QSize maxSize(
         previewContentLtr.width(),
-        Style::getImageHeightMax());
+        Style::Snippet::getLinkPreviewHeightMax());
 
     previewImageSize = limitSize(previewImageSize, maxSize);
 
@@ -275,7 +258,7 @@ QRect YoutubeLinkPreviewBlockLayout::evaluateSiteNameGeometry(const LinkPreviewB
     const auto hasTextAbove = !titleGeometry.isEmpty();
     if (hasTextAbove)
     {
-        siteNameY += Style::getSiteNameTopPadding();
+        siteNameY += Style::Snippet::getSiteNameTopPadding();
     }
 
     auto siteNameX = (faviconGeometry.right() + 1);
@@ -283,7 +266,7 @@ QRect YoutubeLinkPreviewBlockLayout::evaluateSiteNameGeometry(const LinkPreviewB
     const auto hasFavicon = !faviconGeometry.isEmpty();
     if (hasFavicon)
     {
-        siteNameX += Style::getSiteNameLeftPadding();
+        siteNameX += Style::Snippet::getSiteNameLeftPadding();
     }
 
     QSize siteNameSize(0, 0);
@@ -303,7 +286,7 @@ QRect YoutubeLinkPreviewBlockLayout::evaluateSiteNameGeometry(const LinkPreviewB
     else if (block.isInPreloadingState())
     {
         assert(!faviconGeometry.isEmpty());
-        siteNameSize = getSiteNamePlaceholderSize();
+        siteNameSize = Style::Snippet::getSiteNamePlaceholderSize();
         siteNameY = faviconGeometry.top();
     }
 
@@ -327,7 +310,7 @@ QRect YoutubeLinkPreviewBlockLayout::evaluateTitleLtr(const QRect &previewConten
 
     if (hasPreview)
     {
-        const auto topOffset = (isPlaceholder ? getTitlePlaceholderTopOffset() : getTitleTopOffset());
+        const auto topOffset = (isPlaceholder ? Style::Snippet::getTitlePlaceholderTopOffset() : Style::Snippet::getTitleTopOffset());
         titleLtr.translate(0, topOffset);
     }
 
@@ -373,7 +356,7 @@ QRect YoutubeLinkPreviewBlockLayout::setTitleGeometry(LinkPreviewBlock &block, c
     {
         QRect preloaderGeometry(
             titleLtr.topLeft(),
-            getTitlePlaceholderSize());
+            Style::Snippet::getTitlePlaceholderSize());
 
         return preloaderGeometry;
     }
@@ -413,44 +396,6 @@ QRect YoutubeLinkPreviewBlockLayout::setTitleGeometry(LinkPreviewBlock &block, c
     }
 
     return titleGeometry;
-}
-
-namespace
-{
-    QSize getFaviconPlaceholderSize()
-    {
-        return Utils::scale_value(QSize(12, 12));
-    }
-
-    QSize getImagePreloaderSizeDip()
-    {
-        return QSize(320, 164);
-    }
-
-    int32_t getPreviewWidthMax()
-    {
-        return Utils::scale_value(480);
-    }
-
-    QSize getSiteNamePlaceholderSize()
-    {
-        return Utils::scale_value(QSize(64, 12));
-    }
-
-    QSize getTitlePlaceholderSize()
-    {
-        return Utils::scale_value(QSize(272, 20));
-    }
-
-    int32_t getTitlePlaceholderTopOffset()
-    {
-        return Utils::scale_value(8);
-    }
-
-    int32_t getTitleTopOffset()
-    {
-        return Utils::scale_value(12);
-    }
 }
 
 UI_COMPLEX_MESSAGE_NS_END

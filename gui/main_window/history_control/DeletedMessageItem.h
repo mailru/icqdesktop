@@ -11,6 +11,8 @@ namespace Ui
     public:
         DeletedMessageItem(QWidget* _parent);
         virtual ~DeletedMessageItem();
+
+		virtual void setQuoteSelection() override;
     };
 
 }

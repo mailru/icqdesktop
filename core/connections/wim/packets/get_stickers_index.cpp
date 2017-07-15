@@ -18,6 +18,10 @@ get_stickers_index::~get_stickers_index()
 {
 }
 
+bool get_stickers_index::support_async_execution() const
+{
+    return true;
+}
 
 int32_t get_stickers_index::init_request(std::shared_ptr<core::http_request_simple> _request)
 {
@@ -56,13 +60,9 @@ int32_t get_stickers_index::init_request(std::shared_ptr<core::http_request_simp
 
     _request->set_url(ss_url.str());
     _request->set_keep_alive();
+    _request->set_priority(high_priority);
 
     return 0;
-}
-
-int32_t get_stickers_index::execute()
-{
-    return wim_packet::execute();
 }
 
 int32_t get_stickers_index::parse_response(std::shared_ptr<core::tools::binary_stream> _response)

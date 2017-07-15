@@ -16,6 +16,8 @@ namespace Ui
         {
             MyInfoData()
                 : flags_(0)
+                , auto_created_(false)
+                , hasMail_(false)
             {}
 
             QString aimId_;
@@ -27,6 +29,8 @@ namespace Ui
             uint32_t flags_;
             QString largeIconId_;
             bool auto_created_;
+            bool hasMail_;
+
         };
         MyInfoData data_;
         MyInfoData prevData_;
@@ -34,6 +38,7 @@ namespace Ui
     public:
         my_info();
         void unserialize(core::coll_helper* _collection);
+        bool haveConnectedEmail() { return data_.hasMail_; }
 
         QString aimId() const { return data_.aimId_; };
         QString displayId() const { return data_.displayId_; };

@@ -66,6 +66,8 @@ namespace Logic
         static bool receiveMembers(qint64 _sendSeq, qint64 _seq, QObject* _recv);
         unsigned getVisibleRowsCount() const;
 
+        static int get_limit(int limit);
+
         bool isAdmin() const;
         bool isModer() const;
         void clear();

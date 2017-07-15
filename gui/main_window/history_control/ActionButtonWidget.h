@@ -87,7 +87,7 @@ public:
 
     void setProgress(const double progress);
 
-    void setProgressPen(const int32_t r, const int32_t g, const int32_t b, const double a, const double width);
+    void setProgressPen(const QColor color, const double a, const double width);
 
     void setProgressText(const QString &progressText);
 

@@ -10,6 +10,7 @@
 #define _WIN32_LEAN_AND_MEAN
 
 #include "win32/targetver.h"
+#include <event2/event.h>
 #include <Windows.h>
 #include <Shlobj.h>
 #include <atlbase.h>
@@ -68,7 +69,9 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
+#include "product.h"
 #include "../common.shared/common.h"
+#include "../common.shared/typedefs.h"
 
 #include "tools/tlv.h"
 #include "tools/binary_stream.h"
@@ -97,3 +100,22 @@ typedef rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator> rapidjson_alloca
 //#       define DEBUG__OUTPUT_NET_PACKETS
 #   endif // defined(DEBUG) || defined(_DEBUG)
 #endif // __APPLE__
+
+namespace core
+{
+    typedef long milliseconds_t;
+
+    typedef size_t hash_t;
+
+    typedef int priority_t; // the lower number is the higher priority
+
+    extern const priority_t increase_priority;
+    extern const priority_t decrease_priority;
+
+    extern const priority_t top_priority;
+    extern const priority_t highest_priority;
+    extern const priority_t high_priority;
+    extern const priority_t default_priority;
+    extern const priority_t low_priority;
+    extern const priority_t lowest_priority;
+}

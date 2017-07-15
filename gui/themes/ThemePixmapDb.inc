@@ -1,19 +1,12 @@
-std::make_tuple(PixmapResourceId::ContactListAddContact,					"cl",				"add_contact"),
-std::make_tuple(PixmapResourceId::ContactListAddContactHovered,				"cl",				"add_contact_hover"),
-std::make_tuple(PixmapResourceId::ContentMuteNotify,						"cl",				"mutenotify"),
-std::make_tuple(PixmapResourceId::ContentMuteNotifyNew,						"cl",				"mutenotify_new"),
-
 std::make_tuple(PixmapResourceId::FileSharingDownload,						"file_sharing",		"download"),
 std::make_tuple(PixmapResourceId::FileSharingPlainCancel,					"file_sharing",		"plain_cancel"),
 std::make_tuple(PixmapResourceId::FileSharingMediaCancel,					"file_sharing",		"media_cancel"),
 std::make_tuple(PixmapResourceId::FileSharingMediaCancelActive,				"file_sharing",		"media_cancel_active"),
 std::make_tuple(PixmapResourceId::FileSharingMediaCancelHover,				"file_sharing",		"media_cancel_hover"),
 std::make_tuple(PixmapResourceId::FileSharingMediaPlay,						"file_sharing",		"media_play"),
-std::make_tuple(PixmapResourceId::FileSharingMediaPlayActive,				"file_sharing",		"media_play_active"),
 std::make_tuple(PixmapResourceId::FileSharingMediaPlayHover,				"file_sharing",		"media_play_hover"),
 std::make_tuple(PixmapResourceId::FileSharingGifPlay,						"file_sharing",		"gif_play"),
 std::make_tuple(PixmapResourceId::FileSharingShareContent,					"file_sharing",		"share_content"),
-std::make_tuple(PixmapResourceId::FileSharingShareContentActive,			"file_sharing",		"share_content_active"),
 std::make_tuple(PixmapResourceId::FileSharingShareContentHover,				"file_sharing",		"share_content_hover"),
 
 std::make_tuple(PixmapResourceId::FileSharingBlankButtonIcon48,				"file_sharing",		"blank_icon_48"),
@@ -24,7 +17,6 @@ std::make_tuple(PixmapResourceId::FileSharingSnapExpired,					"file_sharing",		"
 std::make_tuple(PixmapResourceId::FileSharingPttPause,						"file_sharing",		"pause_ptt"),
 std::make_tuple(PixmapResourceId::FileSharingPttPauseActive,				"file_sharing",		"pause_ptt_active"),
 std::make_tuple(PixmapResourceId::FileSharingPttPauseHover,					"file_sharing",		"pause_ptt_hover"),
-std::make_tuple(PixmapResourceId::FileSharingPttPauseDownload,				"file_sharing",		"pause_ptt_download"),
 std::make_tuple(PixmapResourceId::FileSharingPttPlay,						"file_sharing",		"play_ptt"),
 std::make_tuple(PixmapResourceId::FileSharingPttPlayActive,					"file_sharing",		"play_ptt_active"),
 std::make_tuple(PixmapResourceId::FileSharingPttPlayHover,					"file_sharing",		"play_ptt_hover"),
@@ -63,5 +55,4 @@ std::make_tuple(PixmapResourceId::StickerHistoryPlaceholder,				"stickers",			"p
 std::make_tuple(PixmapResourceId::StickerPickerPlaceholder,					"stickers",			"placeholder_picker"),
 
 std::make_tuple(PixmapResourceId::PreviewerReload,							"previewer",		"content_reloadmedia"),
-std::make_tuple(PixmapResourceId::PreviewerReloadActive,					"previewer",		"content_reloadmedia_active"),
 std::make_tuple(PixmapResourceId::PreviewerReloadHover,						"previewer",		"content_reloadmedia_hover"),

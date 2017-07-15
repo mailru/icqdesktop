@@ -1,38 +1,44 @@
 QPushButton#send_button
 {
 	border: none;
-	width: 24dip;
-	height: 24dip;
-	border-image: url(:/resources/input_widget/contr_send_100.png);
+	width: 32dip;
+	height: 32dip;
+	border-image: url(:/resources/input_widget/send_100.png);
 	margin-left: 0;
 	margin-top: 0;
-	margin-right: 20dip;
+	margin-right: 16dip;
 	margin-bottom: 0;
 	padding: 0dip;
 }
 
 QPushButton#send_button:hover
 {
-	border-image: url(:/resources/input_widget/contr_send_100_hover.png);
+	border-image: url(:/resources/input_widget/send_100_hover.png);
 }
 
 QPushButton#send_button:hover:pressed
 {
-	border-image: url(:/resources/input_widget/contr_send_100_active.png);
+	border-image: url(:/resources/input_widget/send_100_pressed.png);
 }
 
 QPushButton#send_button:disabled
 {
-	border-image: url(:/resources/input_widget/contr_send_100_disable.png);
+	border-image: url(:/resources/input_widget/send_100_disable.png);
+}
+
+QPushButton#send_button:focus
+{
+	border: none;
+	outline: none;
 }
 
 QPushButton#smiles_button
 {
 	border: none;
-	width: 24dip;
-	height: 24dip;
-	border-image: url(:/resources/input_widget/contr_smile_100.png);
-	margin-left: 22dip;
+	width: 32dip;
+	height: 32dip;
+	border-image: url(:/resources/input_widget/smile_100.png);
+	margin-left: 16dip;
 	margin-top: 0;
 	margin-right: 0;
 	margin-bottom: 0;
@@ -41,12 +47,18 @@ QPushButton#smiles_button
 
 QPushButton#smiles_button:hover
 {
-	border-image: url(:/resources/input_widget/contr_smile_100_hover.png);
+	border-image: url(:/resources/input_widget/smile_100_hover.png);
 }
 
 QPushButton#smiles_button:hover:pressed
 {
-	border-image: url(:/resources/input_widget/contr_smile_100_active.png);
+	border-image: url(:/resources/input_widget/smile_100_active.png);
+}
+
+QPushButton#smiles_button:focus
+{
+	border: none;
+	outline: none;
 }
 
 QPushButton#cancel_files
@@ -54,20 +66,26 @@ QPushButton#cancel_files
 	border: none;
 	width: 20dip;
 	height: 20dip;
-	border-image: url(:/resources/dialog_closechat_100.png);
-	margin-left: 24dip;
+	border-image: url(:/resources/i_history_100.png);
+	margin-left: 16dip;
 	margin-top: 0;
 	margin-right: 0;
 	margin-bottom: 0;
 	padding: 0dip;
 }
 
+QPushButton#cancel_files:focus
+{
+	border: none;
+	outline: none;
+}
+
 QPushButton#cancel_quote
 {
 	border: none;
-	width: 24dip;
-	height: 24dip;
-	border-image: url(:/resources/contr_clear_100.png);
+	width: 20dip;
+	height: 20dip;
+	border-image: url(:/resources/i_history_100.png);
 	margin-right: 0dip;
 	margin-top: 0;
 	margin-right: 0;
@@ -75,13 +93,18 @@ QPushButton#cancel_quote
 	padding: 0dip;
 }
 
+QPushButton#cancel_quote:focus
+{
+	border: none;
+	outline: none;
+}
 
 QPushButton#file_button
 {
 	border: none;
 	width: 24dip;
 	height: 24dip;
-	border-image: url(:/resources/input_widget/contr_attachfiles_100.png);
+	border-image: url(:/resources/input_widget/attachfiles_100.png);
 	margin-top: 0;
 	margin-right: 0;
 	margin-bottom: 0;
@@ -90,42 +113,44 @@ QPushButton#file_button
 
 QPushButton#file_button:hover
 {
-	border-image: url(:/resources/input_widget/contr_attachfiles_100_hover.png);
+	border-image: url(:/resources/input_widget/attachfiles_100_hover.png);
 }
 
 QPushButton#file_button:hover:pressed
 {
-	border-image: url(:/resources/input_widget/contr_attachfiles_100_active.png);
+	border-image: url(:/resources/input_widget/attachfiles_100_active.png);
 }
 
+QPushButton#file_button:focus
+{
+	border: none;
+	outline: none;
+}
 
 Ui--InputWidget#input_edit_control
 {
-	background: #ebebeb;
+	background: #ffffff;
 	padding: 0;
 	margin: 0;
-	border-top-color: #dadada;
+	border-top-color: #d7d7d7;
 	border-top-width: 1dip;
 	border-top-style: solid;
 }
 
 Ui--TextEditEx#input_edit_control
 {
-	background: #fafafa;
+	background: #ffffff;
 	border-radius: 8dip;
 	border-color: #d7d7d7;
 	border-width: 1dip;
 	border-style: solid;
-	margin-top: 8dip;
-	margin-bottom: 8dip;
+	margin-top: 12dip;
+	margin-bottom: 12dip;
 	margin-left: 16dip;
 	margin-right: 16dip;
 		
-	padding-left: 15dip;
-	padding-left: 15dip;
-	padding-top: 12dip;
-	padding-bottom: 10dip;
-
+	padding-left: 16dip;
+    padding-top: 6dip;
 }
 
 Ui--TextEditEx#input_edit_control:focus

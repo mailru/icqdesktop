@@ -1,145 +1,21 @@
-QWidget[ContactListWidget="true"]
-{
-	background: transparent;
-}
-
-QLineEdit#searchEdit
-{
-	font-size: 15dip;
-	border-style: none;
-}
-
-QFrame#bottomPanel
-{
-	min-height: 72dip;
-	background-color: #ebebeb;
-	border-style: solid;
-	border-width: 1dip;
-	border-color: #dadada;
-	border-left: none;
-	border-bottom: none;
-}
-
-QPushButton#recentsButton
-{
-	min-width: 24dip;
-	max-width: 24dip;
-	min-height: 24dip;
-	max-height: 24dip;
-	border-image: url(:/resources/tabs_recents_100.png);
-	margin-left: 24dip;
-	margin-right: 24dip;
-	margin-top: 24dip;
-	margin-bottom: 24dip;
-}
-QPushButton#recentsButton:hover
-{
-	border-image: url(:/resources/tabs_recents_100_hover.png);
-}
-QPushButton#recentsButton:checked
-{
-	border-image: url(:/resources/tabs_recents_100_active.png);
-}
-QPushButton#recentsButton:checked:hover
-{
-	border-image: url(:/resources/tabs_recents_100_active.png);
-}
-
-QPushButton#liveChatsButton
-{
-	min-width: 24dip;
-	max-width: 24dip;
-	min-height: 24dip;
-	max-height: 24dip;
-	border-image: url(:/resources/tabs_livechats_100.png);
-	margin-left: 24dip;
-	margin-right: 24dip;
-	margin-top: 24dip;
-	margin-bottom: 24dip;
-}
-QPushButton#liveChatsButton:hover
-{
-	border-image: url(:/resources/tabs_livechats_100_hover.png);
-}
-QPushButton#liveChatsButton:checked
-{
-	border-image: url(:/resources/tabs_livechats_100_active.png);
-}
-QPushButton#liveChatsButton:checked:hover
-{
-	border-image: url(:/resources/tabs_livechats_100_active.png);
-}
-
 QLabel#liveChatsTitle
 {
     text-align: left baseline;
     font-family: "%FONT_FAMILY_LIGHT%";
     font-weight: %FONT_WEIGHT_LIGHT%;
     font-size: 32dip;
-    color: #282828;
     margin-left: 16dip;
-    margin-bottom: 6dip;
-    margin-top: 12dip;
-}
-
-QPushButton#contactListButton
-{
-	min-width: 24dip;
-	max-width: 24dip;
-	min-height: 24dip;
-	max-height: 24dip;
-	border-image: url(:/resources/tabs_contacts_100.png);
-	margin-left: 24dip;
-	margin-right: 24dip;
-	margin-top: 24dip;
-	margin-bottom: 24dip;
-}
-QPushButton#contactListButton:hover
-{
-	border-image: url(:/resources/tabs_contacts_100_hover.png);
-}
-QPushButton#contactListButton:checked
-{
-	border-image: url(:/resources/tabs_contacts_100_active.png);
-}
-QPushButton#contactListButton:checked:hover
-{
-	border-image: url(:/resources/tabs_contacts_100_active.png);
-}
-
-QPushButton#settingsButton
-{
-	min-width: 24dip;
-	max-width: 24dip;
-	min-height: 24dip;
-	max-height: 24dip;
-	border-image: url(:/resources/tabs_settings_100.png);
-	margin-left: 24dip;
-	margin-top: 24dip;
-	margin-bottom: 24dip;
-}
-QPushButton#settingsButton:hover
-{
-	border-image: url(:/resources/tabs_settings_100_hover.png);
-}
-QPushButton#settingsButton:checked
-{
-	border-image: url(:/resources/tabs_settings_100_active.png);
-}
-QPushButton#settingsButton:checked:hover
-{
-	border-image: url(:/resources/tabs_settings_100_active.png);
+    margin-top: 8dip;
 }
 
 QWidget#noContacts
 {
 	image: url(:/resources/placeholders/content_placeholder_cl_100.png);
-	background-color: transparent;
 	margin: 0;
 }
 QLabel#noContactsLabel
 {
-	color: #696969; font-size: 15dip;
+	color: #767676; font-size: 15dip;
 	margin: 0; padding: 0;
 	padding-left: 16dip; padding-right: 16dip; 
 }
@@ -147,23 +23,32 @@ QLabel#noContactsLabel
 QWidget#noRecents
 {
 	image: url(:/resources/placeholders/content_placeholder_recents_100.png);
-	background-color: transparent;
 	margin: 0;
 }
 QLabel#noRecentsLabel
 {
-	color: #696969; font-size: 15dip;
+	color: #767676; font-size: 15dip;
 	margin: 0; padding: 0;
 }
 
 QWidget#noSearchResults
 {
 	image: url(:/resources/placeholders/content_placeholder_emptysearch_100.png);
-	background-color: transparent;
 	margin: 0;
 }
 QLabel#noSearchResultsLabel
 {
-	color: #696969; font-size: 15dip;
+	color: #767676; font-size: 15dip;
 	margin: 0; padding: 0;
+}
+
+QLabel#livechats_topic_label
+{
+    qproperty-alignment: AlignCenter;
+    font-size: 16dip;
+    font-family: "%FONT_FAMILY_MEDIUM%";
+    font-weight: %FONT_WEIGHT_MEDIUM%;
+    min-height: 48dip;
+    max-height: 48dip;
+    color: #999999;
 }

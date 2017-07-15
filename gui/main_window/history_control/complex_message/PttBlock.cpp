@@ -24,20 +24,13 @@
 #include "Style.h"
 
 #include "PttBlock.h"
+#include "QuoteBlock.h"
 
 UI_COMPLEX_MESSAGE_NS_BEGIN
 
 namespace
 {
     QString formatDuration(const int32_t _seconds);
-
-    QPen getDecodedTextSeparatorPen();
-
-    QFont getDurationTextFont();
-
-    QPen getDurationTextPen();
-
-    QBrush getPlaybackProgressBrush();
 }
 
 enum class PttBlock::PlaybackState
@@ -79,7 +72,7 @@ PttBlock::PttBlock(
     ctrlButton_ = new ActionButtonWidget(ActionButtonWidget::ResourceSet::PttPlayGreen_, this);
 
     textButton_ = new ActionButtonWidget(ActionButtonWidget::ResourceSet::PttTextGreen_, this);
-    textButton_->setProgressPen(0x00, 0x00, 0x00, 0.6, 2);
+    textButton_->setProgressPen(Style::Ptt::getPttProgressColor(), 0.6, Style::Ptt::getPttProgressWidth());
 
     durationText_ = formatDuration(durationSec_);
 
@@ -267,7 +260,7 @@ void PttBlock::setTextButtonGeometry(const QRect &_rect)
     textButton_->setVisible(true);
 }
 
-void PttBlock::drawBlock(QPainter &_p)
+void PttBlock::drawBlock(QPainter &_p, const QRect& _rect, const QColor& quote_color)
 {
     const auto &bubbleRect = pttLayout_->getContentRect();
 
@@ -289,7 +282,12 @@ void PttBlock::drawBlock(QPainter &_p)
         const auto durationMsec = (durationSec_ * 1000);
         assert(durationMsec > 0);
 
-        drawPlaybackProgress(_p, playbackProgressMsec_, durationMsec, bubbleRect);
+        drawPlaybackProgress(_p, playbackProgressMsec_, playbackProgressAnimation_->endValue().toInt(), bubbleRect);
+    }
+
+    if (quote_color.isValid())
+    {
+        _p.fillRect(_rect, QBrush(quote_color));
     }
 }
 
@@ -298,8 +296,6 @@ void PttBlock::initializeFileSharingBlock()
     connectSignals();
 
     requestMetainfo(false);
-
-    checkExistingLocalCopy();
 }
 
 void PttBlock::onDownloadingStarted()
@@ -471,7 +467,7 @@ void PttBlock::drawBubble(QPainter &_p, const QRect &_bubbleRect)
     }
     else
     {
-        _p.setPen(Style::getFileSharingFramePen());
+        _p.setPen(Style::Files::getFileSharingFramePen());
 
         if (isBodySelected)
         {
@@ -479,7 +475,14 @@ void PttBlock::drawBubble(QPainter &_p, const QRect &_bubbleRect)
             _p.setBrush(bodyBrush);
         }
 
-        _p.drawRoundedRect(_bubbleRect, MessageStyle::getBorderRadius(), MessageStyle::getBorderRadius());
+        QRect newRect = _bubbleRect;
+        newRect.setRect(
+            newRect.x() + Style::Files::getFileSharingFramePen().width(),
+            newRect.y() + Style::Files::getFileSharingFramePen().width(),
+            newRect.width() - Style::Files::getFileSharingFramePen().width() * 2,
+            newRect.height() - Style::Files::getFileSharingFramePen().width() * 2);
+
+        _p.drawRoundedRect(newRect, MessageStyle::getBorderRadius(), MessageStyle::getBorderRadius());
     }
 
     _p.restore();
@@ -515,7 +518,7 @@ void PttBlock::drawDecodedTextSeparator(QPainter &_p, const QRect &_bubbleRect)
 
     _p.save();
 
-    _p.setPen(getDecodedTextSeparatorPen());
+    _p.setPen(Style::Ptt::getDecodedTextSeparatorPen());
 
     _p.drawLine(p0, p1);
 
@@ -535,8 +538,8 @@ void PttBlock::drawDuration(QPainter &_p, const QRect &_ctrlButtonRect)
 
     const auto textY = durationBaseline;
 
-    const auto font = getDurationTextFont();
-    const auto pen = getDurationTextPen();
+    const auto font = Style::Ptt::getDurationTextFont();
+    const auto pen = Style::Ptt::getDurationTextPen();
 
     _p.save();
 
@@ -545,7 +548,7 @@ void PttBlock::drawDuration(QPainter &_p, const QRect &_ctrlButtonRect)
 
     const auto playbackProgressSec = (playbackProgressMsec_ / 1000);
     const auto secondsLeft = (durationSec_ - playbackProgressSec);
-    const auto &text = (isPlaying() ? formatDuration(secondsLeft) : durationText_);
+    const auto &text = ((isPlaying() || isPaused()) ? formatDuration(secondsLeft) : durationText_);
 
     assert(!text.isEmpty());
     _p.drawText(textX, textY, text);
@@ -559,9 +562,9 @@ void PttBlock::drawPlaybackProgress(QPainter &_p, const int32_t _progressMsec, c
     assert(_durationMsec > 0);
     assert(!_bubbleRect.isEmpty());
 
-    const auto progressWidth = ((_progressMsec * _bubbleRect.width()) / _durationMsec);
+    const auto progressWidth = (_durationMsec ? ((_progressMsec * _bubbleRect.width()) / _durationMsec) : 0);
 
-    const QSize progressSize(progressWidth, Style::getPttBubbleHeaderHeight());
+    const QSize progressSize(progressWidth, Style::Ptt::getPttBubbleHeight());
 
     const QRect progressRect(_bubbleRect.topLeft(), progressSize);
 
@@ -578,7 +581,7 @@ void PttBlock::drawPlaybackProgress(QPainter &_p, const int32_t _progressMsec, c
         _p.setClipPath(headerClipPath_);
     }
 
-    _p.setBrush(getPlaybackProgressBrush());
+    _p.setBrush(Style::Ptt::getPlaybackProgressBrush());
     _p.drawRect(progressRect);
 
     _p.restore();
@@ -631,16 +634,6 @@ void PttBlock::initializeDecodedTextCtrl()
     decodedTextCtrl_->setStyleSheet(selectionStyleSheet);
 
     auto textColor = MessageStyle::getTextColor();
-
-    const auto theme = getTheme();
-    if (theme)
-    {
-        textColor = (
-            isOutgoing() ?
-                theme->outgoing_bubble_.text_color_ :
-                theme->incoming_bubble_.text_color_);
-    }
-
     QPalette palette;
     palette.setColor(QPalette::Text, textColor);
     decodedTextCtrl_->setPalette(palette);
@@ -689,7 +682,7 @@ void PttBlock::renderClipPaths(const QRect &_bubbleRect)
 
     bubbleClipPath_ = Utils::renderMessageBubble(_bubbleRect, MessageStyle::getBorderRadius(), isOutgoing());
 
-    const QRect headerRect(_bubbleRect.left(), _bubbleRect.top(), _bubbleRect.width(), Style::getPttBubbleHeaderHeight());
+    const QRect headerRect(_bubbleRect.left(), _bubbleRect.top(), _bubbleRect.width(), Style::Ptt::getPttBubbleHeight());
     headerClipPath_ = Utils::renderMessageBubble(headerRect, MessageStyle::getBorderRadius(), isOutgoing(), Utils::RenderBubble_TopRounded);
 
     bubbleClipRect_ = _bubbleRect;
@@ -733,18 +726,18 @@ void PttBlock::startPlayback()
 
     playbackState_ = PlaybackState::Playing;
 
-    playingId_ = GetSoundsManager()->playPtt(getFileLocalPath(), playingId_);
+    int duration = 0;
+    playingId_ = GetSoundsManager()->playPtt(getFileLocalPath(), playingId_, duration);
 
     if (!playbackProgressAnimation_)
     {
-        const auto durationMsec = (durationSec_ * 1000);
-        assert(durationMsec > 0);
+        assert(duration > 0);
 
         playbackProgressAnimation_ = new QPropertyAnimation(this, "PlaybackProgress");
-        playbackProgressAnimation_->setDuration(durationMsec);
+        playbackProgressAnimation_->setDuration(duration);
         playbackProgressAnimation_->setLoopCount(1);
         playbackProgressAnimation_->setStartValue(0);
-        playbackProgressAnimation_->setEndValue(durationMsec);
+        playbackProgressAnimation_->setEndValue(duration);
     }
 
     playbackProgressAnimation_->start();
@@ -944,6 +937,13 @@ void PttBlock::pttPlayed(qint64 id)
     }
 }
 
+void PttBlock::connectToHover(Ui::ComplexMessage::QuoteBlockHover* hover)
+{
+    connectButtonToHover(ctrlButton_, hover);
+    connectButtonToHover(textButton_, hover);
+    GenericBlock::connectToHover(hover);
+}
+
 namespace
 {
     QString formatDuration(const int32_t _seconds)
@@ -957,33 +957,6 @@ namespace
         return QString("%1:%2")
             .arg(minutes, 2, 10, QChar('0'))
             .arg(seconds, 2, 10, QChar('0'));
-    }
-
-    QPen getDecodedTextSeparatorPen()
-    {
-        const auto alpha = ((255 * 15) / 100);
-        return QPen(QColor(0x00, 0x00, 0x00, alpha));
-    }
-
-    QFont getDurationTextFont()
-    {
-        return Fonts::appFontScaled(15);
-    }
-
-    QPen getDurationTextPen()
-    {
-        return QPen(0x282828);
-    }
-
-    QBrush getPlaybackProgressBrush()
-    {
-        const auto alpha = ((12 * 255) / 100);
-
-        const QColor color(0x00, 0x00, 0x00, alpha);
-
-        QBrush result(color);
-
-        return result;
     }
 }
 

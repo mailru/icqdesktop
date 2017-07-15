@@ -20,22 +20,26 @@ namespace core
         themes_settings_etag = 10,
 
         core_settings_locale_was_changed = 20,
+        core_need_show_promo = 21,
         
         max
     };
 
 	class core_settings : public core::tools::settings
 	{
-		std::wstring	file_name_;
+		std::wstring file_name_;
+        std::wstring file_name_exported_;
+
+        bool load_exported();
 
 	public:
-		core_settings(const boost::filesystem::wpath& _path);
+		core_settings(const boost::filesystem::wpath& _path, const boost::filesystem::wpath& _file_name_exported);
 		virtual ~core_settings();
         
 		bool save();
 		bool load();
 
-		void init_default();
+        bool end_init_default();
 
         void set_user_proxy_settings(const proxy_settings& _user_proxy_settings);
 
@@ -49,6 +53,11 @@ namespace core
 		
         bool get_voip_mute_fix_flag() const;
 		void set_voip_mute_fix_flag(bool bValue);
+
+        void set_need_show_promo(bool _need_show_promo);
+        bool get_need_show_promo() const;
+
+        bool unserialize(const rapidjson::Value& _node);
 	};
 
 }

@@ -35,6 +35,9 @@ namespace Ui
         void showToolTip(bool& _show);
         // Need to show vertical volume control in right time.
         void isVideoWindowActive(bool&);
+        // Update conferention layout.
+        void updateConferenceMode(voip_manager::ConferenceLayout layout);
+        void addUserToConference();
 
     private Q_SLOTS:
         void onHangUpButtonClicked();
@@ -50,11 +53,13 @@ namespace Ui
         void onMinimalBandwithMode();
 
         void onVoipMediaLocalAudio(bool _enabled);
-        void onVoipMediaLocalVideo(bool _enabled);
-        void onVoipCallNameChanged(const std::vector<voip_manager::Contact>&);
+        void onVoipMediaLocalVideo(bool _enabled);        
         void onVoipMinimalBandwidthChanged (bool _bEnable);
         void hideBandwidthTooltip();
         void activateVideoWindow();
+
+        void onChangeConferenceMode();
+        void onAddUserClicked();
 
     public:
         VideoPanel(QWidget* _parent, QWidget* _container);
@@ -63,20 +68,27 @@ namespace Ui
         void setFullscreenMode(bool _en);
         void fadeIn(unsigned int kAnimationDefDuration) override;
         void fadeOut(unsigned int  kAnimationDefDuration) override;
+        bool isFadedIn() override;
 
+
+        void talkCreated();
         // Calls when your companion accept the call.
         void talkStarted();
         void talkFinished();
         
         void startToolTipHideTimer();
         
-        bool isActiveWindow();		
+        bool isActiveWindow();
+        void setContacts(const std::vector<voip_manager::Contact>&);
+        void changeConferenceMode(voip_manager::ConferenceLayout layout);
 
     private:
         void resetHangupText();
         void updateToolTipsPosition();
         bool isNormalPanelMode();
 		bool isFitSpacersPanelMode();
+        void updateConferenceModeButton();
+        void updateBandwidthButtonState();
 
     protected:
         void changeEvent(QEvent* _e) override;
@@ -95,7 +107,7 @@ namespace Ui
         QWidget* parent_;
         QWidget* rootWidget_;
 
-        std::string activeContact_;
+        std::vector<voip_manager::Contact> activeContact_;
         QPushButton* addChatButton_;
         QPushButton* fullScreenButton_;
         QPushButton* micButton_;
@@ -103,6 +115,8 @@ namespace Ui
         QPushButton* settingsButton_;
         QPushButton* stopCallButton_;
         QPushButton* videoButton_;
+        QPushButton* conferenceModeButton_;
+        QPushButton* addUsers_;
 
         QTimer*    hideBandwidthTooltipTimer;
         QVector<QWidget* > hideButtonList;
@@ -118,6 +132,8 @@ namespace Ui
 		QSpacerItem* rightSpacer_;
         //Are we talking in this moment?
         bool isTakling;
+
+        bool isFadedVisible;
     };
 }
 

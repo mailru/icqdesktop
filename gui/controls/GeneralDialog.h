@@ -8,7 +8,7 @@ namespace Utils
 namespace Ui
 {
     class qt_gui_settings;
-    class SemitransparentWindow;
+    class SemitransparentWindowAnimated;
 
     class GeneralDialog : public QDialog
     {
@@ -51,6 +51,8 @@ namespace Ui
         inline void setLeftButtonDisableOnClicked(bool v) { leftButtonDisableOnClicked_ = v; }
         inline void setRightButtonDisableOnClicked(bool v) { rightButtonDisableOnClicked_ = v; }
 
+        void updateSize();
+
     protected:
         virtual void showEvent(QShowEvent *) override;
         virtual void hideEvent(QHideEvent *) override;
@@ -65,25 +67,25 @@ namespace Ui
         void moveToPosition(int _x, int _y);
 
     private:
-        double                  koeffHeight_;
-        double                  koeffWidth_;
-        QWidget*                mainWidget_;
-        int                     addWidth_;
-        QPushButton*            nextButton_;
-        SemitransparentWindow*  semiWindow_;
-        QWidget*                bottomWidget_;
-        QWidget*                labelHost_;
-        QWidget*                textHost_;
-        QWidget*                errorHost_;
-        QWidget*                headHost_;
-        bool                    keepCenter_;
-        int                     x_;
-        int                     y_;
-        QLabel*                 bottomLabel_;
-        bool                    ignoreKeyPressEvents_;
-        bool                    shadow_;
+        double                          koeffHeight_;
+        double                          koeffWidth_;
+        QWidget*                        mainWidget_;
+        int                             addWidth_;
+        QPushButton*                    nextButton_;
+        SemitransparentWindowAnimated*  semiWindow_;
+        QWidget*                        bottomWidget_;
+        QWidget*                        labelHost_;
+        QWidget*                        textHost_;
+        QWidget*                        errorHost_;
+        QWidget*                        headHost_;
+        bool                            keepCenter_;
+        int                             x_;
+        int                             y_;
+        QLabel*                         bottomLabel_;
+        bool                            ignoreKeyPressEvents_;
+        bool                            shadow_;
         
-        bool                    leftButtonDisableOnClicked_;
-        bool                    rightButtonDisableOnClicked_;
+        bool                            leftButtonDisableOnClicked_;
+        bool                            rightButtonDisableOnClicked_;
     };
 }

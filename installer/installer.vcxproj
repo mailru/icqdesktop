@@ -124,7 +124,7 @@
       <ExceptionHandling>Async</ExceptionHandling>
       <ObjectFileName>release\</ObjectFileName>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;CURL_STATICLIB;UNICODE;WIN32;QT_STATIC;QT_NO_DEBUG;QT_GUI_LIB;QT_CORE_LIB;NDEBUG;_USE_32BIT_TIME_T;RAPIDJSON_HAS_STDSTRING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;CURL_STATICLIB;UNICODE;WIN32;QT_STATIC;QT_NO_DEBUG;QT_GUI_LIB;QT_CORE_LIB;NDEBUG;_USE_32BIT_TIME_T;RAPIDJSON_HAS_STDSTRING=1;SOLUTION_DEF_$(SolutionName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <ProgramDataBaseFileName>
       </ProgramDataBaseFileName>
@@ -256,7 +256,7 @@ call python qt_prebuild.py -config $(Configuration)</Command>
       <ExceptionHandling>Async</ExceptionHandling>
       <ObjectFileName>debug\</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;CURL_STATICLIB;UNICODE;WIN32;QT_STATIC;QT_GUI_LIB;QT_CORE_LIB;_USE_32BIT_TIME_T;RAPIDJSON_HAS_STDSTRING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;CURL_STATICLIB;UNICODE;WIN32;QT_STATIC;QT_GUI_LIB;QT_CORE_LIB;_USE_32BIT_TIME_T;RAPIDJSON_HAS_STDSTRING=1;SOLUTION_DEF_$(SolutionName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -380,8 +380,9 @@ call clean.bat
     <ClCompile Include="..\common.shared\win32\crash_handler.cpp" />
     <ClCompile Include="..\gui.shared\TestingTools.cpp" />
     <ClCompile Include="..\gui.shared\translator_base.cpp" />
+    <ClCompile Include="ui\main_window\pages\account_widget.cpp" />
     <ClCompile Include="legacy\contact_info.cpp" />
-    <ClCompile Include="ui\main_window\pages\accounts_page.cpp" />
+    <ClCompile Include="ui\main_window\pages\account_selector.cpp" />
     <ClCompile Include="legacy\http_login_session.cpp" />
     <ClCompile Include="legacy\login_data.cpp" />
     <ClCompile Include="legacy\lps.cpp" />
@@ -399,7 +400,8 @@ call clean.bat
     <ClCompile Include="logic\tasks\copy_files.cpp" />
     <ClCompile Include="logic\tasks\start_process.cpp" />
     <ClCompile Include="logic\tasks\terminate_process.cpp" />
-    <ClCompile Include="ui\main_window\pages\moc_accounts_page.cpp" />
+    <ClCompile Include="ui\main_window\pages\moc_account_selector.cpp" />
+    <ClCompile Include="ui\main_window\pages\moc_account_widget.cpp" />
     <ClCompile Include="ui\main_window\pages\moc_error_page.cpp" />
     <ClCompile Include="ui\main_window\pages\moc_progress_page.cpp" />
     <ClCompile Include="ui\main_window\pages\moc_start_page.cpp" />
@@ -437,9 +439,11 @@ call clean.bat
     <ClInclude Include="..\common.shared\win32\crash_handler.h" />
     <ClInclude Include="..\gui.shared\TestingTools.h" />
     <ClInclude Include="..\gui.shared\translator_base.h" />
+    <ClInclude Include="ui\main_window\pages\account_widget.h" />
     <ClInclude Include="legacy\const.h" />
     <ClInclude Include="legacy\contact_info.h" />
-    <ClInclude Include="ui\main_window\pages\accounts_page.h" />
+    <ClInclude Include="solution.h" />
+    <ClInclude Include="ui\main_window\pages\account_selector.h" />
     <ClInclude Include="legacy\http_login_session.h" />
     <ClInclude Include="legacy\login_data.h" />
     <ClInclude Include="legacy\lps.h" />
@@ -475,7 +479,7 @@ call clean.bat
     <ClInclude Include="logic\tasks\write_registry.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resource.rc" />
+    <ResourceCompile Include="$(SolutionName).rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

@@ -16,6 +16,7 @@
 
 #include "../corelib/collection_helper.h"
 #include "core_settings.h"
+#include "curl_handler.h"
 #include "gui_settings.h"
 #include "themes/theme_settings.h"
 #include "utils.h"
@@ -42,6 +43,7 @@ using namespace core;
 
 std::unique_ptr<core::core_dispatcher>	core::g_core;
 
+int32_t build::is_core_icq = 0;
 
 core_dispatcher::core_dispatcher()
     : gui_connector_(nullptr)
@@ -50,15 +52,17 @@ core_dispatcher::core_dispatcher()
     , delayed_stat_timer_id_(0)
 {
     http_request_simple::init_global();
+
+    curl_handler::instance().init();
+
 #ifdef _WIN32
     std::locale loc = boost::locale::generator().generate("");
     std::locale::global(loc);
 #endif
+
     search_count_.store(0);
 
-    __LOG(log::init(utils::get_logs_path(), false);)
-
-        profiler::enable(::build::is_debug());
+    profiler::enable(::build::is_debug());
 }
 
 
@@ -68,7 +72,9 @@ core_dispatcher::~core_dispatcher()
 
     __LOG(log::shutdown();)
 
-        http_request_simple::shutdown_global();
+    curl_handler::instance().cleanup();
+
+    http_request_simple::shutdown_global();
 }
 
 std::string core::core_dispatcher::get_uniq_device_id()
@@ -76,7 +82,7 @@ std::string core::core_dispatcher::get_uniq_device_id()
     return settings_->get_value<std::string>(core_settings_values::csv_device_id, std::string());
 }
 
-void core::core_dispatcher::excute_core_context(std::function<void()> _func)
+void core::core_dispatcher::execute_core_context(std::function<void()> _func)
 {
     if (!core_thread_)
     {
@@ -84,12 +90,7 @@ void core::core_dispatcher::excute_core_context(std::function<void()> _func)
         return;
     }
 
-    core_thread_->excute_core_context(_func);
-}
-
-void core::core_dispatcher::excute_core_context_priority(std::function<void()> _func)
-{
-    core_thread_->excute_core_context_priority(_func);
+    core_thread_->execute_core_context(_func);
 }
 
 std::shared_ptr<base_im> core::core_dispatcher::find_im_by_id(unsigned id) {
@@ -130,11 +131,13 @@ void core::core_dispatcher::link_gui(icore_interface* _core_face, const common::
 {
     // called from main thread
 
+    build::set_core(_settings.is_build_icq_);
+
     gui_connector_ = _core_face->get_gui_connector();
     core_factory_ = _core_face->get_factory();
     core_thread_ = new main_thread();
 
-    excute_core_context([this, _settings]
+    execute_core_context([this, _settings]
     {
         start(_settings);
     });
@@ -142,42 +145,54 @@ void core::core_dispatcher::link_gui(icore_interface* _core_face, const common::
 
 void core::core_dispatcher::start(const common::core_gui_settings& _settings)
 {
+    __LOG(log::init(utils::get_logs_path(), false);)
+
     core_gui_settings_ = _settings;
-    // called from core thread
-    network_log_.reset(new network_log(utils::get_logs_path()));
 
     boost::system::error_code error_code;
     const auto product_data_root = boost::filesystem::canonical(utils::get_product_data_path(), Out error_code);
     const auto app_ini_path = boost::filesystem::canonical(product_data_root / L"app.ini", Out error_code);
     configuration::load_app_config(app_ini_path);
 
-    http_handles_.reset(http_request_simple::create_http_handlers());
+    // called from core thread
+    network_log_.reset(new network_log(utils::get_logs_path()));
 
-    settings_ = std::make_shared<core::core_settings>(product_data_root / L"settings/core.stg");
-    if (!settings_->load())
+    settings_ = std::make_shared<core::core_settings>(product_data_root / L"settings/core.stg"
+        , utils::get_product_data_path() + L"/settings/" + tools::from_utf8(core_settings_export_file_name));
+    settings_->load();
+
+    if (settings_->end_init_default())
     {
-        settings_->init_default();
         settings_->save();
     }
+
+    proxy_settings_manager_.reset(new proxy_settings_manager(*settings_));
 
     save_thread_.reset(new async_executer());
     scheduler_.reset(new scheduler());
 
     load_gui_settings();
     load_theme_settings();
-    load_proxy_settings();
     load_hosts_config();
+
+    post_need_promo();
     post_theme_settings();
     post_gui_settings();
     post_app_config();
-    g_core->post_user_proxy_to_gui();
+    post_user_proxy_to_gui();
+
+    curl_handler::instance().start();
 
 #ifndef STRIP_VOIP
     voip_manager_.reset(new(std::nothrow) voip_manager::VoipManager(*this));
     assert(!!voip_manager_);
 #endif //__STRIP_VOIP
     im_container_.reset(new im_container(voip_manager_));
-    im_container_->create();
+
+    if (!settings_->get_need_show_promo())
+        im_container_->create();
+
+    post_logins();
 
     updater_.reset(new update::updater());
 
@@ -193,10 +208,11 @@ void core::core_dispatcher::start(const common::core_gui_settings& _settings)
 
 void core::core_dispatcher::unlink_gui()
 {
-    excute_core_context([this]
+    curl_handler::instance().stop();
+
+    execute_core_context([this]
     {
         // NOTE : this order is important!
-
         voip_manager_.reset();
         im_container_.reset();
         gui_settings_.reset();
@@ -208,7 +224,6 @@ void core::core_dispatcher::unlink_gui()
         updater_.reset();
         report_sender_.reset();
         network_log_.reset();
-        http_handles_.reset();
         proxy_settings_manager_.reset();
         theme_settings_.reset();
     });
@@ -285,11 +300,6 @@ void core_dispatcher::load_gui_settings()
     gui_settings_->start_save();
 }
 
-void core_dispatcher::load_proxy_settings()
-{
-    proxy_settings_manager_ = std::make_shared<core::proxy_settings_manager>();
-}
-
 void core_dispatcher::load_hosts_config()
 {
     hosts_config_ = std::make_shared<core::hosts_config>();
@@ -311,7 +321,7 @@ void core_dispatcher::load_statistics()
     statistics_ = std::make_shared<core::stats::statistics>(utils::get_product_data_path() + L"/stats/stats.stg");
 
     auto wr_stats = std::weak_ptr<core::stats::statistics>(statistics_);
-    excute_core_context([this]
+    execute_core_context([this]
     {
         statistics_->init();
         start_session_stats(false /* delayed */);
@@ -369,7 +379,7 @@ void core_dispatcher::insert_event(core::stats::stats_event_names _event, const 
 
     auto wr_stats = std::weak_ptr<core::stats::statistics>(statistics_);
 
-    g_core->excute_core_context([wr_stats, _event, _props]
+    g_core->execute_core_context([wr_stats, _event, _props]
     {
         auto ptr_stats = wr_stats.lock();
         if (!ptr_stats)
@@ -393,7 +403,19 @@ void core_dispatcher::post_gui_settings()
 
     cl_coll.set_value_as_string("data_path", core::tools::from_utf16(core::utils::get_product_data_path()));
     cl_coll.set_value_as_string("os_version", core::tools::system::get_os_version_string());
+
+
     post_message_to_gui("gui_settings", 0, cl_coll.get());
+}
+
+void core_dispatcher::post_logins()
+{
+    coll_helper cl_coll(create_collection(), true);
+    gui_settings_->serialize(cl_coll);
+
+    cl_coll.set_value_as_bool("has_valid_login", im_container_->has_valid_login());
+
+    post_message_to_gui("core/logins", 0, cl_coll.get());
 }
 
 void core_dispatcher::post_theme_settings()
@@ -403,6 +425,13 @@ void core_dispatcher::post_theme_settings()
     theme_settings_->serialize(cl_coll);
 
     post_message_to_gui("theme_settings", 0, cl_coll.get());
+}
+
+void core_dispatcher::post_need_promo()
+{
+    coll_helper cl_coll(create_collection(), true);
+    cl_coll.set_value_as_bool("need_promo", settings_->get_need_show_promo());
+    post_message_to_gui("need_show_promo_loaded", 0, cl_coll.get());
 }
 
 void core_dispatcher::post_app_config()
@@ -538,7 +567,7 @@ void core::core_dispatcher::receive_message_from_gui(const char * _message, int6
         begin_history_search();
     }
 
-    excute_core_context([this, message_string, _seq, _message_data]
+    execute_core_context([this, message_string, _seq, _message_data]
     {
         coll_helper params(_message_data, true);
         if (message_string != "log")
@@ -554,8 +583,10 @@ void core::core_dispatcher::receive_message_from_gui(const char * _message, int6
                 s << params.get_value_as_string("contact");
                 s << " from: ";
                 s << params.get_value_as_int64("from");
-                s << " count: ";
-                s << params.get_value_as_int64("count");
+                s << " count_early: ";
+                s << params.get_value_as_int64("count_early");
+                s << " count_later: ";
+                s << params.get_value_as_int64("count_later");
 
                 bs.write<std::string>(s.str());
                 bs.write<std::string>("\r\n");
@@ -696,7 +727,7 @@ void core::core_dispatcher::replace_uin_in_login(im_login_id& old_login, im_logi
 }
 
 void core::core_dispatcher::post_voip_message(unsigned _id, const voip_manager::VoipProtoMsg& msg) {
-    excute_core_context([this, _id, msg] {
+    execute_core_context([this, _id, msg] {
         auto im = im_container_->get_im_by_id(_id);
         assert(!!im);
 
@@ -708,7 +739,7 @@ void core::core_dispatcher::post_voip_message(unsigned _id, const voip_manager::
 
 void core::core_dispatcher::post_voip_alloc(unsigned _id, const char* _data, size_t _len) {
     std::string data_str(_data, _len);
-    excute_core_context([this, _id, data_str] {
+    execute_core_context([this, _id, data_str] {
         auto im = im_container_->get_im_by_id(_id);
         assert(!!im);
 
@@ -720,19 +751,13 @@ void core::core_dispatcher::post_voip_alloc(unsigned _id, const char* _data, siz
 
 void core::core_dispatcher::on_thread_finish()
 {
-    assert(http_handles_.get());
-
-    if (http_handles_)
-    {
-        http_handles_->on_thread_shutdown();
-    }
 }
 
-void core::core_dispatcher::unlogin()
+void core::core_dispatcher::unlogin(const bool _is_auth_error)
 {
-    excute_core_context([this]()
+    execute_core_context([this, _is_auth_error]()
     {
-        im_container_->logout();
+        im_container_->logout(_is_auth_error);
     });
 }
 
@@ -741,42 +766,19 @@ network_log& core::core_dispatcher::get_network_log()
     return (*network_log_);
 }
 
-proxy_settings core_dispatcher::get_auto_proxy_settings()
-{
-    return proxy_settings_manager_->get();
-}
-
 proxy_settings core_dispatcher::get_proxy_settings()
 {
-    auto user_proxy_settings = get_user_proxy_settings();
-    auto is_user_proxy = user_proxy_settings.proxy_type_ != (int32_t)core::proxy_types::auto_proxy;
-
-    auto current_proxy = g_core->get_auto_proxy_settings();
-    if (is_user_proxy)
-        current_proxy = user_proxy_settings;
-    return current_proxy;
+    return proxy_settings_manager_->get_current_settings();
 }
 
-proxy_settings core_dispatcher::get_registry_proxy_settings()
+bool core_dispatcher::try_to_apply_alternative_settings()
 {
-    return proxy_settings_manager_->get_registry_settings();
-}
-
-void core_dispatcher::switch_proxy_settings()
-{
-    proxy_settings_manager_->switch_settings();
-}
-
-proxy_settings core_dispatcher::get_user_proxy_settings()
-{
-    assert(g_core->get_core_thread_id() == std::this_thread::get_id());
-    return settings_->get_user_proxy_settings();
+    return proxy_settings_manager_->try_to_apply_alternative_settings();
 }
 
 void core_dispatcher::set_user_proxy_settings(const proxy_settings& _user_proxy_settings)
 {
-    assert(g_core->get_core_thread_id() == std::this_thread::get_id());
-    settings_->set_user_proxy_settings(_user_proxy_settings);
+    proxy_settings_manager_->apply(_user_proxy_settings);
     g_core->post_user_proxy_to_gui();
 }
 
@@ -808,7 +810,7 @@ std::string core_dispatcher::get_locale() const
 
 void core_dispatcher::post_user_proxy_to_gui()
 {
-    auto user_proxy = g_core->get_user_proxy_settings();
+    auto user_proxy = proxy_settings_manager_->get_current_settings();
     coll_helper cl_coll(create_collection(), true);
     user_proxy.serialize(cl_coll);
     g_core->post_message_to_gui("user_proxy/result", 0, cl_coll.get());
@@ -839,4 +841,9 @@ hosts_config& core_dispatcher::get_hosts_config()
     assert(hosts_config_);
 
     return *hosts_config_;
+}
+
+void core_dispatcher::set_need_show_promo(bool _need_show_promo)
+{
+    settings_->set_need_show_promo(_need_show_promo);
 }

@@ -33,6 +33,7 @@ namespace Logic
         const QStringList& getPattern() const;
         void emitChanged(int _first, int _last) override;
         void setChatMembersModel(ChatMembersModel* _membersModel);
+        virtual bool isServiceItem(int i) const override;
 
         virtual QString getCurrentPattern() const;
         

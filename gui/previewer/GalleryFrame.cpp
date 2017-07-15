@@ -8,8 +8,8 @@
 namespace
 {
     const int buttonSize = 40;
-    const QString imagePath1 = ":/resources/previewer/viewerctrl_%1_100.png";
-    const QString imagePath2 = ":/resources/previewer/viewerctrl_%1_100_%2.png";
+    const QString imagePath1 = ":/resources/previewer/viewer_%1_100.png";
+    const QString imagePath2 = ":/resources/previewer/viewer_%1_100_%2.png";
 }
 
 Previewer::GalleryFrame::GalleryFrame(QWidget* _parent)
@@ -17,11 +17,9 @@ Previewer::GalleryFrame::GalleryFrame(QWidget* _parent)
 {
     const auto style = Utils::LoadStyle(":/resources/previewer/qss/frame.qss");
     setStyleSheet(style);
-    setProperty("GalleryFrame", QVariant(true));
+    setProperty("GalleryFrame", true);
 
-    layout_ = new QHBoxLayout();
-    layout_->setSpacing(0);
-    layout_->setContentsMargins(0, 0, 0, 0);
+    layout_ = Utils::emptyHLayout();
     setLayout(layout_);
 }
 
@@ -29,8 +27,6 @@ Ui::CustomButton* Previewer::GalleryFrame::addButton(const QString& name, Button
 {
     auto button = new Ui::CustomButton(this, getImagePath(name, Default));
 
-    if (allowableStates & Active)
-        button->setActiveImage(getImagePath(name, Active));
     if (allowableStates & Disabled)
         button->setDisabledImage(getImagePath(name, Disabled));
     if (allowableStates & Hover)
@@ -40,8 +36,7 @@ Ui::CustomButton* Previewer::GalleryFrame::addButton(const QString& name, Button
 
     const auto size = Utils::scale_value(buttonSize);
 
-    button->setFixedWidth(size);
-    button->setFixedHeight(size);
+    button->setFixedSize(size, size);
 
     button->setCursor(Qt::PointingHandCursor);
 
@@ -56,7 +51,7 @@ QLabel* Previewer::GalleryFrame::addLabel()
 
     auto label = new QLabel(this);
     label->setStyleSheet(style);
-    label->setProperty("GalleryLabel", QVariant(true));
+    label->setProperty("GalleryLabel", true);
 
     layout_->addWidget(label);
     return label;
@@ -77,10 +72,9 @@ QString Previewer::GalleryFrame::getImagePath(const QString& name, ButtonStates 
     switch (state)
     {
         case Default:   return imagePath1.arg(name);
-        case Active:    return imagePath2.arg(name).arg("active");
         case Disabled:  return imagePath2.arg(name).arg("disable");
         case Hover:     return imagePath2.arg(name).arg("hover");
-        case Pressed:   return imagePath2.arg(name).arg("pressed");
+        case Pressed:   return imagePath2.arg(name).arg("active");
     }
     assert(!"invalid kind!");
     return QString();

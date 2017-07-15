@@ -52,6 +52,7 @@ namespace core
         void on_logout(int64_t _seq, coll_helper& _params);
         void on_phoneinfo(int64_t _seq, coll_helper& _params);
         void on_snap_read(int64_t _seq, coll_helper& _params);
+        void on_delete_read(int64_t _seq, coll_helper& _params);
         void on_snap_download_metainfo(int64_t _seq, coll_helper& _params);
         void on_connect_after_migration(int64_t _seq, coll_helper& _params);
         void on_get_contact_avatar(int64_t _seq, coll_helper& _params);
@@ -79,13 +80,16 @@ namespace core
         void on_mute_chat(int64_t _seq, coll_helper& _params);
         void on_upload_file_sharing(int64_t _seq, coll_helper& _params);
         void on_abort_file_sharing_uploading(int64_t _seq, coll_helper& _params);
+
+        void on_get_file_sharing_preview_size(int64_t _seq, coll_helper& _params);
+        void on_download_file_sharing_metainfo(int64_t _seq, coll_helper& _params);
         void on_download_file(int64_t _seq, coll_helper& _params);
-        void on_request_file_direct_uri(int64_t _seq, coll_helper& _params);
+
         void on_download_image(int64_t _seq, coll_helper& _params);
         void on_cancel_image_downloading(int64_t _seq, coll_helper& _params);
         void on_download_link_preview(int64_t _seq, coll_helper& _params);
         void on_download_raise_priority(int64_t _seq, coll_helper& _params);
-        void on_download_raise_contact_tasks_priority(int64_t _seq, coll_helper& _params);
+        void on_contact_switched(int64_t _seq, coll_helper& _params);
         void on_abort_file_downloading(int64_t _seq, coll_helper& _params);
         void on_get_stickers_meta(int64_t _seq, coll_helper& _params);
         void on_get_themes_meta(int64_t _seq, coll_helper& _params);
@@ -97,7 +101,6 @@ namespace core
         void on_get_chat_home(int64_t _seq, coll_helper& _params);
         void on_resolve_pending(int64_t _seq, coll_helper& _params);
         void on_search_contacts(int64_t _seq, coll_helper& _params);
-        void on_search_contacts2(int64_t _seq, coll_helper& _params);
         void on_profile(int64_t _seq, coll_helper& _params);
         void on_hide_dlg_state(int64_t _seq, coll_helper& _params);
         void on_add_contact(int64_t _seq, coll_helper& _params);
@@ -140,9 +143,17 @@ namespace core
         void on_add_chat(int64_t _seq, coll_helper& _params);
         void on_modify_chat(int64_t _seq, coll_helper& _params);
 
+        //mrim
+        void on_mrim_get_key(int64_t _seq, coll_helper& _params);
+
         // tools
         void on_sign_url(int64_t _seq, coll_helper& _params);
         void on_stats(int64_t _seq, coll_helper& _params);
+
+        //snaps
+        void on_snaps_refresh(int64_t _seq, coll_helper& _params);
+        void on_refresh_user_snaps(int64_t _seq, coll_helper& _params);
+        void on_remove_from_snaps_storage(int64_t _seq, coll_helper& _params);
 
         std::shared_ptr<base_im> get_im(coll_helper& _params) const;
         void on_get_flags(int64_t _seq, coll_helper& _params);
@@ -165,7 +176,9 @@ namespace core
         std::shared_ptr<base_im> get_im_by_id(int32_t _id) const;
         bool update_login(im_login_id& _login);
         void replace_uin_in_login(im_login_id& old_login, im_login_id& new_login);
-        void logout();
+        void logout(const bool _is_auth_error);
+
+        bool has_valid_login() const;
 
         im_container(std::shared_ptr<voip_manager::VoipManager> voip_manager);
         virtual ~im_container();

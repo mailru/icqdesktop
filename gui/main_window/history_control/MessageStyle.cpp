@@ -9,61 +9,105 @@
 
 UI_MESSAGE_STYLE_NS_BEGIN
 
-namespace
-{
-    int32_t byteAlpha(const double alpha)
-    {
-        assert(alpha >= 0);
-        assert(alpha <= 1.0);
-
-        return (int32_t)(alpha * 255);
-    }
-}
-
 QFont getTextFont(int size)
 {
-    return Fonts::appFont(size == -1 ? 
-#ifdef __linux__
-	Utils::scale_value(16)
-#else
-	Utils::scale_value(15)
-#endif //__linux__
- : size);
+    const int defaultFontSize = platform::is_linux() ? 16 : 15;
+
+    const int fontSize = size == -1 ? defaultFontSize : size;
+
+    return Fonts::appFontScaled(fontSize);
 }
 
 QColor getTextColor(double opacity)
 {
-    return QColor(0x28, 0x28, 0x28, opacity * 255);
+    QColor textColor("#000000");
+    textColor.setAlphaF(opacity);
+    return textColor;
 }
 
 QColor getTimeColor()
 {
-    return QColor(0x97, 0x97, 0x97);
+    return QColor("#999999");
 }
 
-QFont getTimeFont()
+QColor getChatEventColor()
+{
+    return QColor("#999999");
+}
+
+QColor getTypingColor()
+{
+    return QColor("#454545");
+}
+
+QColor getSenderColor()
+{
+    return QColor("#454545");
+}
+
+QFont getSenderFont()
 {
     return Fonts::appFontScaled(12);
 }
 
-QColor getIncomingBodyColorA(const double alpha)
+QFont getTimeFont()
 {
-    return QColor(0xff, 0xff, 0xff, byteAlpha(alpha));
+    return Fonts::appFontScaled(10, platform::is_apple() ? Fonts::FontWeight::Normal : Fonts::FontWeight::Medium);
 }
 
-QColor getOutgoingBodyColorA(const double alpha)
+int32_t getTimeMarginX()
 {
-    return QColor(0xd8, 0xd4, 0xce, byteAlpha(alpha));
+    return Utils::scale_value(4);
+}
+int32_t getTimeMarginY()
+{
+    return Utils::scale_value(4);
 }
 
-QColor getIncomingBodyColorB(const double alpha)
+int32_t getTimeMaxWidth()
 {
-    return QColor(0xff, 0xff, 0xff, byteAlpha(alpha));
+    return Utils::scale_value(32);
 }
 
-QColor getOutgoingBodyColorB(const double alpha)
+QColor getIncomingBodyColorA()
 {
-    return QColor(0xd5, 0xd2, 0xce, byteAlpha(alpha));
+    return QColor("#ffffff");
+}
+
+QColor getOutgoingBodyColorA()
+{
+    QColor outgoingBodyColorA("#d8d4ce");
+    outgoingBodyColorA.setAlphaF(0.9);
+    return outgoingBodyColorA;
+}
+
+QColor getIncomingBodyColorB()
+{
+    QColor incomingBodyColorB("#ffffff");
+    incomingBodyColorB.setAlphaF(0.72);
+    return incomingBodyColorB;
+}
+
+QColor getOutgoingBodyColorB()
+{
+    QColor outgoingBodyColorB("#d5d2ce");
+    outgoingBodyColorB.setAlphaF(0.72);
+    return outgoingBodyColorB;
+}
+
+QString getLinkColorS()
+{
+    return "#579e1c";
+}
+
+QColor getLinkColor()
+{
+    return QColor(getLinkColorS());
+}
+
+QString getMessageStyle()
+{
+    return QString("a {text-decoration:none;color:") + MessageStyle::getLinkColorS() + ";}";
 }
 
 QBrush getBodyBrush(
@@ -77,55 +121,34 @@ QBrush getBodyBrush(
 
     grad.setCoordinateMode(QGradient::ObjectBoundingMode);
 
-    QColor outgoingSelectedBackgroundColor0 = !isSelected ? _theme->outgoing_bubble_.bg1_color_ : QColor(0x57, 0x9e, 0x1c, (int32_t)(0.9 * 255));
-    QColor incomingSelectedBackgroundColor0 = !isSelected ? _theme->incoming_bubble_.bg1_color_ : QColor(0x57, 0x9e, 0x1c, (int32_t)(1.0 * 255));
+    QColor selectionColor("#579e1c");
+    auto leftOpacity = isOutgoing ? 0.9 : 1.0;
+    auto rightOpacity = 0.72;
 
-    QColor outgoingSelectedBackgroundColor1 = !isSelected ? _theme->outgoing_bubble_.bg2_color_ : QColor(0x57, 0x9e, 0x1c, (int32_t)(0.72 * 255));
-    QColor incomingSelectedBackgroundColor1 = !isSelected ? _theme->incoming_bubble_.bg2_color_ : QColor(0x57, 0x9e, 0x1c, (int32_t)(0.72 * 255));
-
-    QColor outgoingBackgroundColor0 = !isSelected ? _theme->outgoing_bubble_.bg1_color_ : QColor(0xd8, 0xd4, 0xce, (int32_t)(0.9 * 255));
-    QColor incomingBackgroundColor0 = !isSelected ? _theme->incoming_bubble_.bg1_color_ : QColor(0xff, 0xff, 0xff, (int32_t)(1.0 * 255));
-
-    QColor outgoingBackgroundColor1 = !isSelected ? _theme->outgoing_bubble_.bg2_color_ : QColor(0xd5, 0xd2, 0xce, (int32_t)(0.72 * 255));
-    QColor incomingBackgroundColor1 = !isSelected ? _theme->incoming_bubble_.bg2_color_ : QColor(0xff, 0xff, 0xff, (int32_t)(0.72 * 255));
+    QColor selectedColor0 = selectionColor;
+    selectedColor0.setAlphaF(leftOpacity);
+    QColor selectedColor1 = selectionColor;
+    selectedColor1.setAlphaF(rightOpacity);
 
     if (isSelected)
     {
-        const auto color0 = (
-            isOutgoing ?
-                outgoingSelectedBackgroundColor0 :
-                incomingSelectedBackgroundColor0
-        );
-
-
+        const auto color0 = selectedColor0;
         grad.setColorAt(0, color0);
 
-        const auto color1 = (
-            isOutgoing ?
-                outgoingSelectedBackgroundColor1 :
-                incomingSelectedBackgroundColor1
-        );
+        const auto color1 = selectedColor1;
         grad.setColorAt(1, color1);
     }
     else
     {
-        const auto color0 = (
-            isOutgoing ?
-                outgoingBackgroundColor0 :
-                incomingBackgroundColor0
-        );
+        const auto color0 = isOutgoing ? _theme->outgoing_bubble_.bg1_color_ : _theme->incoming_bubble_.bg1_color_;
         grad.setColorAt(0, color0);
 
-        const auto color1 = (
-            isOutgoing ?
-                outgoingBackgroundColor1 :
-                incomingBackgroundColor1
-        );
+        const auto color1 = isOutgoing ? _theme->outgoing_bubble_.bg2_color_ : _theme->incoming_bubble_.bg2_color_;
         grad.setColorAt(1, color1);
     }
 
     QBrush result(grad);
-    result.setColor(QColor(0, 0, 0, 0));
+    result.setColor(Qt::transparent);
 
     return result;
 }
@@ -157,13 +180,8 @@ int32_t getLeftMargin(const bool isOutgoing)
 int32_t getRightMargin(const bool isOutgoing)
 {
     return Utils::scale_value(
-        isOutgoing ? 16 : 72
+        isOutgoing ? 8 : 72
     );
-}
-
-int32_t getTimeMargin()
-{
-    return Utils::scale_value(8);
 }
 
 int32_t getAvatarSize()
@@ -193,40 +211,12 @@ int32_t getLastReadAvatarMargin()
 
 int32_t getHistoryWidgetMaxWidth()
 {
-    return Utils::scale_value(600);
+    return Utils::scale_value(640);
 }
 
 int32_t getSenderHeight()
 {
-    return Utils::scale_value(14);
-}
-
-QSize getImagePlaceholderSize()
-{
-    return Utils::scale_value(QSize(320, 240));
-}
-
-QBrush getImagePlaceholderBrush()
-{
-    return QBrush(QColor(0x00, 0x00, 0x00, byteAlpha(.15)));
-}
-
-QBrush getImageShadeBrush()
-{
-    QColor shadeColor(0x00, 0x00, 0x00);
-    shadeColor.setAlphaF(0.4);
-
-    return QBrush(shadeColor);
-}
-
-QSize getMinPreviewSize()
-{
-    return Utils::scale_value(QSize(48, 48));
-}
-
-QSizeF getMinPreviewSizeF()
-{
-    return Utils::scale_value(QSizeF(48, 48));
+    return Utils::scale_value(16);
 }
 
 QFont getRotatingProgressBarTextFont()
@@ -238,7 +228,7 @@ QFont getRotatingProgressBarTextFont()
 
 QPen getRotatingProgressBarTextPen()
 {
-    return QPen(Qt::white);
+    return QPen(QColor("#ffffff"));
 }
 
 int32_t getRotatingProgressBarTextTopMargin()
@@ -254,7 +244,7 @@ int32_t getRotatingProgressBarPenWidth()
 QPen getRotatingProgressBarPen()
 {
     return QPen(
-        QColor(0x579e1c),
+        QColor("#579e1c"),
         getRotatingProgressBarPenWidth());
 }
 
@@ -273,6 +263,11 @@ int32_t roundTextWidthDown(const int32_t width)
     assert(width > 0);
 
     return ((width / getTextWidthStep()) * getTextWidthStep());
+}
+
+int32_t getSnippetMaxWidth()
+{
+    return Utils::scale_value(420);
 }
 
 UI_MESSAGE_STYLE_NS_END

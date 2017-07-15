@@ -109,15 +109,6 @@ namespace Logic
 	{
 		assert(lineHeight > 0);
 
-        if (platform::is_apple())
-        {
-            // ask George Ulyanov 
-
-            //doc.setDocumentMargin(0);
-
-            //return;
-        }
-
 		for (auto block = doc.firstBlock(); block.isValid(); block = block.next())
 		{
 			QTextCursor c(block);
@@ -161,6 +152,36 @@ namespace Logic
 
         emit (_edit.document()->contentsChanged());
 	}
+
+    void Text4Edit(const QString& _text, Ui::TextEditEx& _edit, const bool _convertLinks, Emoji::EmojiSizePx _emojiSize)
+    {
+        auto cur = _edit.textCursor();
+        Text4Edit(_text, _edit, cur, _convertLinks, _emojiSize);
+    }
+
+    void Text4Edit(const QString& _text, Ui::TextEditEx& _edit, QTextCursor& _cursor, const bool _convertLinks, Emoji::EmojiSizePx _emojiSize)
+    {
+        _edit.blockSignals(true);
+        _edit.document()->blockSignals(true);
+        _edit.setUpdatesEnabled(false);
+
+        Text2DocConverter converter;
+        converter.MakeUniqueResources(true);
+
+        _cursor.beginEditBlock();
+
+        converter.Convert(_text, _cursor, Text2DocHtmlMode::Escape, _convertLinks, false, nullptr, _emojiSize, QTextCharFormat::AlignBaseline);
+
+        _cursor.endEditBlock();
+
+        _edit.mergeResources(converter.GetResources());
+
+        _edit.setUpdatesEnabled(true);
+        _edit.document()->blockSignals(false);
+        _edit.blockSignals(false);
+
+        emit (_edit.document()->contentsChanged());
+    }
     
     void Text4EditEmoji(const QString& text, Ui::TextEditEx& _edit, Emoji::EmojiSizePx _emojiSize, const QTextCharFormat::VerticalAlignment _aligment)
     {
@@ -192,11 +213,12 @@ namespace Logic
 		QTextCursor &cursor,
 		const Text2DocHtmlMode htmlMode,
 		const bool convertLinks,
-		const Text2HtmlUriCallback uriCallback)
+		const Text2HtmlUriCallback uriCallback,
+        const Emoji::EmojiSizePx _emojiSize)
 	{
 		Text2DocConverter converter;
         cursor.document()->blockSignals(true);
-		converter.Convert(text, cursor, htmlMode, convertLinks, false, uriCallback, Emoji::EmojiSizePx::Auto, QTextCharFormat::AlignBaseline);
+		converter.Convert(text, cursor, htmlMode, convertLinks, false, uriCallback, _emojiSize, QTextCharFormat::AlignBaseline);
         cursor.document()->blockSignals(false);
         emit (cursor.document()->contentsChanged());
 	}
@@ -328,7 +350,7 @@ namespace
 			{
 				continue;
 			}
-
+            
             if (!platform::is_apple() &&
                 ConvertEmoji(_emojiSize, _aligment))
 			{
@@ -356,7 +378,8 @@ namespace
         while (!IsEos())
         {
             InputCursorStack_.resize(0);
-            if (!platform::is_apple() && ConvertEmoji(_emojiSize, _aligment))
+            if (!platform::is_apple() &&
+                ConvertEmoji(_emojiSize, _aligment))
             {
                 continue;
             }
@@ -426,12 +449,21 @@ namespace
 
     bool Text2DocConverter::AddSoftHyphenIfNeed(QString& output, const QString& word, bool isWordWrapEnabled)
     {
+        if (platform::is_apple())
+        {
+            if (isWordWrapEnabled && !word.isEmpty() && (word.length() % WORD_WRAP_LIMIT == 0))
+            {
+                output += QChar::SoftHyphen;
+                return true;
+            }
+            return false;
+        }
+        
         const auto applyHyphen = (isWordWrapEnabled && (word.length() >= WORD_WRAP_LIMIT));
         if (applyHyphen)
         {
             output += QChar::SoftHyphen;
         }
-
         return applyHyphen;
     }
 
@@ -474,16 +506,50 @@ namespace
 
         QString buf;
 
+        auto onUrlFound = [isWordWrapEnabled, this]()
+        {
+            PopInputCursor();
+            const auto& url = parser_.get_url();
+            const auto urlAsString = QString::fromUtf8(url.original_.c_str(), url.original_.size());
+            const auto charsProcessed = urlAsString.size();
+            if (!Input_.seek(Input_.pos() + charsProcessed))
+            {
+                Input_.readAll(); // end of stream
+            }
+            SaveAsHtml(urlAsString, url, isWordWrapEnabled);
+        };
+
+        auto getChar = [this, &onUrlFound]()
+        {
+            QString buf;
+
+            QChar c1;
+            Input_ >> c1;
+            buf.append(c1);
+
+            if (c1.isHighSurrogate())
+            {
+                assert(!Input_.atEnd());
+                if (!Input_.atEnd())
+                {
+                    QChar c2;
+                    Input_ >> c2;
+                    buf.append(c2);
+                }
+            }
+
+            return buf;
+        };
+
         while (true)
         {
-            const auto& charAsStr = Input_.read(1);
-            if (charAsStr.isEmpty())
+            if (Input_.atEnd())
             {
                 parser_.finish();
 
                 if (parser_.has_url())
                 {
-                    SaveAsHtml(buf, parser_.get_url(), isWordWrapEnabled);
+                    onUrlFound();
                     return true;
                 }
                 else
@@ -493,6 +559,7 @@ namespace
                 }
             }
 
+            const auto charAsStr = getChar();
             for (char c : charAsStr.toUtf8())
                 parser_.process(c);
 
@@ -504,7 +571,7 @@ namespace
 
             if (parser_.has_url())
             {
-                SaveAsHtml(buf, parser_.get_url(), isWordWrapEnabled);
+                onUrlFound();
                 return true;
             }
 
@@ -564,7 +631,7 @@ namespace
 		const auto nextChar = ReadSChar();
 
         const auto nextCharStr = nextChar.ToQString();
-
+        
         const auto isNextCharSpace = nextChar.IsSpace();
 
         const auto isEmoji = nextChar.IsEmoji();
@@ -588,7 +655,7 @@ namespace
                 LastWord_ += nextCharStr;
             }
 
-            if (!isEmoji)
+            if (!isEmoji && !platform::is_apple())
             {
                 AddSoftHyphenIfNeed(LastWord_, LastWord_, isWordWrapEnabled);
             }
@@ -603,16 +670,15 @@ namespace
 			else
 			{
 				const auto htmlEscaped = nextCharStr.toHtmlEscaped();
-
 				Buffer_ += htmlEscaped;
 			}
 		}
 		else
 		{
             Buffer_ += nextCharStr;
-		}
+        }
 
-        if (!isEmoji)
+        if (!isEmoji || platform::is_apple())
         {
             AddSoftHyphenIfNeed(Buffer_, LastWord_, isWordWrapEnabled);
         }
@@ -733,7 +799,7 @@ namespace
 
 			return result;
 		};
-
+        
 		const QImage& img = Emoji::GetEmoji(_main, _ext, _emojiSize);
 
 		QString emoji_code = make_from_code(_main);
@@ -787,8 +853,6 @@ namespace
 
         const auto bufferPos2 = Buffer_.length();
 
-        Buffer_ += SPACE_ENTITY;
-
         if (UriCallback_)
         {
             UriCallback_(Buffer_.mid(bufferPos1, bufferPos2 - bufferPos1), Writer_.position());
@@ -828,7 +892,7 @@ namespace
 					break;
 			}
 
-            if (isWordWrapEnabled)
+            if (isWordWrapEnabled && !ch.isHighSurrogate())
             {
                 Text2DocConverter::AddSoftHyphenIfNeed(out, out, isWordWrapEnabled);
             }

@@ -28,7 +28,7 @@ namespace Ui
         void setPostfix(const QString& postfix);
         void setPostfixColor(const QColor& color);
 
-        int precalculateWidth(QPainter* painter = nullptr);
+        int precalculateWidth();
         void setState(const eButtonState state);
 
     protected:

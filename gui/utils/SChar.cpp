@@ -156,6 +156,13 @@ namespace Utils
 
 	QChar SChar::ToQChar() const
 	{
+#ifdef __APPLE__
+        if (Main_ == 0x0000FFFC)
+        {
+            return QChar();
+        }
+#endif
+
 		if (LengthQChars() > 1)
 		{
 			assert(!"conversion not possible");
@@ -169,6 +176,13 @@ namespace Utils
 	{
 		QString result;
 
+#ifdef __APPLE__
+        if (Main_ == 0x0000FFFC)
+        {
+            return QString();
+        }
+#endif
+        
 		const auto MAX_LENGTH = 4;
 		result.reserve(MAX_LENGTH);
 

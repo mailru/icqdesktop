@@ -11,16 +11,17 @@ QWidget#stackedWidget
 
 QLabel#hint
 {
-	background-color: transparent;
-    min-height: 32dip;
-	max-height: 45dip;
-	font-size: 16dip;
-	color: #696969;
+    min-height: 48dip;
+	max-height: 48dip;
+    margin-top: 12dip;
+    margin-bottom: 12dip;
+	font-size: 24dip;
 }
 
 QPushButton#passwordForgotten
 {
-    background-color: transparent;
+    min-height: 32dip;
+	max-height: 32dip;
     font-size: 16dip;
     text-align: top;
 }
@@ -29,11 +30,10 @@ QWidget#countryWidget
 {
 	min-height: 48dip;
 	max-height: 48dip;
-	background: transparent;
 	border-style: none;
 	border-bottom-style: solid;
 	border-bottom-width: 1dip;
-	border-bottom-color: #cccccc;
+	border-bottom-color: #d7d7d7;
 }
 
 QTreeView[CountrySearchView="true"]
@@ -49,7 +49,6 @@ QTreeView[CountrySearchView="true"]
 
 QLineEdit#countryCodeEdit
 {
-	background-color: transparent;
 	border-style: outset;
 	min-height: 48dip;
 	font-size: 18dip;
@@ -58,7 +57,7 @@ QLineEdit#countryCodeEdit
 QWidget#phoneWidget[Common="true"]
 {
 	background-color: transparent;
-	border-bottom-color: #cccccc;
+	border-bottom-color: #d7d7d7;
 	border-bottom-width: 1dip;
 	border-bottom-style: solid;
 	min-height: 48dip;
@@ -78,7 +77,7 @@ QWidget#phoneWidget[Focused="true"]
 QWidget#phoneWidget[Error="true"]
 {
 	background-color: transparent;
-	border-bottom-color: #e20b00;
+	border-bottom-color: #d0021b;
 	border-bottom-width: 1dip;
 	border-bottom-style: solid;
 	margin-top: 4dip;
@@ -86,26 +85,23 @@ QWidget#phoneWidget[Error="true"]
 
 QLineEdit#phoneEdit[Common="true"]
 {
-	background-color: transparent;
 	border-style: outset;
 	min-height: 48dip;
 	max-height: 48dip;
 	font-size: 18dip;
 	text-align: left;
 	padding-left: 10dip;
-	color: #282828;
 }
 
 QLineEdit#phoneEdit[Error="true"]
 {
-	background-color: transparent;
 	border-style: outset;
 	min-height: 48dip;
 	max-height: 48dip;
 	font-size: 18dip;
 	text-align: left;
 	padding-left: 10dip;
-	color: #e20b00;
+	color: #d0021b;
 }
 
 QWidget#switchLogin
@@ -117,7 +113,6 @@ QWidget#switchLogin
 
 QWidget#controlsWidget
 {
-	background-color: transparent;
 	max-width: 1000dip;
 	min-width: 400dip;
 }
@@ -127,37 +122,15 @@ QWidget#mainWidget
 	background-color: transparent;
 }
 
-QLabel#enteredPhoneLabel
-{
-	font-size: 24dip;
-    font-family: "%FONT_FAMILY_LIGHT%";
-    font-weight: %FONT_WEIGHT_LIGHT%;
-}
-
 Qwidget#enteredPhone
 {
-	background-color: transparent;
 	margin-bottom: 32dip;
-}
-
-QLineEdit#code[Error="true"]
-{
-	background-color: transparent;
-	border-style: none;
-	color: #e20b00;
-	border-bottom-color: #e20b00;
-	border-bottom-width: 1dip;
-	border-bottom-style: solid;
-	min-height: 48dip;
-	max-height: 48dip;
-	font-size: 18dip;
 }
 
 QLabel#errorLabel
 {
 	font-size: 15dip;
-	background-color: transparent;
-	color: #e20b00;
+	color: #d0021b;
 }
 
 QWidget#errorWidget
@@ -170,25 +143,14 @@ QWidget#nextButton
 	min-width: 150dip;
 	min-height: 40dip;
 	max-height: 40dip;
-	background: transparent;
 	margin-top: 20dip;
 }
 
 QPushButton#settingsButton
 {
-	min-width: 24dip;
-	max-width: 24dip;
+	min-width: 28dip;
+	max-width: 28dip;
 	min-height: 24dip;
 	max-height: 24dip;
-	border-image: url(:/resources/tabs_settings_100.png);
-}
-
-QPushButton#settingsButton:hover
-{
-	border-image: url(:/resources/tabs_settings_100_hover.png);
-}
-
-QPushButton#settingsButton:hover:pressed
-{
-	border-image: url(:/resources/tabs_settings_100_active.png);
+	border-image: url(:/resources/settings/settings_general_100.png);
 }

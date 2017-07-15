@@ -7,8 +7,15 @@
 
 #include "MpegLoader.h"
 
+namespace openal
+{
+    #define AL_ALEXT_PROTOTYPES
+    #include <AL/alext.h>
+}
+
 const int IncomingMessageInterval = 3000;
-const int PttCheckInterval = 500;
+const int PttCheckInterval = 100;
+const int DeviceCheckInterval = 60 * 1000;
 
 namespace Ui
 {
@@ -29,12 +36,14 @@ namespace Ui
         openal::alSourcei(Source_, AL_BUFFER, Buffer_);
     }
 
-    void PlayingData::play()
+    int PlayingData::play()
     {
         if (isEmpty())
-            return;
+            return 0;
 
-        openal::alSourcePlay(Source_);
+        auto duration = calcDuration();
+        GetSoundsManager()->sourcePlay(Source_);
+        return duration;
     }
 
     void PlayingData::pause()
@@ -75,9 +84,32 @@ namespace Ui
         }
     }
 
+    void PlayingData::clearData()
+    {
+        openal::alSourceStop(Source_);
+        openal::ALuint buffer = 0;
+        openal::alSourceUnqueueBuffers(Source_, 1, &buffer);
+    }
+
     bool PlayingData::isEmpty() const
     {
         return Id_ == -1;
+    }
+
+    int PlayingData::calcDuration()
+    {
+        openal::ALint sizeInBytes;
+        openal::ALint channels;
+        openal::ALint bits;
+
+        openal::alGetBufferi(Buffer_, AL_SIZE, &sizeInBytes);
+        openal::alGetBufferi(Buffer_, AL_CHANNELS, &channels);
+        openal::alGetBufferi(Buffer_, AL_BITS, &bits);
+
+        auto lengthInSamples = sizeInBytes * 8 / (channels * bits);
+        openal::ALint frequency;
+        openal::alGetBufferi(Buffer_, AL_FREQUENCY, &frequency);
+        return ((float)lengthInSamples / (float)frequency) * 1000;
     }
 
     openal::ALenum PlayingData::state() const
@@ -96,6 +128,7 @@ namespace Ui
 		, CanPlayIncoming_(true)
 		, Timer_(new QTimer(this))
         , PttTimer_(new QTimer(this))
+        , DeviceTimer_(new QTimer(this))
         , AlId(-1)
         , AlAudioDevice_(0)
         , AlAudioContext_(0)
@@ -103,6 +136,7 @@ namespace Ui
 	{
         initIncomig();
         initOutgoing();
+        initMail();
 		Timer_->setInterval(IncomingMessageInterval);
 		Timer_->setSingleShot(true);
 		connect(Timer_, SIGNAL(timeout()), this, SLOT(timedOut()), Qt::QueuedConnection);
@@ -110,6 +144,12 @@ namespace Ui
         PttTimer_->setInterval(PttCheckInterval);
         PttTimer_->setSingleShot(true);
         connect(PttTimer_, SIGNAL(timeout()), this, SLOT(checkPttState()), Qt::QueuedConnection);
+        
+        DeviceTimer_->setInterval(DeviceCheckInterval);
+        DeviceTimer_->setSingleShot(true);
+        connect(DeviceTimer_, SIGNAL(timeout()), this, SLOT(deviceTimeOut()), Qt::QueuedConnection);
+
+        connect(this, SIGNAL(needUpdateDeviceTimer()), this, SLOT(updateDeviceTimer()), Qt::QueuedConnection);
 
         connect(&Utils::InterConnector::instance(), &Utils::InterConnector::historyControlReady, this, &SoundsManager::contactChanged, Qt::QueuedConnection);
 	}
@@ -119,6 +159,7 @@ namespace Ui
         CurPlay_.free();
         PrevPlay_.free();
         Incoming_.free();
+		Mail_.free();
         Outgoing_.free();
         if (AlInited_)
             shutdownOpenAl();
@@ -127,7 +168,16 @@ namespace Ui
 	void SoundsManager::timedOut()
 	{
 		CanPlayIncoming_ = true;
+        Incoming_.clearData();
+        Mail_.clearData();
+        Outgoing_.clearData();
 	}
+
+    void SoundsManager::updateDeviceTimer()
+    {
+        if (!DeviceTimer_->isActive() || DeviceTimer_->remainingTime() < DeviceTimer_->interval() / 2)
+            DeviceTimer_->start();
+    }
 
     void SoundsManager::checkPttState()
     {
@@ -166,6 +216,11 @@ namespace Ui
         }
     }
 
+    void SoundsManager::deviceTimeOut()
+    {
+        openal::alcDevicePauseSOFT(AlAudioDevice_);
+    }
+
 	void SoundsManager::playIncomingMessage()
 	{
         if (CurPlay_.state() == AL_PLAYING)
@@ -179,6 +234,19 @@ namespace Ui
 		}
 	}
 
+    void SoundsManager::playIncomingMail()
+    {
+        if (CurPlay_.state() == AL_PLAYING)
+            return;
+
+        if (get_gui_settings()->get_value<bool>(settings_sounds_enabled, true) && CanPlayIncoming_ && !CallInProgress_)
+        {
+            CanPlayIncoming_ = false;
+            Mail_.play();
+            Timer_->start();
+        }
+    }
+
 	void SoundsManager::playOutgoingMessage()
 	{
         if (CurPlay_.state() == AL_PLAYING)
@@ -187,10 +255,11 @@ namespace Ui
 		if (get_gui_settings()->get_value(settings_outgoing_message_sound_enabled, false) && !CallInProgress_)
         {
             Outgoing_.play();
+            Timer_->start();
         }
 	}
 
-    int SoundsManager::playPtt(const QString& file, int id)
+    int SoundsManager::playPtt(const QString& file, int id, int& duration)
     {
         if (!AlInited_)
             initOpenAl();
@@ -212,7 +281,7 @@ namespace Ui
                     PrevPlay_ = CurPlay_;
                     CurPlay_ = exchange;
 
-                    CurPlay_.play();
+                    duration = CurPlay_.play();
                     PttTimer_->start();
                     return CurPlay_.Id_;
                 }
@@ -234,7 +303,7 @@ namespace Ui
             {
                 if (CurPlay_.Id_ == id)
                 {
-                    CurPlay_.play();
+                    duration = CurPlay_.play();
                     PttTimer_->start();
                     return CurPlay_.Id_;
                 }
@@ -247,6 +316,10 @@ namespace Ui
                 }
 
                 PrevPlay_ = CurPlay_;
+            }
+            else if (CurPlay_.state() == AL_STOPPED)
+            {
+                emit pttFinished(CurPlay_.Id_, false);
             }
             CurPlay_.clear();
         }
@@ -267,23 +340,30 @@ namespace Ui
         }     
 
         CurPlay_.setBuffer(result, frequency, format);
-
-        int err;
-        if ((err = openal::alGetError()) == AL_NO_ERROR)
-        {
-            CurPlay_.Id_ = ++AlId;
-            CurPlay_.play();
-            PttTimer_->start();
-            return CurPlay_.Id_;
-        }
-
-        return -1;
+        
+        CurPlay_.Id_ = ++AlId;
+        duration = CurPlay_.play();
+        PttTimer_->start();
+        return CurPlay_.Id_;
     }
 
     void SoundsManager::pausePtt(int id)
     {
         if (CurPlay_.Id_ == id)
             CurPlay_.pause();
+    }
+
+    void SoundsManager::delayDeviceTimer()
+    {
+        emit needUpdateDeviceTimer();
+    }
+
+    void SoundsManager::sourcePlay(unsigned source)
+    {
+        openal::alcDeviceResumeSOFT(AlAudioDevice_);
+        openal::alSourcePlay(source);
+
+        delayDeviceTimer();
     }
 
 	void SoundsManager::callInProgress(bool value)
@@ -297,6 +377,7 @@ namespace Ui
             shutdownOpenAl();
         initIncomig();
         initOutgoing();
+		initMail();
     }
 
     void SoundsManager::initOpenAl()
@@ -313,7 +394,9 @@ namespace Ui
         openal::alDistanceModel(AL_NONE);
 
         if (openal::alGetError() == AL_NO_ERROR)
+        {
             AlInited_ = true;
+        }
     }
     
     void SoundsManager::initIncomig()
@@ -326,7 +409,7 @@ namespace Ui
         
         Incoming_.init();
         
-        MpegLoader l(":/sounds/incoming", true);
+        MpegLoader l(build::is_icq() ? ":/sounds/incoming" : ":/sounds/incoming_agent", true);
         if (!l.open())
             return;
         
@@ -345,6 +428,38 @@ namespace Ui
         if ((err = openal::alGetError()) == AL_NO_ERROR)
         {
             Incoming_.Id_ = ++AlId;
+        }
+    }
+
+    void SoundsManager::initMail()
+    {
+        if (!AlInited_)
+            initOpenAl();
+
+        if (!Mail_.isEmpty())
+            return;
+
+        Mail_.init();
+
+        MpegLoader l(":/sounds/mail", true);
+        if (!l.open())
+            return;
+
+        QByteArray result;
+        qint64 samplesAdded = 0, frequency = l.frequency(), format = l.format();
+        while (1)
+        {
+            int res = l.readMore(result, samplesAdded);
+            if (res < 0)
+                break;
+        }
+
+        Mail_.setBuffer(result, frequency, format);
+
+        int err;
+        if ((err = openal::alGetError()) == AL_NO_ERROR)
+        {
+            Mail_.Id_ = ++AlId;
         }
     }
     
@@ -403,6 +518,10 @@ namespace Ui
         Outgoing_.free();
         Outgoing_.clear();
 
+		Mail_.stop();
+		Mail_.free();
+		Mail_.clear();
+
         if (AlAudioContext_)
         {
             openal::alcMakeContextCurrent(NULL);
@@ -419,9 +538,19 @@ namespace Ui
         AlInited_ = false;
     }
 
-	SoundsManager* GetSoundsManager()
-	{
-		static std::unique_ptr<SoundsManager> manager(new SoundsManager());
-		return manager.get();
-	}
+    std::unique_ptr<SoundsManager> g_sounds_manager;
+
+    SoundsManager* GetSoundsManager()
+    {
+        if (!g_sounds_manager)
+            g_sounds_manager.reset(new SoundsManager());
+
+        return g_sounds_manager.get();
+    }
+
+    void ResetSoundsManager()
+    {
+        if (g_sounds_manager)
+            g_sounds_manager.reset();
+    }
 }

@@ -50,6 +50,7 @@ namespace core
         void save_if_needed();
 
         const hosts_map& get_hosts() const;
+
         void update_hosts(const hosts_map& _hosts, bool _replace_scheme = true);
 
         std::string get_host_alt(const std::string& _host) const;
@@ -60,7 +61,10 @@ namespace core
 
         void change_scheme();
 
+        bool is_alt_scheme() const;
+
         static std::chrono::system_clock::duration get_request_period();
+
         static int32_t get_first_request_timeout_ms();
     };
 }

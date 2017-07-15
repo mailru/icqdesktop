@@ -7,6 +7,8 @@
 #include "../../../core/Voip/libvoip/include/voip/voip_types.h"
 #include "../../utils/utils.h"
 #include "../../../external/mac/iTunes.h"
+#import <IOKit/pwr_mgt/IOPMLib.h>
+//#include <ApplicationServices/ApplicationServices.h>
 
 @interface WindowRect : NSObject
 {
@@ -327,16 +329,32 @@ QRect platform_macos::getWindowRect(const QWidget& parent)
 }
 */
 
-void platform_macos::setAspectRatioForWindow(QWidget& wnd, float aspectRatio) {
+void setAspectRatioForWindow(QWidget& wnd, float w, float h) {
     NSView* view = (NSView*)wnd.winId();
     assert(view);
     if (view) {
         NSWindow* window = [view window];
         assert(window);
         if (window) {
-            [window setContentAspectRatio:NSMakeSize(10.0f * aspectRatio, 10.0f)];
+            if (w > 0.0f)
+            {
+                [window setContentAspectRatio: NSMakeSize(w, h)];
+            }
+            else
+            {
+                [window setResizeIncrements: NSMakeSize(1.0, 1.0)];
+            }
         }
     }
+}
+
+void platform_macos::setAspectRatioForWindow(QWidget& wnd, float aspectRatio) {
+    setAspectRatioForWindow(wnd, 10.0f * aspectRatio, 10.0f);
+}
+
+void platform_macos::unsetAspectRatioForWindow(QWidget& wnd)
+{
+    setAspectRatioForWindow(wnd, 0.0f, 0.0f);
 }
 
 bool platform_macos::windowIsOverlapped(QWidget* frame) {
@@ -493,11 +511,19 @@ class GraphicsPanelMacosImpl : public platform_specific::GraphicsPanel {
     virtual void resizeEvent(QResizeEvent*) override;
     virtual void showEvent(QShowEvent*) override;
     virtual void hideEvent(QHideEvent*) override;
+    virtual void mousePressEvent(QMouseEvent * event) override;
+    virtual void mouseReleaseEvent(QMouseEvent * event) override;
+    virtual void mouseMoveEvent(QMouseEvent* _e) override;
+    virtual bool eventFilter(QObject *obj, QEvent *event) override;
+    
+    virtual void createdTalk() override;
+    virtual void startedTalk() override;
     
     void _setPanelsAttached(bool attach);
+    void _mouseMoveEvent(QMouseEvent* _e);
 
 public:
-    GraphicsPanelMacosImpl(QWidget* parent, std::vector<Ui::BaseVideoPanel*>& panels);
+    GraphicsPanelMacosImpl(QWidget* parent, std::vector<Ui::BaseVideoPanel*>& panels, bool primaryVideo);
     virtual ~GraphicsPanelMacosImpl();
     
     virtual WId frameId() const override;
@@ -508,16 +534,24 @@ public:
     
     void fullscreenAnimationStart() override;
     void fullscreenAnimationFinish() override;
+    
+    QPoint mouseMovePoint;
+    bool primaryVideo_;
+    bool disableMouseEvents_;
 };
 
-GraphicsPanelMacosImpl::GraphicsPanelMacosImpl(QWidget* parent, std::vector<Ui::BaseVideoPanel*>& panels)
+GraphicsPanelMacosImpl::GraphicsPanelMacosImpl(QWidget* parent, std::vector<Ui::BaseVideoPanel*>& panels, bool primaryVideo)
 : platform_specific::GraphicsPanel(parent)
-, _panels(panels) {
+, _panels(panels)
+, primaryVideo_ (primaryVideo)
+, disableMouseEvents_(true) {
     NSRect frame;
     frame.origin.x    = 0;
     frame.origin.y    = 0;
     frame.size.width  = 1;
     frame.size.height = 1;
+    
+    //primaryVideo_ = false;
     
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_X11DoNotAcceptFocus);
@@ -613,12 +647,117 @@ void GraphicsPanelMacosImpl::showEvent(QShowEvent* e) {
     platform_specific::GraphicsPanel::showEvent(e);
     [_renderView setHidden:NO];
     _setPanelsAttached(true);
+    
+    if (primaryVideo_)
+    {
+        // To catch mouse move event. under Mac.
+        QCoreApplication::instance()->installEventFilter(this);
+    }
 }
 
 void GraphicsPanelMacosImpl::hideEvent(QHideEvent* e) {
     platform_specific::GraphicsPanel::hideEvent(e);
     [_renderView setHidden:YES];
     _setPanelsAttached(false);
+    
+    if (primaryVideo_)
+    {
+        QCoreApplication::instance()->removeEventFilter(this);
+    }
+}
+    
+
+void GraphicsPanelMacosImpl::mousePressEvent(QMouseEvent * event)
+{
+    if (!disableMouseEvents_ && primaryVideo_ && event->button() == Qt::LeftButton)
+    {
+        NSEventType evtType = (event->button() == Qt::LeftButton ? NSLeftMouseDown : NSRightMouseDown);
+        NSPoint where;
+        where.x = event->pos().x();
+        // Cocoa coords is inversted.
+        where.y = height() - event->pos().y();
+        
+        
+        NSEvent *mouseEvent = [NSEvent mouseEventWithType:evtType
+                                                 location:where
+                                            modifierFlags:0
+                                                timestamp:0
+                                             windowNumber:0
+                                                  context:0                                          eventNumber:0
+                                               clickCount:1
+                                                 pressure:0];
+        [[_renderView nextResponder] mouseDown:mouseEvent];
+    }
+    // To pass event to parent widget.
+    event->ignore();
+}
+
+    
+void GraphicsPanelMacosImpl::mouseReleaseEvent(QMouseEvent * event)
+{
+    if (!disableMouseEvents_ && primaryVideo_ && event->button() == Qt::LeftButton)
+    {
+        NSEventType evtType = (event->button() == Qt::LeftButton ? NSLeftMouseUp : NSRightMouseUp);
+        NSPoint where;
+        where.x = event->pos().x();
+        where.y = height() - event->pos().y();
+        
+        NSEvent *mouseEvent = [NSEvent mouseEventWithType:evtType
+                                                 location:where
+                                            modifierFlags:0
+                                                timestamp:0
+                                             windowNumber:0
+                                                  context:0                                          eventNumber:0
+                                               clickCount:1
+                                                 pressure:0];
+        [[_renderView nextResponder] mouseUp:mouseEvent];
+    }
+    
+    event->ignore();
+}
+    
+void GraphicsPanelMacosImpl::mouseMoveEvent(QMouseEvent* _e)
+{
+    _mouseMoveEvent (_e);
+    _e->ignore();
+}
+    
+void GraphicsPanelMacosImpl::_mouseMoveEvent(QMouseEvent* _e)
+{
+    QPoint localPos = mapFromGlobal(QCursor::pos());
+    
+    if (!disableMouseEvents_ && primaryVideo_ && mouseMovePoint != localPos)
+    {
+        mouseMovePoint = localPos;
+        
+        NSEventType evtType = NSMouseMoved;
+        NSPoint where;
+        where.x = _e->pos().x();
+        where.y = height() - _e->pos().y();
+        
+        if (where.x >= 0 && where.x < width() && where.y >= 0 && where.y < height())
+        {
+            int nClickCount = (_e->buttons() == Qt::LeftButton) ? 1 : 0;
+            
+            NSEvent *mouseEvent = [NSEvent mouseEventWithType:evtType
+                                                     location:where
+                                                modifierFlags:0
+                                                    timestamp:0
+                                                 windowNumber:0
+                                                      context:0                                          eventNumber:0
+                                                   clickCount: nClickCount
+                                                     pressure:0];
+            
+            if (nClickCount == 0)
+            {
+                [[_renderView nextResponder] mouseMoved:mouseEvent];
+            }
+            else
+            {
+                [[_renderView nextResponder] mouseDragged:mouseEvent];
+            }
+        }
+    }
 }
     
 void GraphicsPanelMacosImpl::addPanels(std::vector<Ui::BaseVideoPanel*>& panels)
@@ -652,9 +791,47 @@ void GraphicsPanelMacosImpl::clearPanels()
     _panels.clear();
 }
     
+bool GraphicsPanelMacosImpl::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::MouseMove)
+    {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+        if (mouseEvent->buttons() == Qt::NoButton)
+        {
+            _mouseMoveEvent(mouseEvent);
+        }
+    }
+    return false;
+}
+    
+void GraphicsPanelMacosImpl::createdTalk()
+{
+    disableMouseEvents_ = true;
+}
+    
+void GraphicsPanelMacosImpl::startedTalk()
+{
+    disableMouseEvents_ = false;
+}
+    
 }
 
-platform_specific::GraphicsPanel* platform_macos::GraphicsPanelMacos::create(QWidget* parent, std::vector<Ui::BaseVideoPanel*>& panels) {
-    return new platform_macos::GraphicsPanelMacosImpl(parent, panels);
+platform_specific::GraphicsPanel* platform_macos::GraphicsPanelMacos::create(QWidget* parent, std::vector<Ui::BaseVideoPanel*>& panels, bool primaryVideo) {
+    
+    IOPMAssertionID assertionID = 0;
+    if (CGDisplayIsAsleep(CGMainDisplayID()))
+    {
+        CFStringRef reasonForActivity = CFSTR("ICQ Call is active");
+        IOReturn success = IOPMAssertionDeclareUserActivity(reasonForActivity, kIOPMUserActiveLocal, &assertionID);
+        
+        // Give 1s to monitor to turn on.
+        QThread::msleep(1000);
+    }
+    platform_specific::GraphicsPanel* res = new platform_macos::GraphicsPanelMacosImpl(parent, panels, primaryVideo);
+    if (assertionID)
+    {
+        IOPMAssertionRelease((IOPMAssertionID)assertionID);
+    }
+    return res;
 }
 

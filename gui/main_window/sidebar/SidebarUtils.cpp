@@ -9,8 +9,8 @@
 
 namespace
 {
-    const int link_offset_left = 68;
-    const int link_offset_right = 24;
+    const int link_offset_left = 52;
+    const int link_offset_right = 16;
     const int link_offset_top = 6;
 }
 
@@ -18,13 +18,13 @@ namespace Ui
 {
     LineWidget::LineWidget(QWidget* /*parent*/, int leftMargin, int topMargin, int rightMargin, int bottomMargin)
     {
-        auto rootLayout = emptyVLayout(this);
+        auto rootLayout = Utils::emptyVLayout(this);
         rootLayout->addSpacerItem(new QSpacerItem(0, topMargin, QSizePolicy::Preferred, QSizePolicy::Fixed));
         {
-            auto horLayout = emptyHLayout();
+            auto horLayout = Utils::emptyHLayout();
             horLayout->addSpacerItem(new QSpacerItem(leftMargin, 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
             line_ = new QWidget(this);
-            line_->setStyleSheet("background: #dadada");
+            line_->setStyleSheet("background: #d7d7d7");
             line_->setFixedHeight(Utils::scale_value(1));
             horLayout->addWidget(line_);
             horLayout->addSpacerItem(new QSpacerItem(rightMargin, 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
@@ -44,13 +44,15 @@ namespace Ui
         , Hovered_(false)
         , Height_(height)
     {
-        auto vLayout = emptyVLayout(this);
-        auto hLayout = emptyHLayout();
+        auto vLayout = Utils::emptyVLayout(this);
+        auto hLayout = Utils::emptyHLayout();
         hLayout->addSpacerItem(new QSpacerItem(leftMargin, 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
         Button_ = new CustomButton(this, image);
         Button_->setOffsets(textOffset, 0);
         Button_->setCursor(QCursor(Qt::PointingHandCursor));
         Button_->setText(text);
+        Button_->setTextColor("#454545");
+        Button_->setFont(Fonts::appFontScaled(16));
         Button_->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed));
         Button_->setAlign(Qt::AlignLeft);
         Button_->setFocusPolicy(Qt::NoFocus);
@@ -60,7 +62,7 @@ namespace Ui
         vLayout->addLayout(hLayout);
         {
             vLayout->addSpacerItem(new QSpacerItem(0, Utils::scale_value(link_offset_top), QSizePolicy::Preferred, QSizePolicy::Fixed));
-            auto horLayout = emptyHLayout();
+            auto horLayout = Utils::emptyHLayout();
             Link_ = new QLabel(this);
             Link_->setFont(Fonts::appFontScaled(12));
             horLayout->addSpacerItem(new QSpacerItem(Utils::scale_value(link_offset_left), 0, QSizePolicy::Fixed, QSizePolicy::Preferred));
@@ -80,6 +82,16 @@ namespace Ui
     void ActionButton::setText(const QString& text)
     {
         Button_->setText(text);
+    }
+
+    void ActionButton::setColor(const QString& color)
+    {
+        Button_->setTextColor(color);
+    }
+
+    void ActionButton::setFont(const QFont& font)
+    {
+        Button_->setFont(font);
     }
 
     void ActionButton::setLink(const QString& text, const QColor& color)
@@ -192,21 +204,5 @@ namespace Ui
         if (Enabled_)
             emit clicked();
         QWidget::mouseReleaseEvent(e);
-    }
-
-    QHBoxLayout* emptyHLayout(QWidget* parent)
-    {
-        auto layout = new QHBoxLayout(parent);
-        layout->setContentsMargins(0, 0, 0, 0);
-        layout->setSpacing(0);
-        return layout;
-    }
-
-    QVBoxLayout* emptyVLayout(QWidget* parent)
-    {
-        auto layout = new QVBoxLayout(parent);
-        layout->setContentsMargins(0, 0, 0, 0);
-        layout->setSpacing(0);
-        return layout;
     }
 }

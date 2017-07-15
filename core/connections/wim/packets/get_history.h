@@ -51,15 +51,15 @@ namespace core
 
         class get_history : public robusto_packet
         {
-            int64_t		older_msgid_;
+            int64_t older_msgid_;
 
-            get_history_params		hist_params_;
+            get_history_params hist_params_;
 
-            std::shared_ptr<archive::history_block>		messages_;
-            std::shared_ptr<archive::dlg_state>			dlg_state_;
-            std::vector<archive::history_patch_uptr>    history_patches_;
-            std::string                                 patch_version_;
-            std::string                                 locale_;
+            std::shared_ptr<archive::history_block> messages_;
+            std::shared_ptr<archive::dlg_state> dlg_state_;
+            std::vector<archive::history_patch_uptr> history_patches_;
+            std::string patch_version_;
+            std::string locale_;
 
             virtual int32_t init_request(std::shared_ptr<core::http_request_simple> _request) override;
 

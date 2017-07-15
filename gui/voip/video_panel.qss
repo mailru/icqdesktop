@@ -6,7 +6,7 @@ QWidget#VoipPanelHeader
 
 QWidget#VoipPanelHeader
 {
-	background: rgba(255,255,255,1%);
+	background: transparent;
 }
 
 QWidget[VoipPanelHeaderText_Name="true"]
@@ -23,7 +23,7 @@ QWidget[VoipPanelHeaderText_Status="true"]
 
 QWidget[VoipPanelHeaderText_Has_Video="true"]
 {
-  	color: #FFFFFF;
+  	color: #ffffff;
 }
 
 QWidget[VoipPanelHeaderText_Has_Video="false"]
@@ -35,37 +35,20 @@ QWidget[VideoPanel="true"]
 {
 	min-height: 56dip;
 	max-height: 56dip;
-	background: rgba(255,255,255,70%);
+	background: rgba(255, 255, 255, 70%);
 }
 
 QWidget[VideoPanelHeader="true"]
 {
-	min-height: 32dip;
-	max-height: 32dip;
-	background: rgba(255,255,255,70%);
+	min-height: 28dip;
+	max-height: 28dip;
+	background: rgba(255, 255, 255, 70%);
 }
 
 QWidget[VideoPanelHeaderText="true"]
 {
 	font-size: 15dip;
 	text-align: left;
-}
-
-QPushButton[StopCallMainButton="true"]
-{
-	min-width: 40dip;
-	max-width: 40dip;
-	min-height: 40dip;
-	max-height: 40dip;
-	border-image: url(:/resources/contr_endcall_100.png);
-}
-QPushButton[StopCallMainButton="true"]:hover
-{
-	border-image: url(:/resources/contr_endcall_100_hover.png);
-}
-QPushButton[StopCallMainButton="true"]:hover:pressed
-{
-	border-image: url(:/resources/contr_endcall_100_active.png);
 }
 
 QPushButton[StopCallButton="true"]
@@ -80,10 +63,6 @@ QPushButton[StopCallButton="true"]:hover
 {
 	border-image: url(:/resources/contr_endcall_100_hover.png);
 }
-QPushButton[StopCallButton="true"]:hover:pressed
-{
-	border-image: url(:/resources/contr_endcall_100_active.png);
-}
 
 QPushButton[CallSoundOn="true"]
 {
@@ -96,10 +75,6 @@ QPushButton[CallSoundOn="true"]
 QPushButton[CallSoundOn="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_volume_100_hover.png);
-}
-QPushButton[CallSoundOn="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_volume_100_active.png);
 }
 
 QPushButton[CallSoundOff="true"]
@@ -114,10 +89,6 @@ QPushButton[CallSoundOff="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_volume_off_100_hover.png);
 }
-QPushButton[CallSoundOff="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_volume_off_100_active.png);
-}
 
 QPushButton[CallSettings="true"]
 {
@@ -130,10 +101,6 @@ QPushButton[CallSettings="true"]
 QPushButton[CallSettings="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_settings_100_hover.png);
-}
-QPushButton[CallSettings="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_settings_100_active.png);
 }
 
 QPushButton[CallAddChat="true"]
@@ -148,10 +115,6 @@ QPushButton[CallAddChat="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_add_100_hover.png);
 }
-QPushButton[CallAddChat="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_add_100_active.png);
-}
 
 QPushButton[CallGoChat="true"]
 {
@@ -164,10 +127,6 @@ QPushButton[CallGoChat="true"]
 QPushButton[CallGoChat="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_chat_100_hover.png);
-}
-QPushButton[CallGoChat="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_chat_100_active.png);
 }
 
 QPushButton[MinimalBandwithMode="false"]
@@ -182,10 +141,6 @@ QPushButton[MinimalBandwithMode="false"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_economy_off_100_hover.png);
 }
-QPushButton[MinimalBandwithMode="false"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_economy_off_100_active.png);
-}
 
 QPushButton[MinimalBandwithMode="true"]
 {
@@ -198,10 +153,6 @@ QPushButton[MinimalBandwithMode="true"]
 QPushButton[MinimalBandwithMode="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_economy_on_100_hover.png);
-}
-QPushButton[MinimalBandwithMode="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_economy_on_100_active.png);
 }
 
 
@@ -217,10 +168,6 @@ QPushButton[CallFSOn="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_fullscreen_100_hover.png);
 }
-QPushButton[CallFSOn="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_fullscreen_100_active.png);
-}
 
 QPushButton[CallFSOff="true"]
 {
@@ -233,10 +180,6 @@ QPushButton[CallFSOff="true"]
 QPushButton[CallFSOff="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_decrease_100_hover.png);
-}
-QPushButton[CallFSOff="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_decrease_100_active.png);
 }
 
 QPushButton[CallPanelEnBtn="true"]
@@ -269,10 +212,6 @@ QPushButton[CallEnableCam="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_camera_100_hover.png);
 }
-QPushButton[CallEnableCam="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_camera_100_active.png);
-}
 
 QPushButton[CallDisableCam="true"]
 {
@@ -281,10 +220,6 @@ QPushButton[CallDisableCam="true"]
 QPushButton[CallDisableCam="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_camera_off_100_hover.png);
-}
-QPushButton[CallDisableCam="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_camera_off_100_active.png);
 }
 
 QPushButton[CallEnableMic="true"]
@@ -295,10 +230,6 @@ QPushButton[CallEnableMic="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_micro_100_hover.png);
 }
-QPushButton[CallEnableMic="true"]:hover:pressed
-{
-	border-image: url(:/resources/video_panel/videoctrl_micro_100_active.png);
-}
 
 QPushButton[CallDisableMic="true"]
 {
@@ -308,7 +239,52 @@ QPushButton[CallDisableMic="true"]:hover
 {
 	border-image: url(:/resources/video_panel/videoctrl_micro_off_100_hover.png);
 }
-QPushButton[CallDisableMic="true"]:hover:pressed
+
+
+QPushButton[ConferenceAllTheSame="true"]
 {
-	border-image: url(:/resources/video_panel/videoctrl_micro_off_100_active.png);
+	border-image: url(:/resources/video_panel/videoctrl_groupmode1_100.png);
+	min-width: 40dip;
+	max-width: 40dip;
+	min-height: 40dip;
+	max-height: 40dip;
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+QPushButton[ConferenceAllTheSame="true"]:hover
+{
+	border-image: url(:/resources/video_panel/videoctrl_groupmode1_100_hover.png);
+}
+
+QPushButton[ConferenceOneIsBig="true"]
+{
+	border-image: url(:/resources/video_panel/videoctrl_groupmode2_100.png);
+	min-width: 40dip;
+	max-width: 40dip;
+	min-height: 40dip;
+	max-height: 40dip;
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+QPushButton[ConferenceOneIsBig="true"]:hover
+{
+	border-image: url(:/resources/video_panel/videoctrl_groupmode2_100_hover.png);
+}
+
+QPushButton[AddUser="true"]
+{
+	border-image: url(:/resources/video_panel/videoctrl_add_100.png);
+	min-width: 40dip;
+	max-width: 40dip;
+	min-height: 40dip;
+	max-height: 40dip;
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+QPushButton[AddUser="true"]:hover
+{
+	border-image: url(:/resources/video_panel/videoctrl_add_100_hover.png);
 }

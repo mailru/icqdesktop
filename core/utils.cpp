@@ -11,12 +11,14 @@ namespace core
     {
         std::wstring get_product_data_path()
         {
+            const wchar_t* product_path = build::is_icq() ? product_path_icq_w : (platform::is_apple() ? product_path_agent_mac_w : product_path_agent_w);
+
 #ifdef __linux__
-            return (core::tools::system::get_user_profile() + L"/.config/" + L"ICQ");
+            return (core::tools::system::get_user_profile() + L"/.config/" + product_path);
 #elif _WIN32
-            return ::common::get_product_data_path();
+            return ::common::get_user_profile() + L"/" + product_path;
 #else
-            return (core::tools::system::get_user_profile() + L"/" + L"ICQ");
+            return (core::tools::system::get_user_profile() + L"/" + product_path);
 #endif //__linux__
         }
 
@@ -29,20 +31,20 @@ namespace core
         {
             if (platform::is_windows())
             {
-                return "Mail.ru Windows ICQ";
+                return build::is_icq() ? "Mail.ru Windows ICQ" : "Mail.ru Windows Agent";
             }
             else if (platform::is_apple())
             {
-                return "Mail.ru Mac OS X ICQ";
+                return build::is_icq() ? "Mail.ru Mac OS X ICQ" : "Mail.ru Mac OS X Agent";
             }
             else if (platform::is_linux())
             {
-                return "Mail.ru Linux ICQ";
+                return build::is_icq() ? "Mail.ru Linux ICQ" : "Mail.ru Linux Agent";
             }
             else
             {
                 assert(false);
-                return "Mail.ru ICQ";
+                return build::is_icq() ? "Mail.ru ICQ" : "Mail.ru Agent";
             }
         }
 

@@ -6,63 +6,17 @@
 #include "../controls/CommonStyle.h"
 #include "../utils/utils.h"
 
-#define SCALED_VALUE(x) (Utils::scale_value((x)))
-#define DEFAULT_BORDER SCALED_VALUE(12)
-#define DEFAULT_WINDOW_ROUND_RECT SCALED_VALUE(5)
-#define DEFAULT_TIME_BUTTONS_OFFSET SCALED_VALUE(300)
+#define DEFAULT_BORDER Utils::scale_value(12)
+#define DEFAULT_WINDOW_ROUND_RECT Utils::scale_value(5)
 
-#define COLOR_SECURE_BTN_ACTIVE   QColor(255, 255, 255, 255)
-#define COLOR_SECURE_BTN_INACTIVE QColor(255, 255, 255, 0)
-#define CLOSE_BUTTON_FIXED_SIZE SCALED_VALUE(32)
-
-#ifdef __APPLE__
-    const QString minButtonStyle =
-        "QPushButton { border-image: url(:/resources/main_window/contr_minimize_100.png); width: 32dip; height: 32dip; background-color: transparent; padding: 0; margin: 0; border: none; } "
-        "QPushButton:hover { border-image: url(:/resources/main_window/contr_minimize_100_hover.png); background-color: #d3d3d3; } "
-        "QPushButton:pressed { border-image: url(:/resources/main_window/contr_minimize_100_active.png); background-color: #9b9b9b; }";
-
-    const QString maxButtonStyle =
-        "QPushButton { border-image: url(:/resources/video_panel/videoctrl_bigwindow_100.png); width: 32dip; height: 32dip; background-color: transparent; padding: 0; margin: 0; border: none; } "
-        "QPushButton:hover { border-image: url(:/resources/video_panel/videoctrl_bigwindow_100_hover.png); background-color: #d3d3d3; } "
-        "QPushButton:pressed { border-image: url(:/resources/video_panel/videoctrl_bigwindow_100_active.png); background-color: #9b9b9b; }";
-#else
-    const QString minButtonStyle =
-        "QPushButton { background-image: url(:/resources/main_window/contr_minimize_100.png); background-color: transparent; background-repeat: no-repeat; background-position: center; background-color: transparent; padding-top: 2dip; padding-bottom: 2dip; width: 24dip; height: 24dip; padding-left: 11dip; padding-right: 12dip; border: none; }"
-        "QPushButton:hover { background-image: url(:/resources/main_window/contr_minimize_100_hover.png); background-color: #d3d3d3; }"
-        "QPushButton:pressed { background-image: url(:/resources/main_window/contr_minimize_100_active.png); background-color: #9b9b9b; } ";
-
-    const QString maxButtonStyle =
-        "QPushButton { background-image: url(:/resources/video_panel/videoctrl_bigwindow_100.png); background-color: transparent; background-repeat: no-repeat; background-position: center; background-color: transparent; padding-top: 2dip; padding-bottom: 2dip; width: 24dip; height: 24dip; padding-left: 11dip; padding-right: 12dip; border: none; }"
-        "QPushButton:hover { background-image: url(:/resources/video_panel/videoctrl_bigwindow_100_hover.png); background-color: #d3d3d3; }"
-        "QPushButton:pressed { background-image: url(:/resources/video_panel/videoctrl_bigwindow_100_active.png); background-color: #9b9b9b; } ";
-#endif
+#define COLOR_SECURE_BTN_ACTIVE   QColor("#ffffff")
+#define COLOR_SECURE_BTN_INACTIVE Qt::transparent
 
 const QString secureCallButton = 
-" \
-QPushButton \
-{ \
-    color: #000000; \
-    font-size: 15dip; \
-    text-align: center; \
-    border-style: none; \
-    background-color: transparent; \
-} \
-";
+    " QPushButton { font-size: 15dip; text-align: center; border-style: none; background-color: transparent; } ";
 
 const QString secureCallButtonClicked = 
-" \
-QPushButton \
-{ \
-    color: #000000; \
-    font-size: 15dip; \
-    text-align: center; \
-    border-style: solid; \
-    border-color: #000000; \
-    background-color: #FFFFFF; \
-} \
-";
-
-const QString userNameStyle = "QWidget { color: #FFFFFF; }";
+    " QPushButton { font-size: 15dip; text-align: center; border-style: none; background-color: #ffffff; } ";
 
 #define SECURE_BTN_BORDER_W    Utils::scale_value(24)
 #define SECURE_BTN_ICON_W      Utils::scale_value(16)
@@ -137,7 +91,7 @@ void Ui::MoveablePanel::mousePressEvent(QMouseEvent* _e)
     {
         grabMouse = true;
         dragState_.isDraging = true;
-        dragState_.posDragBegin = _e->pos();
+        dragState_.posDragBegin = QCursor::pos();
     }
 }
 
@@ -145,7 +99,8 @@ void Ui::MoveablePanel::mouseMoveEvent(QMouseEvent* _e)
 {
     if (isVisible() && (_e->buttons() & Qt::LeftButton) && dragState_.isDraging)
     {
-        QPoint diff = _e->pos() - dragState_.posDragBegin;
+        QPoint diff = QCursor::pos() - dragState_.posDragBegin;
+        dragState_.posDragBegin = QCursor::pos();
         QPoint newpos = parent_->pos() + diff;
 
         parent_->move(newpos);
@@ -205,7 +160,6 @@ Ui::VideoPanelHeader::VideoPanelHeader(QWidget* _parent, int _items)
     , callTime_(NULL)
     , btnMin_(NULL)
     , secureCallEnabled_(false)
-    , btnMax_(NULL)
     , btnClose_(NULL)
     , itemsToShow_(_items)
 {
@@ -213,22 +167,18 @@ Ui::VideoPanelHeader::VideoPanelHeader(QWidget* _parent, int _items)
     setProperty("VideoPanelHeader", true);
     setContentsMargins(0, 0, 0, 0);
 
-    QHBoxLayout* layout = new QHBoxLayout();
+    QHBoxLayout* layout = Utils::emptyHLayout();
     lowWidget_ = new QWidget(this);
     { // low widget. it makes background panel coloured
         lowWidget_->setContentsMargins(DEFAULT_BORDER, 0, 0, 0);
         lowWidget_->setProperty("VideoPanelHeader", true);
         lowWidget_->setLayout(layout);
 
-        QVBoxLayout* vLayoutParent = new QVBoxLayout();
-        vLayoutParent->setContentsMargins(0, 0, 0, 0);
-        vLayoutParent->setSpacing(0);
+        QVBoxLayout* vLayoutParent = Utils::emptyVLayout();
         vLayoutParent->setAlignment(Qt::AlignVCenter);
         vLayoutParent->addWidget(lowWidget_);
         setLayout(vLayoutParent);
 
-        layout->setSpacing(0);
-        layout->setContentsMargins(0, 0, 0, 0);
         layout->setAlignment(Qt::AlignVCenter);
 
         //layout->addSpacing(DEFAULT_BORDER);
@@ -251,9 +201,7 @@ Ui::VideoPanelHeader::VideoPanelHeader(QWidget* _parent, int _items)
         assert(_w);
         if (_w)
         {
-            QHBoxLayout* layout = new QHBoxLayout();
-            layout->setSpacing(0);
-            layout->setContentsMargins(0, 0, 0, 0);
+            QHBoxLayout* layout = Utils::emptyHLayout();
             layout->setAlignment(_align);
             _w->setLayout(layout);
         }
@@ -278,13 +226,12 @@ Ui::VideoPanelHeader::VideoPanelHeader(QWidget* _parent, int _items)
         callName_->setNameProperty("VideoPanelHeaderText", true);
 
         leftWidg->layout()->addWidget(callName_);
-        //leftWidg->layout()->addSpacing(DEFAULT_BORDER << 1);
     }
 
     if (itemsToShow_ & kVPH_ShowTime)
     {
         callTime_ = new voipTools::BoundBox<PushButton_t>(centerWidg);
-        callTime_->setPostfixColor(QColor(0, 0, 0, 255));
+        callTime_->setPostfixColor(Ui::CommonStyle::getTextCommonColor());
         callTime_->setFont(font);
         callTime_->setEnabled(false);
         callTime_->setAlignment(Qt::AlignCenter);
@@ -295,7 +242,6 @@ Ui::VideoPanelHeader::VideoPanelHeader(QWidget* _parent, int _items)
         QObject::connect(callTime_, SIGNAL(clicked()), this, SLOT(_onSecureCallClicked()), Qt::QueuedConnection);
         Utils::ApplyStyle(callTime_, secureCallButton);
         centerWidg->layout()->addWidget(callTime_);
-        //layout->addSpacing(DEFAULT_BORDER * 3);
     }
 
     QWidget* parentWidget = rightWidg;
@@ -313,22 +259,12 @@ Ui::VideoPanelHeader::VideoPanelHeader(QWidget* _parent, int _items)
     };
     if (itemsToShow_ & kVPH_ShowMin)
     {
-        btnMin_ = addButton(minButtonStyle, SLOT(_onMinimize()));
-    }
-
-    if (itemsToShow_ & kVPH_ShowMax)
-    {
-        btnMax_ = addButton(maxButtonStyle, SLOT(_onMaximize()));
+        btnMin_ = addButton(Ui::CommonStyle::getMinimizeButtonStyle(), SLOT(_onMinimize()));
     }
 
     if (itemsToShow_ & kVPH_ShowClose)
     {
         btnClose_ = addButton(Ui::CommonStyle::getCloseButtonStyle(), SLOT(_onClose()));
-        
-#ifdef __APPLE__
-        // Force set size for close button, becuase it should be square.
-        btnClose_->setFixedSize(CLOSE_BUTTON_FIXED_SIZE, CLOSE_BUTTON_FIXED_SIZE);
-#endif
     }
 }
 

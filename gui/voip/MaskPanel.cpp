@@ -5,14 +5,14 @@
 #include "../utils/utils.h"
 #include "../core_dispatcher.h"
 #include "MaskManager.h"
-
+#include "VoipTools.h"
 
 
 // Items view settings.
 enum {
     NORMAL_ITEM_BORDER = 1, SELECTED_ITEM_BORDER = 5,
     NORMAL_ITEM_SIZE = 40 + NORMAL_ITEM_BORDER * 2,
-    SELECTED_ITEM_SIZE = 64 + SELECTED_ITEM_BORDER * 2,
+    SELECTED_ITEM_SIZE = 62 + SELECTED_ITEM_BORDER * 2,
     PANEL_SIZE = 116, HIDE_PRIVIEW_PRIMARY_INTERVAL = 7000,
     SCROLLING_SPEED = 10, MASK_SPACING = 12, 
     MASKS_ANIMATION_MOVE_SPEED = 25,
@@ -21,7 +21,9 @@ enum {
     MASKS_ANIMATION_DURATION = 300, // In ms.
 };
 
-Ui::MaskWidget::MaskWidget(const voip_masks::Mask* mask) : mask_(mask), loadingProgress_(0.0), maskEngineReady_(false), applyWhenEnebled_(false)
+Ui::MaskWidget::MaskWidget(const voip_masks::Mask* mask) : mask_(mask), loadingProgress_(0.0), 
+    maskEngineReady_(false), applyWhenEnebled_(false), 
+    closeIcon_(Utils::parse_image_name(":/resources/video_panel/close_mask_100.png"))
 {
     setObjectName("MaskWidget");
     setCursor(Qt::PointingHandCursor);
@@ -39,6 +41,16 @@ Ui::MaskWidget::MaskWidget(const voip_masks::Mask* mask) : mask_(mask), loadingP
     auto margin = Utils::scale_value(1);
     setContentsMargins(margin, margin, margin, margin);
 	setFixedSize(Utils::scale_value(QSize(NORMAL_ITEM_SIZE + margin, NORMAL_ITEM_SIZE + margin)));
+
+    resizeAnimationMin_ = new QPropertyAnimation(this, "minimumSize");
+    resizeAnimationMin_->setEasingCurve(QEasingCurve::InOutQuad);
+    resizeAnimationMin_->setDuration(100);
+
+    resizeAnimationMax_ = new QPropertyAnimation(this, "maximumSize");
+    resizeAnimationMax_->setEasingCurve(QEasingCurve::InOutQuad);
+    resizeAnimationMax_->setDuration(100);
+    
+    setContentsMargins(0, 0, 0, 0);
 }
 
 void Ui::MaskWidget::paintEvent(QPaintEvent * /*event*/)
@@ -53,11 +65,21 @@ void Ui::MaskWidget::paintEvent(QPaintEvent * /*event*/)
 
 	{
 		painter.save();
-		painter.setPen(QPen(QColor(0, 0, 0, 128)));
-		painter.setBrush(QBrush(QColor(255, 255, 255, 128)));
+        QColor maskPenColor("#000000");
+        maskPenColor.setAlphaF(0.5);
+        QColor maskBrushColor("#ffffff");
+        maskBrushColor.setAlphaF(0.5);
+		painter.setPen(QPen(maskPenColor));
+		painter.setBrush(QBrush(maskBrushColor));
 
 		// Draw outer border.
-		painter.drawEllipse(contentsRect());
+        QRectF contentRectF = contentsRect();
+        
+        // Fix for retina and non-retina displays.
+        // Fo retina we will have roundBorder 0.5.
+        float roundBorder = 1.0f / Utils::scale_bitmap(1);
+        contentRectF.adjust(roundBorder, roundBorder,  - roundBorder, - roundBorder);
+        painter.drawEllipse(contentRectF);
 		painter.restore();
 	}
 
@@ -68,8 +90,8 @@ void Ui::MaskWidget::paintEvent(QPaintEvent * /*event*/)
 	{
 		painter.save();
 
-		QPen pen(QColor(255, 255, 255, 255));
-		pen.setWidth(4);
+        QPen pen(QColor("#ffffff"));
+		pen.setWidth(Utils::scale_value(4));
 
 		painter.setPen(pen);
 
@@ -93,22 +115,36 @@ void Ui::MaskWidget::paintEvent(QPaintEvent * /*event*/)
 		path.addEllipse(imageRect);
 		painter.setClipPath(path);
 
-        auto resizedImage = image_.scaled(imageRect.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        auto resizedImage = image_.scaled(Utils::scale_bitmap(imageRect.size()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 		painter.drawPixmap(imageRect, resizedImage, resizedImage.rect());
 	}
 
-    // Draw disabled state
-    if (!isEnabled() || !maskEngineReady_)
+    // Draw disabled state or selected.
+    if (!isEnabled() || !maskEngineReady_ || isChecked())
     {
         painter.save();
-        painter.setPen(QPen(QColor(0, 0, 0, 0)));
-        painter.setBrush(QBrush(QColor(0, 0, 0, 128)));
+        painter.setPen(QPen(Qt::transparent));
+        QColor maskDisabledColor("#000000");
+        maskDisabledColor.setAlphaF(0.5);
+        painter.setBrush(QBrush(maskDisabledColor));
         
         // Draw outer border.
         int startAngel  = 90 * 16; // 90 degree.
         int spanAngel = (1.0 - loadingProgress_) * 360 * 16; // 90 degree - progress * 360 
-        painter.drawPie(contentsRect(), startAngel, !maskEngineReady_ ? 360 * 16 : spanAngel);
+        painter.drawPie(contentsRect(), startAngel, (!maskEngineReady_ || isChecked()) ? 360 * 16 : spanAngel);
         painter.restore();
+    }
+
+    // Draw close icon
+    if (isChecked())
+    {
+        auto imageRect = contentsRect().marginsRemoved(QMargins(border, border, border, border));
+        auto iconSize = Utils::scale_value(20) * width() / Utils::scale_value(SELECTED_ITEM_SIZE);
+        QRect closeIconRect(imageRect.left() + imageRect.width() / 2 - iconSize / 2, 
+                            imageRect.top()  + imageRect.height() / 2 - iconSize / 2, 
+                            iconSize, 
+                            iconSize);
+        painter.drawPixmap(closeIconRect, closeIcon_, closeIcon_.rect());
     }
 }
 
@@ -132,8 +168,20 @@ void Ui::MaskWidget::setChecked(bool check)
 {
 	QPushButton::setChecked(check);
 
-	setFixedSize(Utils::scale_value(check ? QSize(SELECTED_ITEM_SIZE, SELECTED_ITEM_SIZE) :
-		QSize(NORMAL_ITEM_SIZE, NORMAL_ITEM_SIZE)));
+    QSize targetSize = Utils::scale_value(check ? QSize(SELECTED_ITEM_SIZE, SELECTED_ITEM_SIZE) :
+        QSize(NORMAL_ITEM_SIZE, NORMAL_ITEM_SIZE));
+
+    if (targetSize != size())
+    {
+        resizeAnimationMax_->stop();
+        resizeAnimationMin_->stop();
+
+        resizeAnimationMax_->setEndValue(targetSize);
+        resizeAnimationMin_->setEndValue(targetSize);
+        
+        resizeAnimationMax_->start();
+        resizeAnimationMin_->start();
+    }
 
     if (check)
     {
@@ -227,10 +275,38 @@ int  Ui::MaskWidget::yCenter()
     return y() + height() / 2;
 }
 
+void Ui::MaskWidget::setYPos(int y)
+{
+    move(x(), y);
+}
+
+void Ui::MaskWidget::setXCenter(int x)
+{
+    move(x - width() / 2, y());
+}
+
+int  Ui::MaskWidget::xCenter()
+{
+    return x() + width() / 2;
+}
+
 void Ui::MaskWidget::updateSize()
 {
     setFixedSize(Utils::scale_value(isChecked() ? QSize(SELECTED_ITEM_SIZE, SELECTED_ITEM_SIZE) :
         QSize(NORMAL_ITEM_SIZE, NORMAL_ITEM_SIZE)));
+}
+
+void Ui::MaskWidget::moveEvent(QMoveEvent *event)
+{
+    // Made position even, because during animation we have twitching without this code.
+    if (x() % 2 == 1)
+    {
+        setXPos(x() - 1);
+    }
+    if (y() % 2 == 1)
+    {
+        setYPos(y() - 1);
+    }
 }
 
 
@@ -240,12 +316,16 @@ Ui::ScrollWidget::ScrollWidget()
 
 void Ui::ScrollWidget::animationShow()
 {
-    runAnimation(false);
+    auto boxLayout = qobject_cast<QBoxLayout*>(layout());
+
+    prerunAnimation(false, (boxLayout->direction() == QBoxLayout::TopToBottom));
 }
 
 void Ui::ScrollWidget::animationHide()
 {
-    runAnimation(true);
+    auto boxLayout = qobject_cast<QBoxLayout*>(layout());
+
+    prerunAnimation(true, (boxLayout->direction() == QBoxLayout::TopToBottom));
 }
 
 template <typename T> void Ui::ScrollWidget::addAnimation(QObject* mask, const QByteArray& param, const T& start, const T& finish,
@@ -260,17 +340,24 @@ template <typename T> void Ui::ScrollWidget::addAnimation(QObject* mask, const Q
     animation->start(QAbstractAnimation::DeleteWhenStopped);    
 }
 
-void Ui::ScrollWidget::runAnimation(bool out)
+void Ui::ScrollWidget::runAnimationVertical(bool out)
 {
     auto masks = findChildren<MaskWidget*>();
 
     QMap<QWidget*, QRect> maskPositions;
-    updateGeometry();
 
-    // Save correct position on panel.
+    // Fix shifting after animation.
+    QPoint offset;
+
+    if (!masks.empty())
+    {
+        offset.setY(-masks[0]->frameGeometry().top() + 1);
+    }
+
     for (auto mask : masks)
     {
         maskPositions[mask] = mask->frameGeometry();
+        maskPositions[mask].translate(offset);
     }
 
     // Remove masks widgets from layout.
@@ -286,9 +373,7 @@ void Ui::ScrollWidget::runAnimation(bool out)
         }
     }
 
-    // Make size fixed, to stay scroll on the same plase during animation.
-    setFixedSize(size());
-
+    
     int index = 0;
 
     auto addAnimations = [] (MaskWidget* mask, const QRect& rect, double duration, bool out, ScrollWidget* self) {
@@ -335,7 +420,7 @@ void Ui::ScrollWidget::runAnimation(bool out)
 
             if (isVisible)
             {
-            index++;
+                index++;
             }
         }
     }
@@ -377,7 +462,7 @@ void Ui::ScrollWidget::runAnimation(bool out)
             for (auto mask : masks)
             {
                 mask->updateSize();
-                boxLayout->insertWidget((index == 0) ? index : index * 2, mask, 0, Qt::AlignLeft | Qt::AlignTop);
+                boxLayout->insertWidget((index == 0) ? index : index * 2, mask, 0, Qt::AlignCenter);
                 index++;
             }
             updateGeometry();
@@ -388,8 +473,181 @@ void Ui::ScrollWidget::runAnimation(bool out)
         setFixedSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
         emit animationFinished(out);
     });
+
+    emit animationRunned(out);
 }
 
+void Ui::ScrollWidget::runAnimationHorizontal(bool out)
+{
+    auto masks = findChildren<MaskWidget*>();
+    QMap<QWidget*, QRect> maskPositions;
+
+    // Fix shifting after animation.
+    QPoint offset;
+
+    if (!masks.empty())
+    {
+        auto maskPosition = masks[0]->frameGeometry();
+        offset = QPoint(-maskPosition.left() + 1, 0);
+    }
+
+    for (auto mask : masks)
+    {
+        maskPositions[mask] = mask->frameGeometry();
+        maskPositions[mask].translate(offset);
+    }
+
+    // Remove masks widgets from layout.
+    for (auto mask : masks)
+    {
+        layout()->removeWidget(mask);
+
+        // Move to start position.
+        if (!out)
+        {
+            mask->move(0, mask->frameGeometry().center().y());
+            mask->setFixedSize(0, 0);
+        }
+    }
+
+
+    int index = 0;
+
+    auto addAnimations = [](MaskWidget* mask, const QRect& rect, double duration, bool out, ScrollWidget* self) {
+        // Animation for opacity.
+        auto opacityEffect = new QGraphicsOpacityEffect(mask);
+        mask->setGraphicsEffect(opacityEffect);
+        self->addAnimation(opacityEffect, "opacity", 0.0, 1.0,
+            duration * 1.5, QEasingCurve::InOutSine, out);
+
+        self->addAnimation(mask, "minimumSize", QSize(0, 0), rect.size(),
+            duration, QEasingCurve::Linear, out);
+
+        self->addAnimation(mask, "maximumSize", QSize(0, 0), rect.size(),
+            duration, QEasingCurve::Linear, out);
+
+        self->addAnimation(mask, "xCenter", 0, rect.center().x(),
+            duration, QEasingCurve::InOutCubic, out);
+
+        self->addAnimation(mask, "yPos", rect.center().y(), rect.top(),
+            duration, QEasingCurve::Linear, out);
+    };
+
+
+    auto scrollParentRect = parentWidget() ? parentWidget()->geometry() : QRect();
+    auto padding = Utils::scale_value(QSize(SELECTED_ITEM_SIZE, SELECTED_ITEM_SIZE));
+    // TODO: Hack, because looks like using only geometry is not enough.
+    scrollParentRect.setSize(scrollParentRect.size() + 2 * padding);
+
+    auto positionOnParent = mapFromParent(QPoint(0, 0));
+    scrollParentRect.moveTo(positionOnParent - QPoint(padding.width(), padding.height()));
+
+    // Add animations for masks.
+    if (!out)
+    {
+        for (auto mask : masks)
+        {
+            int duration = 0;
+            auto rect = maskPositions[mask];
+
+            bool isVisible = scrollParentRect.contains(rect);
+            duration = isVisible ? (MASKS_ANIMATION_DURATION + index * MASKS_ANIMATION_DURATION / 5) : 0;
+
+            addAnimations(mask, rect, duration, out, this);
+
+            if (isVisible)
+            {
+                index++;
+            }
+        }
+    }
+    else
+    {
+        for (int i = masks.size() - 1; i >= 0; i--)
+        {
+            auto mask = masks[i];
+            int duration = 0;
+            auto rect = maskPositions[mask];
+
+            bool isVisible = scrollParentRect.contains(rect);
+            duration = isVisible ? MASKS_ANIMATION_DURATION : 0;
+
+            auto startAnimationTime = isVisible ? index * MASKS_ANIMATION_DURATION / 5 : 0;
+            // For out animation, we start from last to first item.
+            QTimer::singleShot(startAnimationTime, this, [=]
+            {
+                addAnimations(mask, rect, duration, out, this);
+            });
+
+            if (isVisible)
+            {
+                index++;
+            }
+        }
+    }
+
+    auto endAnimation = (MASKS_ANIMATION_DURATION + index * MASKS_ANIMATION_DURATION / 5) + 100;
+
+    QTimer::singleShot(endAnimation, this, [=]
+    {
+        QBoxLayout* boxLayout = qobject_cast<QBoxLayout*>(layout());
+        if (boxLayout)
+        {
+            int index = 0;
+            auto masks = findChildren<MaskWidget*>();
+
+            for (auto mask : masks)
+            {
+                mask->updateSize();
+                boxLayout->insertWidget((index == 0) ? index : index * 2, mask, 0, Qt::AlignCenter);
+                index++;
+            }
+            updateGeometry();
+            layout()->activate();
+        }
+
+        // Disable fixed size for scroll widget.
+        setFixedSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
+        emit animationFinished(out);
+    });
+
+    emit animationRunned(out);
+}
+
+void Ui::ScrollWidget::prerunAnimation(bool out, bool vertical)
+{
+    auto masks = findChildren<MaskWidget*>();
+
+    QSize sumSize;
+    for (auto mask : masks)
+    {
+        mask->updateSize();
+
+        sumSize += mask->size();
+    }
+
+    if (vertical)
+    {
+        setFixedHeight(masks.size() * Utils::scale_value(MASK_SPACING) + sumSize.height());
+    }
+    else
+    {
+        setFixedWidth(masks.size() * Utils::scale_value(MASK_SPACING) + sumSize.width());
+    }
+
+    layout()->activate();
+    layout()->update();
+    update();
+
+    if (vertical)
+    {
+        runAnimationVertical(out);
+    }
+    else
+    {
+        runAnimationHorizontal(out);
+    }
+}
 
 Ui::MaskPanel::MaskPanel(QWidget* _parent, QWidget* _container, int topOffset, int bottomOffset) :
 #ifdef __APPLE__
@@ -409,20 +667,21 @@ Ui::MaskPanel::MaskPanel(QWidget* _parent, QWidget* _container, int topOffset, i
     , hasLocalVideo_(false)
     , hidePreviewPrimaryTimer_(new QTimer())
     , backgroundWidget_(nullptr)
+    , animationRunning_(false)
+    , hideMaskListOnAnimationFinish_(false)
 {
 	// Layout
 	// rootLayout -> rootWidget_ -> layoutTarget -> maskListWidget_ -> layoutMaskListWidget -> maskList_ -> Masks
 	//									|---------> currentMaskButton_          |-------->upButton_/downButton_
 	//
 
+    setContentsMargins(0, 0, 0, 0);
     setStyleSheet(Utils::LoadStyle(":/voip/mask_panel.qss"));
     setObjectName("MaskPanel");
     setAttribute(Qt::WA_NoSystemBackground, true);
     setAttribute(Qt::WA_TranslucentBackground, true);
 
-    QHBoxLayout* rootLayout = new QHBoxLayout();
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
+    QHBoxLayout* rootLayout = Utils::emptyHLayout();
 	rootLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     setLayout(rootLayout);
 
@@ -431,26 +690,24 @@ Ui::MaskPanel::MaskPanel(QWidget* _parent, QWidget* _container, int topOffset, i
     backgroundWidget_->updateSizeFromParent();
 #endif
     
-    rootWidget_ = new QWidget(this);
+    rootWidget_ = new voipTools::BoundBox<QWidget>(this, QColor(255, 0, 0));
     rootWidget_->setContentsMargins(0, 0, 0, 0);
-    layout()->addWidget(rootWidget_);
+    rootWidget_->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+    layout()->addWidget(rootWidget_);    
     
-    
-    QVBoxLayout* layoutTarget = new QVBoxLayout();
-    layoutTarget->setContentsMargins(Utils::scale_value(16), Utils::scale_value(16), Utils::scale_value(16), Utils::scale_value(16));
-    layoutTarget->setSpacing(0);
-    layoutTarget->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    QVBoxLayout* layoutTarget = Utils::emptyVLayout();
+    layoutTarget->setAlignment(Qt::AlignCenter);
     rootWidget_->setLayout(layoutTarget);
 
 	// This widget contains up/down buttons, mask list.
 	maskListWidget_ = createMaskListWidget();
 
-	layoutTarget->addWidget(maskListWidget_);
+    layoutTarget->addWidget(maskListWidget_, 0, Qt::AlignCenter);
 
 	currentMaskButton_ = new MaskWidget(nullptr);
     currentMaskButton_->setMaskEngineReady(true);
 
-	layoutTarget->addWidget(currentMaskButton_);
+	layoutTarget->addWidget(currentMaskButton_, 0, Qt::AlignCenter);
 
 	layoutTarget->setDirection(QBoxLayout::LeftToRight);
 
@@ -465,7 +722,7 @@ Ui::MaskPanel::MaskPanel(QWidget* _parent, QWidget* _container, int topOffset, i
         this, SLOT(setVideoStatus(bool)), Qt::DirectConnection);
 
     connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallCreated(const voip_manager::ContactEx&)), 
-        this, SLOT(updateMaskList()), Qt::DirectConnection);
+        this, SLOT(updateMaskList(const voip_manager::ContactEx&)), Qt::DirectConnection);
 
     connect(hidePreviewPrimaryTimer_, SIGNAL(timeout()), this, SLOT(autoHidePreviewPrimary()), Qt::DirectConnection);
 
@@ -535,8 +792,6 @@ void Ui::MaskPanel::updatePosition(const QWidget& parent)
 #ifdef _WIN32
         move(rc.x(), rc.y() + topOffset_);
 #endif
-        setFixedHeight(Utils::scale_value(PANEL_SIZE));
-        setFixedWidth(rc.width());
         
 #ifdef __APPLE__
         platform_macos::setWindowPosition(*this,
@@ -545,16 +800,22 @@ void Ui::MaskPanel::updatePosition(const QWidget& parent)
                                                 parentRect.width(),
                                                 Utils::scale_value(PANEL_SIZE)));
 #endif
+        
+        setFixedHeight(Utils::scale_value(PANEL_SIZE));
+        setFixedWidth(rc.width());
 
-        rootWidget_->layout()->setContentsMargins(Utils::scale_value(12), Utils::scale_value(16), Utils::scale_value(12), Utils::scale_value(16));
+        rootWidget_->setContentsMargins(Utils::scale_value(12), Utils::scale_value(16 - 10), Utils::scale_value(12), Utils::scale_value(16));
+
+        rootWidget_->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding));
+
+        maskListWidget_->setFixedWidth(contentsRect().width() - 2 * Utils::scale_value(12));
+        maskListWidget_->setFixedHeight(QWIDGETSIZE_MAX);
 	}
 	else if (direction_ == QBoxLayout::TopToBottom)
 	{
 #ifdef _WIN32
         move(rc.x(), rc.y() + topOffset_);
 #endif
-        setFixedHeight(rc.height() - topOffset_ - bottomOffset_);
-        setFixedWidth(Utils::scale_value(PANEL_SIZE));
         
 #ifdef __APPLE__
         platform_macos::setWindowPosition(*this,
@@ -563,7 +824,16 @@ void Ui::MaskPanel::updatePosition(const QWidget& parent)
                                                 Utils::scale_value(PANEL_SIZE),
                                                 parentRect.height() - topOffset_ - bottomOffset_));
 #endif
-        rootWidget_->layout()->setContentsMargins(Utils::scale_value(16), Utils::scale_value(16), Utils::scale_value(16), Utils::scale_value(16));
+        
+        setFixedHeight(rc.height() - topOffset_ - bottomOffset_);
+        setFixedWidth(Utils::scale_value(PANEL_SIZE));
+
+        rootWidget_->setContentsMargins(Utils::scale_value(16 - 10), Utils::scale_value(16), Utils::scale_value(16), Utils::scale_value(16));
+
+        rootWidget_->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+        
+        maskListWidget_->setFixedHeight(contentsRect().size().height() - 2 * Utils::scale_value(16));
+        maskListWidget_->setFixedWidth(QWIDGETSIZE_MAX);
 	}
 }
 
@@ -573,38 +843,26 @@ void Ui::MaskPanel::setMaskList(const voip_masks::MaskList& maskList)
 
     clearMaskList();
 
-	auto maskWidget = appendItem(nullptr);
-
-	for (auto mask : maskList)
-	{
-		maskLayout_->addSpacing(Utils::scale_value(MASK_SPACING));
-		appendItem(mask);
-	}
+    for (auto mask : maskList)
+    {
+        maskLayout_->addSpacing(Utils::scale_value(MASK_SPACING));
+        appendItem(mask);
+    }
 
     updateUpDownButtons();
 
-    selectMask(maskWidget);
+    selectMask(nullptr);
 }
 
 void Ui::MaskPanel::showMaskList()
 {
     sendOpenStatistic();
 
-	maskListWidget_->show();
-    scrollWidget_->animationShow();
-	currentMaskButton_->hide();
-
-    Ui::GetDispatcher()->getVoipController().initMaskEngine();
-
-    auto selectedMask = getSelectedWidget();
-    if (selectedMask && !selectedMask->isEmptyMask())
+    if (!animationRunning_)
     {
-        emit makePreviewPrimary();
+        scrollWidget_->animationShow();
+        animationRunning_ = true;
     }
-
-    emit onShowMaskList();
-
-    scrollWidget_->setFocus();
 }
 
 void Ui::MaskPanel::hideMaskListWithOutAnimation()
@@ -620,19 +878,39 @@ void Ui::MaskPanel::hideMaskListWithOutAnimation()
 void Ui::MaskPanel::hideMaskList()
 {
     hidePreviewPrimaryTimer_->stop();
-    scrollWidget_->animationHide();
+
+    if (!animationRunning_)
+    {
+        scrollWidget_->animationHide();
+        animationRunning_ = true;
+        hideMaskListOnAnimationFinish_ = false;
+    }
+    else
+    {
+        // Hide after animation finish.
+        hideMaskListOnAnimationFinish_ = true;
+    }
 }
 
 void Ui::MaskPanel::animationFinished(bool out)
 {
+    animationRunning_ = false;
     if (out)
     {
         hideMaskListWithOutAnimation();
     }
     else
     {
+        // Hide mask list automaticle.
+        if (hideMaskListOnAnimationFinish_)
+        {
+            hideMaskList();
+        }
         hidePreviewPrimaryTimer_->start();
     }
+
+    hideMaskListOnAnimationFinish_ = false;
+    emit animationRunningFinished(out);
 }
 
 Ui::MaskWidget* Ui::MaskPanel::appendItem(const voip_masks::Mask* mask)
@@ -663,7 +941,7 @@ Ui::MaskWidget* Ui::MaskPanel::appendItem(const voip_masks::Mask* mask)
 
 	connect(icon, SIGNAL(clicked(bool)), this, SLOT(changedMask()));
 
-	maskLayout_->addWidget(icon, 0, Qt::AlignLeft | Qt::AlignTop);
+	maskLayout_->addWidget(icon, 0, Qt::AlignCenter);
 
 	return icon;
 }
@@ -674,8 +952,16 @@ void Ui::MaskPanel::changedMask()
 
 	if (mask)
 	{
-        sendSelectMaskStatistic(mask);
-		selectMask(mask);
+        if (mask->isChecked())
+        {
+            sendSelectMaskStatistic(mask);
+            selectMask(mask);            
+        }
+        else
+        {
+            selectMask(nullptr);
+        }
+
         hidePreviewPrimaryTimer_->start();
 	}
 }
@@ -699,8 +985,11 @@ void Ui::MaskPanel::selectMask(MaskWidget* mask)
             hasLocalVideo_ = true;
         }
 
-        mask->setChecked(true);
-
+        {
+            const QSignalBlocker blocker(mask);
+            mask->setChecked(true);
+        }
+        
         QMetaObject::invokeMethod(this, "scrollToWidget", Qt::QueuedConnection,
             Q_ARG(QString, mask->name()));
 
@@ -717,31 +1006,42 @@ void Ui::MaskPanel::selectMask(MaskWidget* mask)
             currentMaskButton_->setPixmap(pixmap);
         }
 	}
+    else
+    {
+        Ui::GetDispatcher()->getVoipController().loadMask("");
+        
+        if (currentMaskButton_->pixmap().isNull())
+        {
+            auto mask = getFirstMask();
+            auto pixmap = mask ? mask->pixmap() : QPixmap();
+            currentMaskButton_->setPixmap(pixmap);
+        }
+    }
 }
 
 QWidget* Ui::MaskPanel::createMaskListWidget()
 {
-	layoutMaskListWidget_ = new QVBoxLayout();
-	layoutMaskListWidget_->setContentsMargins(0, 0, 0, 0);
-	layoutMaskListWidget_->setSpacing(0);
-	layoutMaskListWidget_->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+	layoutMaskListWidget_ = Utils::emptyVLayout();
+	layoutMaskListWidget_->setAlignment(Qt::AlignCenter);
 
-	maskLayout_ = new QVBoxLayout();
-	maskLayout_->setContentsMargins(0, 0, 0, 0);
-	maskLayout_->setSpacing(0);
-	maskLayout_->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+	maskLayout_ = Utils::emptyVLayout();
+	maskLayout_->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 
-	scrollWidget_ = new ScrollWidget();
-	scrollWidget_->setObjectName("MaskList");
+	scrollWidget_ = new voipTools::BoundBox<ScrollWidget>();
+	scrollWidget_->setObjectName("MaskList");   
+    scrollWidget_->setContentsMargins(0, 0, 0, 0);
 
 	// Scroll area with all masks.
-	maskList_ = new QScrollArea();
+	maskList_ = new voipTools::BoundBox<QScrollArea>();
 	maskList_->setObjectName("MaskList");
 	maskList_->setProperty("orintation", "vertical");
 	maskList_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	maskList_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	maskList_->setWidgetResizable(true);
 	maskList_->setWidget(scrollWidget_);
+    maskList_->setContentsMargins(0, 0, 0, 0);
+    maskList_->setAlignment(Qt::AlignCenter);
+    maskList_->setLineWidth(0);
 
 	scrollWidget_->setLayout(maskLayout_);
 
@@ -755,10 +1055,7 @@ QWidget* Ui::MaskPanel::createMaskListWidget()
     downButton_->setProperty("MaskArrow", "down");
 	downButton_->setFixedSize(Utils::scale_value(QSize(NORMAL_ITEM_SIZE, NORMAL_ITEM_SIZE)));
     downButton_->setCursor(Qt::PointingHandCursor);
-
-	QWidget* res = new QWidget();
-	res->setLayout(layoutMaskListWidget_);
-
+   
     // Disable change layout if widget was hide.
     QSizePolicy retainUp = upButton_->sizePolicy();
     retainUp.setRetainSizeWhenHidden(true);
@@ -769,11 +1066,15 @@ QWidget* Ui::MaskPanel::createMaskListWidget()
     retainDown.setRetainSizeWhenHidden(true);
     downButton_->setSizePolicy(retainDown);
 
-	layoutMaskListWidget_->addWidget(upButton_, 0, Qt::AlignLeft | Qt::AlignTop);
+	layoutMaskListWidget_->addWidget(upButton_, 0, Qt::AlignCenter);
 	layoutMaskListWidget_->addSpacing(Utils::scale_value(MASK_SPACING));
 	layoutMaskListWidget_->addWidget(maskList_);
 	layoutMaskListWidget_->addSpacing(Utils::scale_value(MASK_SPACING));
-	layoutMaskListWidget_->addWidget(downButton_, 0, Qt::AlignLeft | Qt::AlignTop);
+	layoutMaskListWidget_->addWidget(downButton_, 0, Qt::AlignCenter);
+    
+    QWidget* res = new voipTools::BoundBox<QWidget>(QColor(0, 123, 55));
+    res->setLayout(layoutMaskListWidget_);
+    res->setContentsMargins(0, 0, 0, 0);
 
     maskList_->horizontalScrollBar()->setSingleStep(Utils::scale_value(SCROLLING_SPEED));
     maskList_->verticalScrollBar()->setSingleStep(Utils::scale_value(SCROLLING_SPEED));
@@ -784,6 +1085,7 @@ QWidget* Ui::MaskPanel::createMaskListWidget()
 	connect(maskList_->horizontalScrollBar(), SIGNAL(rangeChanged(int, int)), this, SLOT(updateUpDownButtons()));
 
     connect(scrollWidget_, SIGNAL(animationFinished(bool)), this, SLOT(animationFinished(bool)), Qt::DirectConnection);
+    connect(scrollWidget_, SIGNAL(animationRunned(bool)), this, SLOT(animationRunned(bool)), Qt::DirectConnection);
 
 	return res;
 }
@@ -828,6 +1130,8 @@ void Ui::MaskPanel::setPanelMode(QBoxLayout::Direction direction)
 
                 upButton_->setProperty("MaskArrow", "left");
                 downButton_->setProperty("MaskArrow", "right");
+
+                maskLayout_->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
 			}
 			else
 			{
@@ -836,6 +1140,8 @@ void Ui::MaskPanel::setPanelMode(QBoxLayout::Direction direction)
 
                 upButton_->setProperty("MaskArrow", "up");
                 downButton_->setProperty("MaskArrow", "down");
+
+                maskLayout_->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 			}
 
             auto updateCssStyle = [](QWidget* widget)
@@ -859,10 +1165,18 @@ void Ui::MaskPanel::setVideoStatus(bool bEnabled)
     hasLocalVideo_ = bEnabled;
 }
 
+void Ui::MaskPanel::updateMaskList(const voip_manager::ContactEx&  contactEx)
+{
+	if (contactEx.connection_count == 1)
+	{
+		updateMaskList();
+	}
+}
+
 void Ui::MaskPanel::updateMaskList()
 {
-    auto maskList = Ui::GetDispatcher()->getVoipController().getMaskManager()->getAvailableMasks();
-    setMaskList(maskList);
+	auto maskList = Ui::GetDispatcher()->getVoipController().getMaskManager()->getAvailableMasks();
+	setMaskList(maskList);
 }
 
 void Ui::MaskPanel::setTopOffset(int topOffset)
@@ -873,11 +1187,11 @@ void Ui::MaskPanel::setTopOffset(int topOffset)
 
 void Ui::MaskPanel::chooseFirstMask()
 {
-    auto maskButtons = maskList_->widget()->findChildren<MaskWidget*>();
-    if (maskButtons.size() > 1 && maskButtons[0]->isChecked())
+    auto firstMaskButton = getFirstMask();
+    if (firstMaskButton && !firstMaskButton->isChecked() && getSelectedWidget() == nullptr)
     {
-        selectMask(maskButtons[1]);
-        sendSelectMaskStatistic(maskButtons[1]);
+        selectMask(firstMaskButton);
+        sendSelectMaskStatistic(firstMaskButton);
     }
 }
 
@@ -903,9 +1217,9 @@ Ui::MaskWidget* Ui::MaskPanel::getSelectedWidget()
 Ui::MaskWidget* Ui::MaskPanel::getFirstMask()
 {
     auto maskButtons = maskList_->widget()->findChildren<MaskWidget*>();
-    if (maskButtons.size() > 1)
+    if (maskButtons.size() > 0)
     {
-        return maskButtons[1];
+        return maskButtons[0];
     }
 
     return nullptr;
@@ -914,6 +1228,7 @@ Ui::MaskWidget* Ui::MaskPanel::getFirstMask()
 
 void Ui::MaskPanel::callDestroyed()
 {
+    hideMaskListWithOutAnimation();
     clearMaskList();
 }
 
@@ -941,8 +1256,7 @@ void Ui::MaskPanel::onVoipMinimalBandwidthChanged(bool _bEnable)
     if (_bEnable)
     {
         // Disable masks in ecomon mode.
-        auto maskButtons = maskList_->widget()->findChildren<MaskWidget*>();
-        selectMask(maskButtons[0]);
+        selectMask(nullptr);
         hideMaskList();
     }
     currentMaskButton_->setDisabled(_bEnable);
@@ -1036,4 +1350,25 @@ void Ui::MaskPanel::scrollToWidget(QString maskName)
 bool Ui::MaskPanel::isOpened()
 {
     return maskListWidget_->isVisible();
+}
+
+void Ui::MaskPanel::animationRunned(bool out)
+{
+    if (!out)
+    {
+        maskListWidget_->show();
+        currentMaskButton_->hide();
+
+        Ui::GetDispatcher()->getVoipController().initMaskEngine();
+
+        auto selectedMask = getSelectedWidget();
+        if (selectedMask && !selectedMask->isEmptyMask())
+        {
+            emit makePreviewPrimary();
+        }
+
+        emit onShowMaskList();
+
+        scrollWidget_->setFocus();
+    }
 }

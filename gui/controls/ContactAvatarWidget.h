@@ -36,7 +36,7 @@ namespace Ui
         };
 
     Q_SIGNALS:
-        void clicked();
+        void clickedInternal();
         void avatarDidEdit();
         void mouseEntered();
         void mouseLeft();
@@ -66,6 +66,7 @@ namespace Ui
         void SetMode(ContactAvatarWidget::Mode _mode);
         void SetVisibleShadow(bool _isVisibleShadow);
         void SetVisibleSpinner(bool _isVisibleSpinner);
+        void SetOutline(bool _isVisibleOutline);
 
         void applyAvatar(const QPixmap &alter = QPixmap());
         const QPixmap &croppedImage() const;
@@ -81,6 +82,7 @@ namespace Ui
         Mode mode_;
         bool isVisibleShadow_;
 	    bool isVisibleSpinner_;
+        bool isVisibleOutline_;
         bool connected_;
         QMovie* spinnerMovie_;
         InfoForSetAvatar infoForSetAvatar_;

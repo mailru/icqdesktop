@@ -1,20 +1,23 @@
 QPushButton
 {
     border: none;
-    color: #282828;
     text-align: left;
-    padding-left: 68dip;
+    padding-left: 52dip;
+}
+
+QLabel#mainLabel
+{
     font-size: 16dip;
+    color: #454545;
 }
 
 QMenu
 {
-    color: #282828;
     font-size: 15dip;
     border-style: solid;
 	border-width: 1dip;
-	border-color: #d4d4d4;
-    background-color: #f2f2f2;
+	border-color: #d7d7d7;
+    background-color: #ffffff;
 }
 QMenu::icon
 {
@@ -23,8 +26,7 @@ QMenu::icon
 }
 QMenu::item:selected
 {
-    color: #282828;
-    background-color: #dcdcdc;
+    background-color: #ebebeb;
 }
 QMenu::separator
 {
@@ -46,11 +48,11 @@ QPushButton#statusButton
 }
 QPushButton#statusButton:pressed
 {
-    background-color: #66cae6b3;
+    background-color: #ebebeb;
 }
 QPushButton#statusButton::menu-indicator
 {
-    image: url(:/resources/widgets/content_dropdown_black_open_100.png);
+    image: url(:/resources/basic_elements/arrow_small_a_100.png);
     width: 12dip;
     height: 8dip;
     subcontrol-origin: padding;
@@ -71,4 +73,20 @@ QLabel#editor
 	font-weight: %FONT_WEIGHT_BOLD%;
 	font-size: 12dip;
 	color: #579e1c;
+}
+QLabel#labelExplanation
+{
+    font-size: 13dip;
+    color: #767676;
+}
+
+QLabel#titleLabel
+{
+    qproperty-alignment: AlignCenter;
+    font-size: 16dip;
+    font-family: "%FONT_FAMILY_MEDIUM%";
+    font-weight: %FONT_WEIGHT_MEDIUM%;
+    min-height: 40dip;
+    max-height: 40dip;
+    color: #999999;
 }

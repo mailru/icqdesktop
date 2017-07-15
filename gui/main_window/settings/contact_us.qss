@@ -1,7 +1,6 @@
 QWidget[normal="true"]
 {
 	font-size: 18dip;
-	color: #282828;
 	background: #ffffff;
 	border-radius: 8dip;
 	border-color: #d7d7d7;
@@ -21,10 +20,10 @@ QWidget[normal="true"]:focus
 QWidget[normal="false"]
 {
 	font-size: 18dip;
-	color: #e30f04;
+	color: #d0021b;
 	background: #ffffff;
 	border-radius: 8dip;
-	border-color: #e30f04;
+	border-color: #d0021b;
 	border-width: 1dip;
 	border-style: solid;
 	padding-left: 12dip;
@@ -48,24 +47,27 @@ QWidget[fileWidget="true"]
 QLabel[fileName="true"]
 {
 	font-size: 16dip;
-	color: #282828;
 	padding: 0;
 }
 
 QLabel[fileSize="true"]
 {
 	font-size: 16dip;
-	color: #696969;
+	color: #999999;
 	padding: 0;
 }
 
 QPushButton#deleteFile
 {
-	border-image: url(:/resources/controls_cotext_close_100_active.png);
+	border-image: url(:/resources/basic_elements/close_a_100.png);
+    min-width: 28dip;
+    max-width: 28dip;
+    min-height: 24dip;
+    max-height: 24dip;
 }
 QPushButton#deleteFile:hover
 {
-	border-image: url(:/resources/controls_cotext_close_100_hover.png);
+	border-image: url(:/resources/basic_elements/close_d_100.png);
 }
 
 QPushButton#successImage

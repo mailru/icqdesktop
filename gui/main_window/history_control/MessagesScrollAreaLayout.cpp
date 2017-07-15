@@ -4,9 +4,11 @@
 #include "../../utils/utils.h"
 
 #include "complex_message/ComplexMessageItem.h"
+#include "ContentWidgets/PreviewContentWidget.h"
 
 #include "ChatEventItem.h"
 #include "MessageItem.h"
+#include "MessageStyle.h"
 #include "ServiceMessageItem.h"
 #include "VoipEventItem.h"
 
@@ -14,6 +16,12 @@
 #include "MessagesScrollbar.h"
 
 #include "MessagesScrollAreaLayout.h"
+
+#include "../../utils/InterConnector.h"
+#include "../MainWindow.h"
+#include "../../gui_settings.h"
+#include "complex_message/ComplexMessageItem.h"
+
 
 namespace Ui
 {
@@ -51,27 +59,7 @@ namespace Ui
 
         return lhs;
     }
-
-    class MessagesScrollAreaLayout::ItemInfo
-    {
-    public:
-        ItemInfo(QWidget *widget, const Logic::MessageKey &key);
-
-        QWidget *Widget_;
-
-        QRect AbsGeometry_;
-
-        Logic::MessageKey Key_;
-
-        bool IsGeometrySet_;
-
-        bool IsHovered_;
-
-        bool IsActive_;
-
-        bool IsVisible_;
-    };
-
+        
     MessagesScrollAreaLayout::ItemInfo::ItemInfo(QWidget *widget, const Logic::MessageKey &key)
         : Widget_(widget)
         , Key_(key)
@@ -95,10 +83,25 @@ namespace Ui
         , IsDirty_(false)
         , UpdatesLocked_(false)
         , TypingWidget_(typingWidget)
+        , QuoteId_(-1)
     {
         assert(ScrollArea_);
         assert(Scrollbar_);
         assert(TypingWidget_);
+
+        ScrollArea_->installEventFilter(this);
+        Utils::InterConnector::instance().getMainWindow()->installEventFilter(this);
+
+        connect(scrollArea, &MessagesScrollArea::buttonDownClicked, this, &MessagesScrollAreaLayout::onButtonDownClicked, Qt::DirectConnection);
+        connect(Logic::GetMessagesModel(), &Logic::MessagesModel::quote, this, &MessagesScrollAreaLayout::onQuote, Qt::QueuedConnection);
+
+        connect(this, &MessagesScrollAreaLayout::moveViewportUpByScrollingItem, this, &MessagesScrollAreaLayout::onMoveViewportUpByScrollingItem, Qt::QueuedConnection);
+    }
+
+    MessagesScrollAreaLayout::~MessagesScrollAreaLayout()
+    {
+        ScrollArea_->removeEventFilter(this);
+        Utils::InterConnector::instance().getMainWindow()->removeEventFilter(this);
     }
 
     void MessagesScrollAreaLayout::setGeometry(const QRect &r)
@@ -128,6 +131,10 @@ namespace Ui
 
             IsDirty_ = false;
         }
+
+		// ------------------------------------------------------------------------
+		// update button down in history
+		updateBounds();
 
         // -----------------------------------------------------------------------
         // check if layout rectangle changed
@@ -387,7 +394,6 @@ namespace Ui
     void MessagesScrollAreaLayout::insertWidgets(const WidgetsList& _widgets, bool _isMoveToButtonIfNeed, int64_t _mess_id)
     {
         assert(!_widgets.empty());
-
         UpdatesLocked_ = true;
 
         const auto isAtBottom = isViewportAtBottom();
@@ -413,6 +419,14 @@ namespace Ui
                 connect(
                     messageItem,
                     &MessageItem::selectionChanged,
+                    ScrollArea_,
+                    &MessagesScrollArea::notifySelectionChanges);
+            }
+            else if (auto complexMessage = qobject_cast<ComplexMessage::ComplexMessageItem*>(widget))
+            {
+                connect(
+                    complexMessage,
+                    &ComplexMessage::ComplexMessageItem::selectionChanged,
                     ScrollArea_,
                     &MessagesScrollArea::notifySelectionChanges);
             }
@@ -444,13 +458,44 @@ namespace Ui
             auto slideOp = SlideOp::NoSlide;
 
             {
-                const auto absolutePosition = calculateInsertionRect(itemInfoIter, Out slideOp);
+                /// if widget exist in erased - get it
 
-                (*itemInfoIter)->AbsGeometry_ = absolutePosition;
+                //auto it = std::find_if(removeWidgets_.begin(), removeWidgets_.end(), [key](ItemInfo& val)->bool
+                //{
+                //    return val.Key_.getId() == key.getId();
+                //});
+                //if (it != removeWidgets_.end())
+                //{
+                //    (*itemInfoIter)->AbsGeometry_ = it->AbsGeometry_;
+                //    (*itemInfoIter)->Widget_ = it->Widget_;
+
+                //    auto widget_it = Widgets_.find(widget);
+                //    if (widget_it != Widgets_.end())
+                //        Widgets_.erase(widget_it);
+
+                //    Widgets_.insert((*itemInfoIter)->Widget_);
+                //    removeWidgets_.erase(it);
+                //}
+                //else
+                {
+                    const auto absolutePosition = calculateInsertionRect(itemInfoIter, Out slideOp);
+                    (*itemInfoIter)->AbsGeometry_ = absolutePosition;
+                }
             }
 
             const auto insertedItemHeight = (*itemInfoIter)->AbsGeometry_.height();
             slideItemsApart(itemInfoIter, insertedItemHeight, slideOp);
+
+            //ServiceMessageItem* service_message = qobject_cast<ServiceMessageItem*>(widget);
+            //if (service_message && service_message->isNew())
+            //{
+            //    const auto bMoveHistory = Ui::get_gui_settings()->get_value<bool>(settings_auto_scroll_new_messages, false);
+            //    if (bMoveHistory)
+            //    {
+            //        ScrollingItems_.push_back(service_message);
+            //        connect(service_message, &QObject::destroyed, this, &MessagesScrollAreaLayout::onDeactivateScrollingItems, Qt::DirectConnection);
+            //    }
+            //}
         }
 
         if (isAtBottom && _isMoveToButtonIfNeed)
@@ -484,13 +529,56 @@ namespace Ui
 
         applyTypingWidgetGeometry();
 
-        //dumpGeometry(QString().sprintf("after insertion of widget %p", _widgets.front().second));
-
         UpdatesLocked_ = false;
+
+
+        /// check new messages or quotes Later->Early
+        //int max_items = 40;
+        for (auto it = LayoutItems_.rbegin(); it != LayoutItems_.rend(); ++it)
+        {
+            auto widget = (*it)->Widget_;
+            auto& key = (*it)->Key_;
+            /// new message item
+            //const auto bMoveHistory = Ui::get_gui_settings()->get_value<bool>(settings_auto_scroll_new_messages, false);
+            //if (bMoveHistory)
+            {
+                ComplexMessage::ComplexMessageItem* complex_item = qobject_cast<ComplexMessage::ComplexMessageItem*>(widget);
+                if (complex_item && complex_item->isObserveToSize())
+                    installEventFilter(this);
+
+                /// quote
+                if (key.getId() == QuoteId_ && QuoteId_ > 0)
+                {
+                    if (complex_item)
+                    {
+                        complex_item->setQuoteSelection();
+                        complex_item->installEventFilter(this);
+
+                        ScrollingItems_.push_back(complex_item);
+                        connect(complex_item, &QObject::destroyed, this, &MessagesScrollAreaLayout::onDeactivateScrollingItems, Qt::UniqueConnection);
+                    }
+                    MessageItem* message_item = qobject_cast<MessageItem*>(widget);
+                    if (message_item)
+                        message_item->setQuoteSelection();
+                }
+            }
+        }
+        QuoteId_ = -1;
+
+        if (!ScrollingItems_.empty())
+        {
+            moveViewportUpByScrollingItems();
+        }
+        //else if (control_widget)
+        //{
+        //    checkBounds();
+        //}
+        //endRemoveWidgets();
+
+        //qDebug("INS :%i %i", LayoutItems_.size(), _widgets.size());
     }
 
-
-    void MessagesScrollAreaLayout::removeWidget(QWidget *widget)
+    void MessagesScrollAreaLayout::removeWidget(QWidget* widget)
     {
         assert(widget);
         assert(widget->parent() == ScrollArea_);
@@ -566,7 +654,7 @@ namespace Ui
 
         //dumpGeometry(QString().sprintf("after removal of %p", widget));
     }
-
+   
     int32_t MessagesScrollAreaLayout::shiftViewportAbsY(const int32_t delta)
     {
         assert(delta != 0);
@@ -604,7 +692,7 @@ namespace Ui
         const QMargins preloadMargins(0, preloadMargin, 0, preloadMargin);
         const auto viewportActivityAbsRect = viewportAbsRect.marginsAdded(preloadMargins);
 
-        const auto visibilityMargin = Utils::scale_value(50);
+        const auto visibilityMargin = Utils::scale_value(0);
         const QMargins visibilityMargins(0, visibilityMargin, 0, visibilityMargin);
         const auto viewportVisibilityAbsRect = viewportAbsRect.marginsAdded(visibilityMargins);
 
@@ -622,7 +710,7 @@ namespace Ui
                 onItemActivityChanged(item->Widget_, isGeometryActive);
             }
 
-            const auto isGeometryVisible = viewportVisibilityAbsRect.intersects(widgetAbsGeometry);
+            auto isGeometryVisible = isVisibleEnoughForPlay(widgetAbsGeometry, viewportVisibilityAbsRect);
 
             const auto isInvisibleMovement = ((!isGeometryVisible && !item->IsVisible_) && item->IsGeometrySet_);
             if (isInvisibleMovement)
@@ -1037,20 +1125,52 @@ namespace Ui
     {
         for (auto &item : LayoutItems_)
         {
-            const auto activateItem = (!item->IsActive_ && item->IsGeometrySet_);
-            if (activateItem)
+            if (item->IsGeometrySet_)
             {
                 item->IsActive_ = true;
 
                 onItemActivityChanged(item->Widget_, true);
-            }
 
-            const auto makeItemVisible = (!item->IsVisible_ && item->IsGeometrySet_);
-            if (makeItemVisible)
-            {
                 item->IsVisible_ = true;
 
-                onItemVisibilityChanged(item->Widget_, true);
+
+                const auto &widgetAbsGeometry = item->AbsGeometry_;
+                const auto viewportAbsRect = evalViewportAbsRect();
+                const auto isGeometryActive = viewportAbsRect.intersects(widgetAbsGeometry);
+
+                const auto isActivityChanged = (item->IsActive_ != isGeometryActive);
+                if (isActivityChanged)
+                {
+                    item->IsActive_ = isGeometryActive;
+
+                    onItemActivityChanged(item->Widget_, isGeometryActive);
+                }
+
+                const auto visibilityMargin = Utils::scale_value(0);
+                const QMargins visibilityMargins(0, visibilityMargin, 0, visibilityMargin);
+                const auto viewportVisibilityAbsRect = viewportAbsRect.marginsAdded(visibilityMargins);
+
+                auto isGeometryVisible = isVisibleEnoughForPlay(widgetAbsGeometry, viewportVisibilityAbsRect);
+
+                onItemVisibilityChanged(item->Widget_, isGeometryVisible);
+            }
+        }
+    }
+
+    void MessagesScrollAreaLayout::updateDistanceForViewportItems()
+    {
+        for (auto &item : LayoutItems_)
+        {
+            if (item->IsGeometrySet_)
+            {
+                const auto &widgetAbsGeometry = item->AbsGeometry_;
+                const auto viewportAbsRect = evalViewportAbsRect();
+
+                const auto visibilityMargin = Utils::scale_value(0);
+                const QMargins visibilityMargins(0, visibilityMargin, 0, visibilityMargin);
+                const auto viewportVisibilityAbsRect = viewportAbsRect.marginsAdded(visibilityMargins);
+
+                onItemDistanseToViewPortChanged(item->Widget_, widgetAbsGeometry, viewportVisibilityAbsRect);
             }
         }
     }
@@ -1059,19 +1179,13 @@ namespace Ui
     {
         for (auto &item : LayoutItems_)
         {
-            if (item->IsVisible_)
-            {
-                item->IsVisible_ = false;
+            item->IsVisible_ = false;
 
-                onItemVisibilityChanged(item->Widget_, false);
-            }
+            onItemVisibilityChanged(item->Widget_, false);
 
-            if (item->IsActive_)
-            {
-                item->IsActive_ = false;
+            item->IsActive_ = false;
 
-                onItemActivityChanged(item->Widget_, false);
-            }
+            onItemActivityChanged(item->Widget_, false);
         }
     }
 
@@ -1115,7 +1229,18 @@ namespace Ui
 
     void MessagesScrollAreaLayout::onItemActivityChanged(QWidget *widget, const bool isActive)
     {
-        auto item = qobject_cast<HistoryControlPageItem*>(widget);
+        {
+            auto item = qobject_cast<HistoryControlPageItem*>(widget);
+
+            if (item)
+            {
+                item->onActivityChanged(isActive);
+                return;
+            }
+
+        }
+
+        auto item = qobject_cast<HistoryControl::PreviewContentWidget*>(widget);
 
         if (item)
         {
@@ -1125,11 +1250,43 @@ namespace Ui
 
     void MessagesScrollAreaLayout::onItemVisibilityChanged(QWidget *widget, const bool isVisible)
     {
-        auto item = qobject_cast<HistoryControlPageItem*>(widget);
+        {
+            auto item = qobject_cast<HistoryControlPageItem*>(widget);
+
+            if (item)
+            {
+                item->onVisibilityChanged(isVisible);
+                return;
+            }
+
+        }
+
+        auto item = qobject_cast<HistoryControl::PreviewContentWidget*>(widget);
 
         if (item)
         {
-            item->onVisibilityChanged(isVisible);
+            item->onActivityChanged(isVisible);
+        }
+    }
+
+    void MessagesScrollAreaLayout::onItemDistanseToViewPortChanged(QWidget *widget, const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect)
+    {
+        {
+            auto item = qobject_cast<HistoryControlPageItem*>(widget);
+
+            if (item)
+            {
+                item->onDistanceToViewportChanged(_widgetAbsGeometry, _viewportVisibilityAbsRect);
+                return;
+            }
+
+        }
+
+        auto item = qobject_cast<HistoryControl::PreviewContentWidget*>(widget);
+
+        if (item)
+        {
+            item->onDistanceToViewportChanged(_widgetAbsGeometry, _viewportVisibilityAbsRect);
         }
     }
 
@@ -1156,6 +1313,9 @@ namespace Ui
         applyTypingWidgetGeometry();
 
         UpdatesLocked_ = false;
+
+		/// move new offset to HistporyControlPage
+		emit updateHistoryPosition(newViewportAbsY, viewportBounds.second);
 
         return true;
     }
@@ -1547,13 +1707,166 @@ namespace Ui
 
     int MessagesScrollAreaLayout::getWidthForItem() const
     {
-        return std::min(std::max<int>(Utils::scale_value(650), 0.6 * ViewportSize_.width()), ViewportSize_.width());
+        return std::min(std::max<int>(MessageStyle::getHistoryWidgetMaxWidth(), 0.6 * ViewportSize_.width()), ViewportSize_.width());
     }
 
     int MessagesScrollAreaLayout::getXForItem() const
     {
         return std::max((ViewportSize_.width() - getWidthForItem()) / 2, 0);
     }
+
+    bool MessagesScrollAreaLayout::isVisibleEnoughForPlay(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect) const
+    {
+        auto enough_percent = 0.7;
+        auto intersected = _viewportVisibilityAbsRect.intersected(_widgetAbsGeometry);
+        return 1.0 * intersected.height() / _widgetAbsGeometry.height() > enough_percent;
+    }
+
+	void MessagesScrollAreaLayout::updateBounds()
+	{
+		if (!ViewportSize_.isEmpty())
+		{
+	        const auto &viewportBounds = getViewportScrollBounds();
+			emit updateHistoryPosition(ViewportAbsY_, viewportBounds.second);
+		}
+	}
+
+	void MessagesScrollAreaLayout::updateScrollbar()
+	{
+		ScrollArea_->updateScrollbar();
+	}
+
+    bool MessagesScrollAreaLayout::eventFilter(QObject* watcher, QEvent* e)
+    {
+        /// messageScrollArea mainWindow
+        if (e->type() == QEvent::KeyPress ||
+            e->type() == QEvent::MouseButtonPress || 
+            e->type() == QEvent::MouseButtonRelease ||
+            e->type() == QEvent::Wheel ||
+            e->type() == QEvent::TouchBegin ||
+            e->type() == QEvent::TouchUpdate ||
+            e->type() == QEvent::TouchEnd || 
+            e->type() == QEvent::TouchCancel)
+        {
+            //ScrollArea_->removeEventFilter(this);
+            //Utils::InterConnector::instance().getMainWindow()->removeEventFilter(this);
+
+            ScrollingItems_.clear();
+        }
+        else if (e->type() == QEvent::Resize)
+        {
+            if (ScrollingItems_.size() == 1 && ScrollingItems_.back() == watcher)
+            {
+                emit moveViewportUpByScrollingItem((QWidget*)watcher);
+            }
+        }
+        return false;
+    }
+
+    void MessagesScrollAreaLayout::onButtonDownClicked()
+    {
+        ScrollingItems_.clear();
+    }
+
+    void MessagesScrollAreaLayout::onQuote(int64_t quote_id)
+    {
+        QuoteId_ = quote_id;
+    }
+
+    void MessagesScrollAreaLayout::onMoveViewportUpByScrollingItem(QWidget* widget)
+    {
+        if (!widget)
+            return;
+
+        auto r = widget->geometry();
+
+        int new_pos = widget->geometry().top();
+        auto type_widget_bottom = TypingWidget_->geometry().bottom();
+        auto delta = Utils::scale_value(40);
+
+        /// move new_message to position
+        int dpos = new_pos - delta;
+        ViewportAbsY_ -= dpos - getTypingWidgetHeight();
+        for (auto& val : LayoutItems_)
+        {
+            val->Widget_->setGeometry(val->Widget_->geometry().translated(0, -dpos));
+        }
+        TypingWidget_->setGeometry(TypingWidget_->geometry().translated(0, -dpos));
+
+        /// move bottom to edge
+        if (TypingWidget_->geometry().bottom() < ViewportSize_.height())
+        {
+            int dpos = ViewportSize_.height() - TypingWidget_->geometry().bottom();
+
+            for (auto& val : LayoutItems_)
+            {
+                val->Widget_->setGeometry(val->Widget_->geometry().translated(0, dpos));
+            }
+            TypingWidget_->setGeometry(TypingWidget_->geometry().translated(0, dpos));
+
+            ViewportAbsY_ = getViewportScrollBounds().second;
+        }
+
+        for (auto& val : LayoutItems_)
+        {
+            val->AbsGeometry_ = val->Widget_->geometry().translated(0, ViewportAbsY_);
+        }
+
+        ///  transfer new position to HistporyControlPage (button down)
+        emit updateHistoryPosition(ViewportAbsY_, getViewportScrollBounds().second);
+        emit recreateAvatarRect();
+   }
+
+    void MessagesScrollAreaLayout::moveViewportUpByScrollingItems()
+	{
+        if (ScrollingItems_.empty() || ScrollingItems_.size() > 1)
+            return;
+
+        QWidget* widget = ScrollingItems_.back();
+        onMoveViewportUpByScrollingItem(widget);
+	}
+
+    void MessagesScrollAreaLayout::onDeactivateScrollingItems(QObject* obj)
+    {
+        if (obj)
+        {
+            auto it = std::remove(begin(ScrollingItems_), end(ScrollingItems_), obj);
+            ScrollingItems_.erase(it, ScrollingItems_.end());
+
+            moveViewportUpByScrollingItems();
+        }
+        else
+            ScrollingItems_.clear();
+    }
+
+    //void MessagesScrollAreaLayout::onDestroyItemAndAlign(QObject* obj)
+    //{
+    //    QWidget* w = (QWidget*)obj;
+    //    auto it = std::find_if(begin(LayoutItems_), end(LayoutItems_), [obj](const ItemInfoUptr& item)->bool
+    //    {
+    //        return item->Widget_ == obj;
+    //    });
+    //    if (it != LayoutItems_.end())
+    //    {
+    //        /// align center
+    //        auto rect = w->geometry();
+    //        bool bCenter = (rect.bottom() > LayoutRect_.top() && rect.top() < LayoutRect_.bottom());
+
+    //        auto h = rect.height();
+    //        for (auto& val : Utils::reverse_iterate(LayoutItems_))
+    //        {
+    //            if (val->Widget_ == w)
+    //            {
+    //                break;
+    //            }
+    //            /// move down full h
+    //            val->AbsGeometry_.translate(0, h);
+    //            val->Widget_->setGeometry(val->Widget_->geometry().translated(0, h));
+    //        }
+    //        /// correct ViewportAbsY_
+    //        LayoutItems_.erase(it);
+    //    }
+    //}
 
     namespace
     {

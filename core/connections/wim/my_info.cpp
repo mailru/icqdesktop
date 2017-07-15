@@ -17,11 +17,13 @@ namespace
         phoneNumber,
         flags,
         autoCreated,
+        hasMail,
     };
 }
 
 my_info::my_info()
     : flags_(0)
+    , hasMail_(false)
 {
 
 }
@@ -65,6 +67,12 @@ int32_t my_info::unserialize(const rapidjson::Value& _node)
             largeIconId_ = iter_large_icon->value.GetString();
     }
 
+    auto item_has_mail = _node.FindMember("hasMail");
+    if (item_has_mail != _node.MemberEnd() && item_has_mail->value.IsUint())
+    {
+        hasMail_ = item_has_mail->value.GetUint() == 1;
+    }
+
     if (state_ == "occupied" || state_ == "na" || state_ == "busy")
         state_ = "dnd";
     else if (state_ == "away")
@@ -85,6 +93,7 @@ void my_info::serialize(core::coll_helper _coll)
     _coll.set_value_as_string("attachedPhoneNumber", phoneNumber_);
     _coll.set_value_as_uint("globalFlags", flags_);
     _coll.set_value_as_string("largeIconId", largeIconId_);
+    _coll.set_value_as_bool("hasMail", hasMail_);
 }
 
 void my_info::serialize(core::tools::binary_stream& _data) const
@@ -97,6 +106,7 @@ void my_info::serialize(core::tools::binary_stream& _data) const
     info_pack.push_child(core::tools::tlv(info_fields::userType, userType_));
     info_pack.push_child(core::tools::tlv(info_fields::phoneNumber, phoneNumber_));
     info_pack.push_child(core::tools::tlv(info_fields::flags, flags_));
+    info_pack.push_child(core::tools::tlv(info_fields::hasMail, hasMail_));
     info_pack.serialize(_data);
 }
 
@@ -113,6 +123,7 @@ bool my_info::unserialize(core::tools::binary_stream& _data)
     auto item_userType_ = info_pack.get_item(info_fields::userType);
     auto item_phoneNumber_ = info_pack.get_item(info_fields::phoneNumber);
     auto item_flags_ = info_pack.get_item(info_fields::flags);
+    auto item_has_mail_ = info_pack.get_item(info_fields::hasMail);
 
     if (!item_aimId_ || !item_displayId_  || !item_friendlyName_ || !item_state_ || !item_userType_ || (!item_phoneNumber_ && !item_flags_))
         return false;
@@ -124,6 +135,8 @@ bool my_info::unserialize(core::tools::binary_stream& _data)
     userType_ =  item_userType_->get_value<std::string>("");
     phoneNumber_ =  item_phoneNumber_->get_value<std::string>("");
     flags_ = item_flags_->get_value<uint32_t>(0);
+    if (item_has_mail_)
+        hasMail_ = item_has_mail_->get_value<bool>(false);
     return true;
 }
 

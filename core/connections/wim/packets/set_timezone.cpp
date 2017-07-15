@@ -16,6 +16,11 @@ set_timezone::~set_timezone()
 {
 }
 
+bool set_timezone::support_async_execution() const
+{
+    return true;
+}
+
 int32_t set_timezone::init_request(std::shared_ptr<core::http_request_simple> _request)
 {
     time_t server_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) - params_.time_offset_;

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "MessageAlertWidget.h"
 #include "../contact_list/RecentItemDelegate.h"
-#include "../contact_list/ContactList.h"
 #include "../../cache/avatars/AvatarStorage.h"
 
 namespace Ui
@@ -15,7 +14,6 @@ namespace Ui
 		Options_.initFrom(this);
 		setFixedSize(Delegate_->sizeHintForAlert());
         connect(Logic::GetAvatarStorage(), SIGNAL(avatarChanged(QString)), this, SLOT(avatarChanged(QString)), Qt::QueuedConnection);
-        Delegate_->setRegim(::Logic::MembersWidgetRegim::FROM_ALERT);
 	}
 
 	MessageAlertWidget::~MessageAlertWidget()
@@ -27,6 +25,11 @@ namespace Ui
 	{
 		return State_.AimId_;
 	}
+
+    QString MessageAlertWidget::mailId() const
+    {
+        return State_.MailId_;
+    }
 
 	void MessageAlertWidget::paintEvent(QPaintEvent*)
 	{
@@ -73,12 +76,12 @@ namespace Ui
 	void MessageAlertWidget::mouseReleaseEvent(QMouseEvent *e)
 	{
         e->accept();
-		emit clicked(State_.AimId_);
+		emit clicked(State_.AimId_, State_.MailId_);
 	}
 
     void MessageAlertWidget::avatarChanged(QString aimId)
     {
-        if (aimId != State_.AimId_)
+        if (aimId != State_.AimId_ && State_.Friendly_.indexOf(aimId) == -1)
             return;
 
         update();

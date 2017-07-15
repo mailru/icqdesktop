@@ -95,7 +95,11 @@ void Ui::VideoSettings::onVoipDeviceListUpdated(const std::vector<voip_proxy::de
             *flagPtr = true;
             comboBox->clear();
         }
-        comboBox->addItem(QIcon (":/resources/main_window/appicon.ico"), desc.name.c_str(), desc.uid.c_str());
+        comboBox->addItem(
+            QIcon (build::is_icq()
+                ? ":/resources/main_window/appicon.ico"
+                : ":/resources/main_window/appicon_agent.ico"),
+            desc.name.c_str(), desc.uid.c_str());
     }
 }
 

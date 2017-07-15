@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "system.h"
 #import <Foundation/Foundation.h>
+#import <CoreServices/CoreServices.h>
 
 std::string core::tools::system::generate_guid()
 {
@@ -62,9 +63,15 @@ bool core::tools::system::copy_file(const std::wstring& _old_file, const std::ws
 {
     boost::filesystem::path from(_old_file);
 	boost::filesystem::path target(_new_file);
-	boost::system::error_code error;
-	boost::filesystem::copy(from, target, error);
+    if (from == target)
+    {
+        return false;
+    }
 
+    boost::system::error_code error;
+	//boost::filesystem::copy(from, target, error);
+    boost::filesystem::copy_file(from, target, boost::filesystem::copy_option::overwrite_if_exists, error); // overwrite is better
+    
 	if (!error)
 	{
 		return true;
@@ -141,6 +148,11 @@ std::string core::tools::system::to_lower(const std::string& str)
 
 std::string core::tools::system::get_os_version_string()
 {
-    // TODO : use actual value here
-    return "MacOS";
+    SInt32 major, minor, bugfix;
+    Gestalt(gestaltSystemVersionMajor, &major);
+    Gestalt(gestaltSystemVersionMinor, &minor);
+    Gestalt(gestaltSystemVersionBugFix, &bugfix);
+
+    NSString *systemVersion = [NSString stringWithFormat:@"%d.%d", major, minor];    
+    return std::string([systemVersion UTF8String]);
 }

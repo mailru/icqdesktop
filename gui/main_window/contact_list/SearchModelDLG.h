@@ -25,8 +25,8 @@ namespace Logic
         void avatarLoaded(QString);
         void contactRemoved(QString contact);
         void sortDialogs();
+        void emptySearchResults(qint64);
 
-        void recvNoSearchResults();
         void recvHideNoSearchResults();
 
 	public:
@@ -37,7 +37,7 @@ namespace Logic
 		Qt::ItemFlags flags(const QModelIndex &index) const override;
 		void setFocus() override;
 		void emitChanged(int first, int last) override;
-        bool isServiceItem(int i) const;
+        virtual bool isServiceItem(int i) const override;
 
         void setSearchInDialog(QString _aimid);
         QString getDialogAimid() const;
@@ -51,6 +51,11 @@ namespace Logic
 
         QString getCurrentPattern() const;
         int count() const;
+
+        int contactsCount() const
+        {
+            return ContactsCount_;
+        }
 
 	private:
         bool less(const ContactItem& first, const ContactItem& second);

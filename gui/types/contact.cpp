@@ -37,7 +37,7 @@ namespace Data
 				contact->UserType_ = value.get_value_as_string("userType");
 				contact->StatusMsg_ = value.get_value_as_string("statusMsg");
 				contact->OtherNumber_ = value.get_value_as_string("otherNumber");
-				contact->HaveLastSeen_ = lastSeen != -1;
+				contact->HasLastSeen_ = lastSeen != -1;
 				contact->LastSeen_ = lastSeen > 0 ? QDateTime::fromTime_t((uint)lastSeen) : QDateTime();
 				contact->Is_chat_ = value.get_value_as_bool("is_chat");
 				contact->GroupId_ = group->Id_;
@@ -83,7 +83,7 @@ namespace Data
 		result->StatusMsg_ = helper->get_value_as_string("statusMsg");
 		result->OtherNumber_ = helper->get_value_as_string("otherNumber");
 		qlonglong lastSeen = helper->get_value_as_int("lastseen");
-		result->HaveLastSeen_ = lastSeen != -1;
+		result->HasLastSeen_ = lastSeen != -1;
 		result->LastSeen_ = lastSeen > 0 ? QDateTime::fromTime_t((uint)lastSeen) : QDateTime();
 		result->Is_chat_ = helper->get_value_as_bool("is_chat");
 		result->Muted_ = helper->get_value_as_bool("mute");

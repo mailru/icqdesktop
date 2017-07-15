@@ -77,6 +77,7 @@ namespace Ui
         virtual ~TransparentScrollBar();
 
         void fadeIn();
+        void fadeOut();
         void setScrollArea(QAbstractScrollArea* _view);
         void setParentWidget(QWidget* _view);
         void setDefaultScrollBar(QScrollBar* _scrollBar);
@@ -177,6 +178,9 @@ namespace Ui
     {
         Q_OBJECT
 
+    Q_SIGNALS:
+        void resized();
+
     public:
         explicit ScrollAreaWithTrScrollBar(QWidget *parent = nullptr);
         virtual ~ScrollAreaWithTrScrollBar();
@@ -188,6 +192,7 @@ namespace Ui
     protected:
         virtual void mouseMoveEvent(QMouseEvent *event) override;
         virtual void wheelEvent(QWheelEvent *event) override;
+        virtual void resizeEvent(QResizeEvent *event) override;
         void updateGeometry();
     private:
         bool eventFilter(QObject *obj, QEvent *event) override;

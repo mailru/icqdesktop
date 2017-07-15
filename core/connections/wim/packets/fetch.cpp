@@ -16,6 +16,8 @@
 #include "../events/fetch_event_typing.h"
 #include "../events/fetch_event_permit.h"
 #include "../events/fetch_event_imstate.h"
+#include "../events/fetch_event_notification.h"
+#include "../events/fetch_event_snaps.h"
 
 #include "../events/webrtc.h"
 
@@ -67,6 +69,7 @@ int32_t fetch::init_request(std::shared_ptr<core::http_request_simple> _request)
     _request->set_url(ss_url.str());
     _request->set_timeout((uint32_t)timeout_ + 5000);
     _request->set_keep_alive();
+    _request->set_priority(top_priority);
 
     if (!params_.full_log_)
     {
@@ -168,6 +171,10 @@ int32_t fetch::parse_response_data(const rapidjson::Value& _data)
                         push_event(std::make_shared<fetch_event_permit>())->parse(iter_event_data->value);
                     else if (event_type == "imState")
                         push_event(std::make_shared<fetch_event_imstate>())->parse(iter_event_data->value);
+                    else if (event_type == "notification")
+                        push_event(std::make_shared<fetch_event_notification>())->parse(iter_event_data->value);
+                    else if (event_type == "snapsEvent")
+                        push_event(std::make_shared<fetch_event_snaps>())->parse(iter_event_data->value);
                 }
             }
         }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../corelib/collection_helper.h"
+enum class loader_errors;
 
 namespace core
 {
@@ -11,11 +12,6 @@ namespace core
     namespace tools
     {
         class binary_stream;
-    }
-
-    namespace wim
-    {
-        enum class loader_errors;
     }
 
     namespace stickers
@@ -292,7 +288,7 @@ namespace core
 
             bool download_in_progress_;
 
-            wim::loader_errors error_;
+            loader_errors error_;
             failed_step failed_step_;
 
             gui_request_params gui_request_params_;
@@ -325,8 +321,8 @@ namespace core
             void set_failed_step(failed_step _step);
             failed_step get_failed_step();
 
-            void set_last_error(wim::loader_errors _error);
-            wim::loader_errors get_last_error() const;
+            void set_last_error(loader_errors _error);
+            loader_errors get_last_error() const;
 
             void set_gui_request_params(const gui_request_params& _params);
             const gui_request_params& get_gui_request_params();

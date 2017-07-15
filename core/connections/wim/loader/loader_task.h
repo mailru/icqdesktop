@@ -2,6 +2,8 @@
 
 #include "../../../namespaces.h"
 
+enum class loader_errors;
+
 CORE_NS_BEGIN
 
 class async_executer;
@@ -11,8 +13,6 @@ struct proxy_settings;
 CORE_NS_END
 
 CORE_WIM_NS_BEGIN
-
-enum class loader_errors;
 
 enum class tasks_runner_slot;
 

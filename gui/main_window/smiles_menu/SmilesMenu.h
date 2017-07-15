@@ -50,6 +50,7 @@ namespace Ui
             int		emojisCount_;
             int		needHeight_;
             bool	singleLine_;
+            bool    snaps_;
             int		spacing_;
 
             std::vector<emoji_category>		emojiCategories_;
@@ -58,7 +59,7 @@ namespace Ui
 
         public:
 
-            EmojiViewItemModel(QWidget* _parent, bool _singleLine = false);
+            EmojiViewItemModel(QWidget* _parent, bool _singleLine = false, bool _snaps = false);
             ~EmojiViewItemModel();
 
             int addCategory(const QString& _category);
@@ -78,8 +79,26 @@ namespace Ui
 
         class EmojiTableItemDelegate : public QItemDelegate
         {
+            Q_OBJECT
+
+        public:
+            EmojiTableItemDelegate(QObject* parent, bool snaps = false);
+
+            void animate(const QModelIndex& index, int start, int end, int duration);
+
             void paint(QPainter* _painter, const QStyleOptionViewItem& _option, const QModelIndex& _index) const;
             QSize sizeHint(const QStyleOptionViewItem& _option, const QModelIndex& _index) const;
+
+            Q_PROPERTY(int prop READ getProp WRITE setProp);
+
+            int getProp() const { return Prop_; }
+            void setProp(int val);
+
+        private:
+            int Prop_;
+            bool Snaps_;
+            QPropertyAnimation* Animation_;
+            QModelIndex AnimateIndex_;
         };
 
         class EmojiTableView : public QTableView

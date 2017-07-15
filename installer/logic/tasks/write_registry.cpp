@@ -25,8 +25,8 @@ namespace installer
                 return installer::error(errorcode::create_registry_key, QString("create registry key: Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"));
 
             CRegKey key_icq;
-            if (ERROR_SUCCESS != key_icq.Create(key_uninstall, L"icq.desktop"))
-                return installer::error(errorcode::create_registry_key, QString("create registry key: Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\icq.desktop"));
+            if (ERROR_SUCCESS != key_icq.Create(key_uninstall, (LPCWSTR) get_product_name().utf16()))
+                return installer::error(errorcode::create_registry_key, QString("create registry key: Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") + get_product_name());
 
             QString version = VERSION_INFO_STR;
             QString major_version, minor_version;
@@ -49,7 +49,7 @@ namespace installer
                 ERROR_SUCCESS != key_icq.SetStringValue(L"UninstallString", uninstall_command)
                 )
             {
-                return installer::error(errorcode::set_registry_value, "set registry value: Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\icq.desktop\\...");
+                return installer::error(errorcode::set_registry_value, QString("set registry value: Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") + get_product_name() + "\\...");
             }
 
             return installer::error();
@@ -121,21 +121,22 @@ namespace installer
                 return installer::error(errorcode::create_registry_key, QString("create registry key: ") + get_product_name());
 
             if (ERROR_SUCCESS != key_product.SetStringValue(L"path", (const wchar_t*) exe_path.utf16()))
-                return installer::error(errorcode::set_registry_value, "set registry value: Software\\icq.desktop path");
+                return installer::error(errorcode::set_registry_value, QString("set registry value: Software\\") + get_product_name() + "path");
 
             write_referer(key_product);
 
             HKEY key_cmd, key_icq = 0, key_icon = 0;
             DWORD disp = 0;
 
+            CAtlString sub_path = (build::is_icq() ? L"Software\\Classes\\icq" : L"Software\\Classes\\magent");
             CAtlString command_string = CAtlString("\"") + (const wchar_t*) exe_path.utf16() + L"\" -urlcommand \"%1\"";
-            CAtlString url_link_string = "URL:ICQ Link";
+            CAtlString url_link_string = (build::is_icq() ? L"URL:ICQ Link" : L"URL:Agent Link");
 
-            if (ERROR_SUCCESS == ::RegCreateKeyEx(HKEY_CURRENT_USER, L"Software\\Classes\\icq\\shell\\open\\command", 0, L"", REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key_cmd, &disp)) 
+            if (ERROR_SUCCESS == ::RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR) (sub_path + L"\\shell\\open\\command"), 0, L"", REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key_cmd, &disp)) 
             {
                 ::RegSetValueEx(key_cmd, NULL, 0, REG_SZ, (LPBYTE) command_string.GetBuffer(), sizeof(TCHAR)*(command_string.GetLength() + 1));
                 
-                if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Classes\\icq", REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, &key_icq))
+                if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR) sub_path, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, &key_icq))
                 {
                     ::RegSetValueEx(key_icq, NULL, 0, REG_SZ, (LPBYTE) url_link_string.GetBuffer(), sizeof(TCHAR)*(url_link_string.GetLength() + 1));
                     ::RegSetValueEx(key_icq, L"URL Protocol", 0, REG_SZ, (LPBYTE) L"", sizeof(TCHAR));
@@ -183,7 +184,7 @@ namespace installer
             if (!get_exported_data().get_settings() || get_exported_data().get_settings()->auto_run_ || haveAutorun)
             {
                 if (ERROR_SUCCESS != key_software_run.SetStringValue((const wchar_t*) get_product_name().utf16(), (const wchar_t*)(QString("\"") + exe_path + "\"" + " /startup").utf16()))
-                    return installer::error(errorcode::set_registry_value, "set registry value: Software\\Microsoft\\Windows\\CurrentVersion\\Run icq.desktop");
+                    return installer::error(errorcode::set_registry_value, QString("set registry value: Software\\Microsoft\\Windows\\CurrentVersion\\Run ") + get_product_name());
             }
 
             return installer::error();
@@ -194,9 +195,9 @@ namespace installer
             CAtlString key_product = CAtlString(L"Software\\") + (const wchar_t*) get_product_name().utf16();
 
             ::SHDeleteKey(HKEY_CURRENT_USER, key_product);
-            ::SHDeleteKey(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\icq.desktop");
+            ::SHDeleteKey(HKEY_CURRENT_USER, (LPCWSTR)(CAtlString(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") + (const wchar_t*) get_product_name().utf16()));
             ::SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", (const wchar_t*) get_product_name().utf16());
-            ::SHDeleteKey(HKEY_CURRENT_USER, L"Software\\Classes\\icq");
+            ::SHDeleteKey(HKEY_CURRENT_USER, CAtlString(L"Software\\Classes\\") + (build::is_icq() ? L"icq" : L"magent"));
 
             return installer::error();
         }

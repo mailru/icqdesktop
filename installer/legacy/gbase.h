@@ -1548,6 +1548,7 @@ public:
  
     bool RCI_Get( IN const tstring sKeyName, IN const tstring sItemName, OUT MAKFC_CContactInfo& rci );
     bool RCI_GetNoCache( IN const tstring sKeyName, IN const tstring sItemName, OUT MAKFC_CContactInfo& rci );
+    void ReadMutedChats(const tstring& sKeyName, std::list<std::string>& _chats);
 };
 
 
@@ -1662,6 +1663,8 @@ public:
 
     bool RCI_Get(IN const tstring sKeyName, IN const tstring sItemName, OUT MAKFC_CContactInfo& rci);
     bool RCI_GetNoCache( IN const tstring sKeyName, IN const tstring sItemName, OUT MAKFC_CContactInfo& rci );
+
+    void ReadMutedChats(const tstring& sKeyName, std::list<std::string>& _chats);
 
 	//////////////////////////////////////////////////////////////////////////
 };

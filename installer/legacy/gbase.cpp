@@ -1501,6 +1501,66 @@ bool MRAOptionsBase::RCI_Get( IN const tstring sKeyName, IN const tstring sItemN
         return bRes;
 }
 
+void MRAOptionsBase::ReadMutedChats(const tstring& sKeyName, std::list<std::string>& _chats)
+{
+    if ( !isOpen() )
+        return;
+
+    BOOL bAttached = FALSE;
+
+    bAttached = TryAttach();
+
+GIGABASE_TRY_BEGIN
+
+    do 
+    {
+        MRAParamsdbTableDescriptor* lpDesc = GetParamsTable(sKeyName, TRUE);
+        if (lpDesc == 0)
+            break;
+
+        gigabase::dbQuery qSelectParamer;
+        qSelectParamer = L"m_sName=", L"NOTIFY_ABOUT_MESSAGES";
+
+        MRAParamsCursor_O cur_sel_params( lpDesc );
+
+        if (!cur_sel_params.select(qSelectParamer))
+        {
+            break;
+        }
+
+        do 
+        {
+            if (MRAParams::eTypeDWORD != cur_sel_params->m_Type)
+                continue;
+
+            if (sizeof(DWORD) != cur_sel_params->m_Value.length())
+                continue;
+
+            DWORD dwValue = 0;
+            memcpy(&dwValue, cur_sel_params->m_Value.get(), sizeof(dwValue));
+
+            if (dwValue)
+                continue;
+
+            _chats.push_back(MAKFC_CString(cur_sel_params->m_sItem).NetStrA(CP_UTF8));
+        } 
+        while (cur_sel_params.next());
+
+    } 
+    while (false);
+
+GIGABASE_TRY_END
+
+    if (bAttached)
+    {
+        Detach();
+    }
+    else
+    {
+        PreCommit();
+    }
+}
+
 
 bool MRAOptionsBase::RCI_GetNoCache( IN const tstring sKeyName, IN const tstring sItemName, OUT MAKFC_CContactInfo& rci )
 {
@@ -1704,4 +1764,9 @@ bool MRABase::RCI_Get(IN const tstring sKeyName, IN const tstring sItemName, OUT
 bool MRABase::RCI_GetNoCache( IN const tstring sKeyName, IN const tstring sItemName, OUT MAKFC_CContactInfo& rci )
 {
     return GetOptionsBase()->RCI_GetNoCache( sKeyName, sItemName, rci );
+}
+
+void MRABase::ReadMutedChats(const tstring& sKeyName, std::list<std::string>& _chats)
+{
+    return GetOptionsBase()->ReadMutedChats(sKeyName, _chats);
 }

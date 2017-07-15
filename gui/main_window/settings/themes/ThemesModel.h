@@ -3,11 +3,11 @@
 
 namespace Ui
 {
-    class ThemesWidget;
+    class ThemesPage;
     class ThemesModel : public QObject
     {
         Q_OBJECT
-        ThemesWidget* themesWidget_;
+        ThemesPage* themesPage_;
         QString targetContact_;
     private Q_SLOTS:
         void onThemesMeta();
@@ -15,7 +15,7 @@ namespace Ui
         void im_created();
 
     public:
-        ThemesModel(ThemesWidget* _flowLayout);
+        ThemesModel(ThemesPage* _flowLayout);
         void themeSelected(int _themeId);
         void setTargetContact(QString _aimId);
     };

@@ -27,19 +27,6 @@ enum {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// error types
-enum  eResult
-{
-  VR_OK                =  0,    // success
-  VR_FAILED            = -1,    // unknown error
-  VR_INVALID_PARAM     = -2,    // parameter check failed
-  VR_NOT_SUPPORTED     = -3,    // functionality not supported on current platform
-  VR_INVALID_STATE     = -4,    
-  VR_DEVICE_ERROR      = -5,    // generic hardware i/o error
-  VR_FILE_IO_ERROR     = -6     //
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////
 // PeerInfo -  platform-dependent parameters required for proper IO operation 
 union  SystemObjects
 {
@@ -120,9 +107,10 @@ enum ConnectionState {
 /////////////////////////////////////////////////////////////////////////////////////////
 // List of compatible display orientations
 enum OrientationMode{  
-    omPortrait          = 0, // default
-    omLandscapeRight    = 1,
-    omLandscapeLeft     = 2
+    omNormal         = 0, // default no rotation
+    omRotateRight    = 1,
+    omRotateLeft     = 2,
+    omUpsideDown     = 3
 };
 
 enum  AudioDeviceType {
@@ -232,6 +220,35 @@ typedef enum {
     WindowTheme_Four = 3,
     WindowTheme_Total = 4
 } WindowThemeType;
+
+#define AUDIOFX_MAX_SLOTS  3
+enum e_AudioEffect
+{
+    AUDIO_EFFECT_NONE = 0,
+    AUDIO_EFFECT_CHORUS,
+    AUDIO_EFFECT_ECHO,
+    AUDIO_EFFECT_ENHANCER,
+    AUDIO_EFFECT_EXCITER,
+    AUDIO_EFFECT_FLANGER,
+    AUDIO_EFFECT_FULLWAVE_RECTIFIER,
+    AUDIO_EFFECT_HALFWAVE_RECTIFIER,
+    AUDIO_EFFECT_MOORER_REVERB,
+    AUDIO_EFFECT_NETWORK_REVERB,
+    AUDIO_EFFECT_PHASER,
+    AUDIO_EFFECT_SLAPBACK,
+    AUDIO_EFFECT_TREMOLO,
+    AUDIO_EFFECT_WAHWAH,
+    AUDIO_EFFECT_OLD_PHONE,
+    AUDIO_EFFECT_DEESSER,
+    AUDIO_EFFECT_TROLL_VOICE
+};
+
+enum VoipSnapMode {
+    SNAP_HIGH_RATE_FOR_REENCODE,
+    SNAP_LOW_RATE_FOR_TRANSFER,
+    SNAP_SMALL_SIZE_FOR_PTS
+};
+
 
 
 #if __PLATFORM_WINPHONE || WINDOWS_PHONE

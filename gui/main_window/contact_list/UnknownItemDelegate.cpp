@@ -76,39 +76,19 @@ namespace Logic
         const auto isMultichat = Logic::getContactListModel()->isChat(_dlg.AimId_);
         const auto state = isMultichat ? QString() : Logic::getContactListModel()->getState(_dlg.AimId_);
 
-        QString slastSeen = "";
-        if (!isMultichat)
-        {
-            slastSeen = QT_TRANSLATE_NOOP("contact_list", "Seen ");
-            QString slastSeenSuffix = "";
-            const auto lastSeen = Logic::getContactListModel()->getLastSeen(_dlg.AimId_);
-            if (lastSeen.isValid())
-            {
-                const auto current = QDateTime::currentDateTime();
-                const auto days = lastSeen.daysTo(current);
-                if (days == 0)
-                    slastSeenSuffix += QT_TRANSLATE_NOOP("contact_list", "today");
-                else if (days == 1)
-                    slastSeenSuffix += QT_TRANSLATE_NOOP("contact_list", "yesterday");
-                else
-                    slastSeenSuffix += Utils::GetTranslator()->formatDate(lastSeen.date(), lastSeen.date().year() == current.date().year());
-                if (lastSeen.date().year() == current.date().year())
-                {
-                    slastSeenSuffix += QT_TRANSLATE_NOOP("contact_list", " at ");
-                    slastSeenSuffix += lastSeen.time().toString(Qt::SystemLocaleShortDate);
-                }
-            }
-            if (!slastSeenSuffix.length())
-                slastSeen = "";
-            else
-                slastSeen += slastSeenSuffix;
-        }
-
         const auto isFilled = !isMultichat;
         bool isDefault = false;
 
-        const auto avatar = *GetAvatarStorage()->GetRounded(_dlg.AimId_, QString(), Utils::scale_bitmap(ContactList::GetRecentsParams(viewParams_.regim_).avatarH().px())
-            , state, isFilled, isDefault, false, ContactList::GetRecentsParams(viewParams_.regim_).isCL());
+        const auto avatar = *GetAvatarStorage()->GetRounded(
+            _dlg.AimId_,
+            QString(),
+            Utils::scale_bitmap(ContactList::GetRecentsParams(viewParams_.regim_).avatarSize()),
+            state,
+            isFilled,
+            isDefault,
+            false,
+            ContactList::GetRecentsParams(viewParams_.regim_).isCL()
+        );
 
         const bool hasMouseOver = (platform::is_apple() ? Logic::getUnknownsModel()->customFlagIsSet(Logic::CustomAbstractListModelFlags::HasMouseOver) : true);
         const bool isSelected_ = (_option.state & QStyle::State_Selected) && !stateBlocked_;
@@ -116,38 +96,7 @@ namespace Logic
 
         const auto displayName = Logic::getContactListModel()->getDisplayName(_dlg.AimId_);
 
-        auto deliveryState = ContactList::DeliveryState::NotDelivered;
-
-        const auto isSending = ((_dlg.LastMsgId_ == -1) && _dlg.Outgoing_);
-        if (isSending)
-        {
-            deliveryState = ContactList::DeliveryState::Sending;
-        }
-
-        const auto isDeliveredToServer = ((_dlg.LastMsgId_ != -1) && _dlg.Outgoing_);
-        if (isDeliveredToServer)
-        {
-            deliveryState = ContactList::DeliveryState::DeliveredToServer;
-        }
-
-        const auto isDeliveredToClient = ((_dlg.TheirsLastDelivered_ >= _dlg.LastMsgId_) && isDeliveredToServer);
-        if (isDeliveredToClient)
-        {
-            deliveryState = ContactList::DeliveryState::DeliveredToClient;
-        }
-
-        if (isDeliveredToServer && isMultichat)//force delivered to client status for mchats
-        {
-            deliveryState = ContactList::DeliveryState::DeliveredToClient;
-        }
-
-        const auto showLastMessage = (_fromAlert || Ui::get_gui_settings()->get_value<bool>(settings_show_last_message, true));
-
-        auto status = (
-            showLastMessage ?
-                _dlg.GetText() :
-                (isMultichat ? "online" : (Utils::stateEqualsOnline(state) ? state : slastSeen))
-        );
+        auto message = _dlg.GetText();
 
         bool isOfficial = _dlg.Official_ || Logic::getContactListModel()->isOfficial(_dlg.AimId_);
 
@@ -158,7 +107,7 @@ namespace Logic
         bool isOutgoing = _dlg.Outgoing_;
         bool isLastRead = (_dlg.LastMsgId_ >= 0 && _dlg.TheirsLastRead_ > 0 && _dlg.LastMsgId_ <= _dlg.TheirsLastRead_);
 
-        if (!isMultichat && isOutgoing && isLastRead && !Logic::GetMessagesModel()->isHasPending(_dlg.AimId_))
+        if (!isMultichat && isOutgoing && isLastRead && !Logic::GetMessagesModel()->hasPending(_dlg.AimId_))
         {
             lastReadAvatar = *GetAvatarStorage()->GetRounded(_dlg.AimId_, QString(), Utils::scale_bitmap(ContactList::GetRecentsParams(viewParams_.regim_).getLastReadAvatarSize())
                 , QString(), isFilled, isDefault, false, ContactList::GetRecentsParams(viewParams_.regim_).isCL());
@@ -169,11 +118,11 @@ namespace Logic
             _dlg.AimId_,
             avatar,
             state,
-            status,
+            message,
             isHovered_,
             isSelected_,
             displayName.isEmpty() ? _dlg.AimId_ : displayName,
-            true /* haveLastSeen */,
+            true /* hasLastSeen */,
             QDateTime::fromTime_t(_dlg.Time_),
             (int)_dlg.UnreadCount_, 
             Logic::getContactListModel()->isMuted(_dlg.AimId_),
@@ -181,8 +130,7 @@ namespace Logic
             isOfficial,
             isDrawLastRead,
             lastReadAvatar,
-            false /* isTyping */,
-            deliveryState);
+            false /* isTyping */);
 
         _painter->save();
         _painter->setRenderHint(QPainter::Antialiasing);
@@ -206,13 +154,13 @@ namespace Logic
 
     bool UnknownItemDelegate::isInAddContactFrame(const QPoint& _p) const
     {
-        auto f = ContactList::AddContactFrame();
+        auto f = ContactList::GetRecentsParams(viewParams_.regim_).addContactFrame();
         return f.contains(_p);
     }
     
     bool UnknownItemDelegate::isInRemoveContactFrame(const QPoint& _p) const
     {
-        auto f = ContactList::RemoveContactFrame();
+        auto f = ContactList::GetRecentsParams(viewParams_.regim_).removeContactFrame();
         return f.contains(_p);
     }
 
@@ -224,16 +172,16 @@ namespace Logic
 
     QSize UnknownItemDelegate::sizeHint(const QStyleOptionViewItem&, const QModelIndex& _i) const
     {
-        auto width = ContactList::GetRecentsParams(viewParams_.regim_).itemWidth().px();
+        auto width = ContactList::GetRecentsParams(viewParams_.regim_).itemWidth();
         if (Logic::getUnknownsModel()->isServiceItem(_i))
-            return QSize(width, ContactList::GetRecentsParams(viewParams_.regim_).serviceItemHeight().px());
+            return QSize(width, ContactList::GetRecentsParams(viewParams_.regim_).unknownsItemHeight());
 
-        return QSize(width, ContactList::GetRecentsParams(viewParams_.regim_).itemHeight().px());
+        return QSize(width, ContactList::GetRecentsParams(viewParams_.regim_).itemHeight());
     }
 
     QSize UnknownItemDelegate::sizeHintForAlert() const
     {
-        return QSize(ContactList::GetRecentsParams(viewParams_.regim_).itemWidthAlert().px(), ContactList::GetRecentsParams(viewParams_.regim_).itemHeight().px());
+        return QSize(ContactList::GetRecentsParams(viewParams_.regim_).itemWidth(), ContactList::GetRecentsParams(viewParams_.regim_).itemHeight());
     }
 
     void UnknownItemDelegate::blockState(bool _value)

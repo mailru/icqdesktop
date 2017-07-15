@@ -4,44 +4,29 @@
 
 namespace ContactList
 {
-	enum class DeliveryState
-	{
-		Invalid,
-		Min,
-
-		NotDelivered = Min,
-		Sending,
-		DeliveredToServer,
-		DeliveredToClient,
-
-		Max = DeliveredToClient
-	};
 
 	struct RecentItemVisualData : VisualDataBase
 	{
 		RecentItemVisualData(
-			const QString &aimId,
-			const QPixmap &avatar,
-			const QString &state,
-			const QString &status,
-			const bool isHovered,
-			const bool isSelected,
-			const QString &contactName,
-			const bool haveLastSeen,
-			const QDateTime &lastSeen,
-			const int unreadsCounter,
-			const bool muted,
-            const QString &senderNick,
-            const bool isOfficial,
+			const QString &_aimId,
+			const QPixmap &_avatar,
+			const QString &_state,
+			const QString &_status,
+			const bool _isHovered,
+			const bool _isSelected,
+			const QString &_contactName,
+			const bool _hasLastSeen,
+			const QDateTime &_lastSeen,
+			const int _unreadsCounter,
+			const bool _muted,
+            const QString &_senderNick,
+            const bool _isOfficial,
             const bool _drawLastRead,
             const QPixmap& _lastReadAvatar,
-            const bool isTyping,
-            const DeliveryState deliveryState,
-            const QString term = "",
-            const bool haveLastMsg = true,
-            const qint64 _msg_id = -1);
-
-		const DeliveryState DeliveryState_;
+            const bool _isTyping,
+            const QString _term = "",
+            const bool _hasLastMsg = true,
+            const qint64 _msgId = -1);
 
 		const bool Muted_;
 
@@ -49,34 +34,28 @@ namespace ContactList
 
         QString senderNick_;
 
-        bool HaveLastMsg_;
+        bool HasLastMsg_;
 
-        qint64 msg_id_;
+        qint64 msgId_;
+
+        bool IsMailStatus_;
 	};
 
-	void RenderRecentsItem(QPainter &painter, const RecentItemVisualData &item, const ViewParams& viewParams);
+	void RenderRecentsItem(QPainter &_painter, const RecentItemVisualData &_item, const ViewParams& _viewParams);
 
-    void RenderRecentsDragOverlay(QPainter &painter, const ViewParams& viewParams);
+    void RenderRecentsDragOverlay(QPainter &_painter, const ViewParams& _viewParams);
 
-    void RenderUnknownsHeader(QPainter &painter, const QString& title, const int count, const ViewParams& viewParams);
+    void RenderUnknownsHeader(QPainter &_painter, const QString& _title, const int _count, const ViewParams& _viewParams);
 
-    void RenderServiceItem(QPainter &painter, const QString& text, bool renderState, bool drawLine, const ViewParams& viewParams);
+    void RenderServiceItem(QPainter &_painter, const QString& _text, bool _renderState, bool _isFavorites, const ViewParams& _viewParams);
 
-    void RenderDeleteAllItem(QPainter &painter, const QString& title, bool isMouseOver, const ViewParams& viewParams);
+    void RenderDeleteAllItem(QPainter &_painter, const QString& _title, bool _isMouseOver, const ViewParams& _viewParams);
 
-	int RenderContactMessage(QPainter &painter, const RecentItemVisualData &visData, const int rightBorderPx, const ViewParams& viewParams, ContactListParams& _recentParams);
+	int RenderContactMessage(QPainter &_painter, const RecentItemVisualData &_visData, const int _rightMargin, const ViewParams& _viewParams, ContactListParams& _recentParams);
 
-	int RenderNotifications(QPainter &painter, const int unreads, bool muted, const ViewParams& viewParams, ContactListParams& _recentParams, bool _isUnknownHeader);
+	int RenderNotifications(QPainter &_painter, const int _unreads, bool _muted, const ViewParams& viewParams, ContactListParams& _recentParams, bool _isUnknownHeader, bool _isActive, bool _isHover);
 
-    void RenderLastReadAvatar(QPainter &painter, const QPixmap& _avatar, const int _xOffset, ContactListParams& _recentParams);
-
-    int RenderAddContact(QPainter &painter, bool hasMouseOver, ContactListParams& _recentParams, const ViewParams& _viewParams);
-
-    int RenderRemoveContact(QPainter &painter, bool hasMouseOver, ContactListParams& _recentParams, const ViewParams& _viewParams);
-
-    QRect AddContactFrame();
-
-    QRect RemoveContactFrame();
+    void RenderLastReadAvatar(QPainter &_painter, const QPixmap& _avatar, const int _xOffset, ContactListParams& _recentParams);
 
     QRect DeleteAllFrame();
 }

@@ -11,6 +11,7 @@ namespace Ui
 {
 	HistoryControlPageItem::HistoryControlPageItem(QWidget *parent)
 		: QWidget(parent)
+        , QuoteAnimation_(parent)
         , HasTopMargin_(false)
         , HasAvatar_(false)
         , HasAvatarSet_(false)
@@ -75,6 +76,9 @@ namespace Ui
     {
     }
 
+    void HistoryControlPageItem::onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect)
+    {}
+
     void HistoryControlPageItem::setHasAvatar(const bool value)
     {
         HasAvatar_ = value;
@@ -101,6 +105,11 @@ namespace Ui
     bool HistoryControlPageItem::setLastRead(const bool /*_isLastRead*/)
     {
         return false;
+    }
+
+    void HistoryControlPageItem::setDeliveredToServer(const bool _delivered)
+    {
+
     }
 
     void HistoryControlPageItem::drawLastReadAvatar(QPainter& _p, const QString& _aimid, const QString& _friendly, const int _rightPadding, const int _bottomPadding)

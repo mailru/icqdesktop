@@ -16,6 +16,7 @@ namespace Ui
 Q_SIGNALS:
 
         void onSearch(search_params _filters);
+        void clicked();
 
         private Q_SLOTS:
 

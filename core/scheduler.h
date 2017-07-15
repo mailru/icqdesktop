@@ -11,22 +11,22 @@ namespace core
     {
         struct scheduler_timer_task
         {
-            std::chrono::system_clock::time_point	last_execute_time_;
-            uint32_t								id_;
-            uint32_t								timeout_msec_;
-            std::function<void()>					function_;
+            std::chrono::system_clock::time_point last_execute_time_;
+            uint32_t id_;
+            uint32_t timeout_msec_;
+            std::function<void()> function_;
 
             scheduler_timer_task() : id_(0), timeout_msec_(0) {}
         };
 
 
 
-        std::unique_ptr<std::thread>						thread_;
-        std::list<std::shared_ptr<scheduler_timer_task>>	timed_tasks_;
+        std::unique_ptr<std::thread> thread_;
+        std::list<std::shared_ptr<scheduler_timer_task>> timed_tasks_;
 
-        std::mutex								mutex_;
-        std::condition_variable					condition_;
-        std::atomic<bool>						is_stop_;
+        std::mutex mutex_;
+        std::condition_variable condition_;
+        std::atomic<bool> is_stop_;
 
     public:
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../QuoteColorAnimation.h"
+
 namespace HistoryControl
 {
 
@@ -14,13 +16,11 @@ namespace HistoryControl
         void forcedLayoutUpdatedSignal() const;
 
     public:
-        virtual QPoint deliveryStatusOffsetHint(const int32_t statusLineWidth) const;
-
         virtual bool isBlockElement() const = 0;
 
         virtual bool canUnload() const = 0;
 
-        virtual void render(QPainter &p) = 0;
+        virtual void render(QPainter &p, const QColor& quote_color) = 0;
 
         virtual QString toLogString() const = 0;
 
@@ -30,11 +30,13 @@ namespace HistoryControl
 
         virtual void saveAs() = 0;
 
-        virtual bool haveContentMenu(QPoint) const = 0;
+        virtual bool hasContextMenu(QPoint) const = 0;
 
         virtual QString toLink() const = 0;
 
-        virtual bool haveOpenInBrowserMenu() { return false; }
+        virtual bool hasOpenInBrowserMenu() { return false; }
+
+		void startQuoteAnimation();
 
 	public:
 		MessageContentWidget(QWidget *parent, const bool isOutgoing, QString _aimId);
@@ -54,6 +56,8 @@ namespace HistoryControl
         virtual void clearSelection();
 
         virtual void onVisibilityChanged(const bool isVisible);
+
+        virtual void onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect);
 
         virtual QString selectedText() const;
 
@@ -101,5 +105,6 @@ namespace HistoryControl
 
         virtual void paintEvent(QPaintEvent*) override final;
 
+		QuoteColorAnimation QuoteAnimation_;
 	};
 }

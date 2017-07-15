@@ -564,7 +564,6 @@ homesense
 honda
 honeywell
 horse
-host
 hosting
 hot
 hoteles
@@ -1492,7 +1491,6 @@ za
 zappos
 zara
 zero
-zip
 zippo
 zm
 zone

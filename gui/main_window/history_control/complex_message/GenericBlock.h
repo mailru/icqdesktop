@@ -1,6 +1,15 @@
 #pragma once
 
 #include "IItemBlock.h"
+#include "../QuoteColorAnimation.h"
+
+namespace Ui
+{
+    namespace ComplexMessage
+    {
+        class QuoteBlockHover;
+    }
+}
 
 UI_NS_BEGIN
 
@@ -26,6 +35,7 @@ class GenericBlock :
 
     Q_SIGNALS:
         void clicked();
+        void setQuoteAnimation();
 
 public:
     GenericBlock(
@@ -56,6 +66,8 @@ public:
 
     virtual QString getSourceText() const override;
 
+    virtual QString getTextForCopy() const override;
+
     std::shared_ptr<const themes::theme> getTheme() const;
 
     int getThemeId() const;
@@ -80,6 +92,8 @@ public:
 
     virtual void onVisibilityChanged(const bool isVisible) override;
 
+    virtual void onDistanceToViewportChanged(const QRect& _widgetAbsGeometry, const QRect& _viewportVisibilityAbsRect) override;
+
     virtual QRect setBlockGeometry(const QRect &ltr) override;
 
     virtual QSize sizeHint() const override;
@@ -88,10 +102,18 @@ public:
 
     virtual int getMaxPreviewWidth() const { return 0; }
 
+	virtual void setQuoteSelection();
+
+    virtual void connectToHover(Ui::ComplexMessage::QuoteBlockHover* hover);
+
+    virtual void hideBlock() final override;
+
+    virtual bool isHasLinkInMessage() const override;
+
 protected:
     virtual bool drag() override;
 
-    virtual void drawBlock(QPainter &p) = 0;
+    virtual void drawBlock(QPainter &p, const QRect& _rect, const QColor& quate_color) = 0;
 
     virtual void enterEvent(QEvent *) override;
 
@@ -123,6 +145,10 @@ protected:
 
     void clickHandled() { ClickHandled_ = true; }
 
+    void connectButtonToHover(ActionButtonWidget* btn, Ui::ComplexMessage::QuoteBlockHover* hover);
+
+	QuoteColorAnimation QuoteAnimation_;
+
 private:
     GenericBlock();
 
@@ -152,7 +178,6 @@ private:
 
 private Q_SLOTS:
     void onResourceUnloadingTimeout();
-
 };
 
 UI_COMPLEX_MESSAGE_NS_END

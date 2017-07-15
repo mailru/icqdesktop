@@ -45,8 +45,6 @@ namespace Utils
     void ApplyStyle(QWidget* _widget, QString _style);
     void ApplyPropertyParameter(QWidget* _widget, const char* _property, QVariant _parameter);
 
-    QString SetFont(const QString& _qss);
-
     QString LoadStyle(const QString& _qssFile);
 
     QPixmap getDefaultAvatar(const QString& _uin, const QString& _displayName, const int _sizePx, const bool _isFilled);
@@ -109,22 +107,21 @@ namespace Utils
 
     const uint getInputMaximumChars();
 
-    bool stateEqualsOnline(const QString& _state);
-
     int calcAge(const QDateTime& _birthdate);
-
-    void initCrashHandlersInCore();
 
     void drawText(QPainter & painter, const QPointF & point, int flags,
         const QString & text, QRectF * boundingRect = 0);
 
-    const QString &DefaultDownloadsPath();
+    QString DefaultDownloadsPath();
+    QString UserDownloadsPath();
 
     bool is_image_extension(const QString& _ext);
+    bool is_image_extension_not_gif(const QString& _ext);
+    bool is_video_extension(const QString& _ext);
 
     void copyFileToClipboard(const QString& _path);
 
-    bool saveAs(const QString& _inputFilename, QString& _filename, QString& _directory, bool asSheet = true /* for OSX only */);
+    void saveAs(const QString& _inputFilename, std::function<void (QString& _filename, QString& _directory)> _callback, std::function<void ()> _cancel_callback = std::function<void ()>(), bool asSheet = true /* for OSX only */);
 
     typedef std::vector<std::pair<QString, Ui::KeyToSendMessage>> SendKeysIndex;
 
@@ -134,6 +131,7 @@ namespace Utils
     void post_stats_with_settings();
     QRect GetMainRect();
     QPoint GetMainWindowCenter();
+    QRect GetWindowRect(QWidget* window);
 
     void UpdateProfile(const std::vector<std::pair<std::string, QString>>& _fields);
 
@@ -156,7 +154,7 @@ namespace Utils
         bool acceptEnter = true);
 
     bool GetConfirmationWithTwoButtons(const QString& _buttonLeft, const QString& _buttonRight,
-        const QString& _messageText, const QString& _labelText, QWidget* _parent);
+        const QString& _messageText, const QString& _labelText, QWidget* _parent, QWidget* _mainWindow = nullptr);
 
     bool GetErrorWithTwoButtons(const QString& _buttonLeftText, const QString& _buttonRightText,
         const QString& _messageText, const QString& _labelText, const QString& _errorText, QWidget* _parent);
@@ -210,9 +208,63 @@ namespace Utils
 
     StatsSender* getStatsSender();
 
-    int GetMinWidthOfMainWindow();
-
-    int GetDragDistance();
-
     bool haveText(const QMimeData *);
+
+    QString normalizeLink(const QString& _link);
+
+    const wchar_t* get_crossprocess_mutex_name();
+    const char* get_crossprocess_pipe_name();
+
+    QHBoxLayout* emptyHLayout(QWidget* parent = 0);
+    QVBoxLayout* emptyVLayout(QWidget* parent = 0);
+
+    QString getProductName();
+    QString getInstallerName();
+
+    void openMailBox(const QString& email, const QString& mrimKey, const QString& mailId);
+    void openAgentUrl(
+        const QString& _url, 
+        const QString& _fail_url, 
+        const QString& _email, 
+        const QString& _mrimKey);
+    
+    QString getUnreadsBadgeStr(int _unreads);
+    void drawUnreads(QPainter *p, const QFont &font, const QColor *bgColor, const QColor *textColor, const QColor *borderColor, int unreads, int balloonSize, int x, int y);
+    QPoint getUnreadsSize(QPainter *p, const QFont &font, bool bBorder, int unreads, int balloonSize);
+
+    /*
+    Template used for reverse iteration in C++11 range-based for loops.
+  
+    std::vector<int> v = {1, 2, 3, 4, 5};
+    for (auto x : reverse_iterate(v))
+        std::cout << x << " ";
+ */
+
+    template <typename T>
+    class reverse_range
+    {
+        T &x;
+    
+    public:
+        reverse_range(T &_x) : x(_x) {}
+    
+        typename T::reverse_iterator begin() const
+        {
+            return x.rbegin();
+        }
+    
+        typename T::reverse_iterator  end() const
+        {
+            return x.rend();
+        }
+    };
+ 
+    template <typename T>
+    reverse_range<T> reverse_iterate(T &x)
+    {
+        return reverse_range<T>(x);
+    }
+
+    QImage iconWithCounter(int size, int count, QColor bg, QColor fg, QImage back = QImage());
 }
+

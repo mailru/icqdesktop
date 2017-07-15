@@ -17,8 +17,8 @@ namespace Logic
     {
         if (_regim == Logic::MembersWidgetRegim::CONTACT_LIST)
             return getSearchModelDLG();
-        else if (!Logic::is_delete_members_regim(_regim))
-            return getCustomSearchModelDLG(false, _regim != Logic::MembersWidgetRegim::SHARE_LINK && _regim != Logic::MembersWidgetRegim::SHARE_TEXT);
+        else if (!Logic::is_members_regim(_regim))
+            return getCustomSearchModelDLG(false, _regim != Logic::MembersWidgetRegim::SHARE_LINK && _regim != Logic::MembersWidgetRegim::SHARE_TEXT && _regim != Logic::MembersWidgetRegim::CONTACT_LIST_POPUP);
         else
             return getSearchMemberModel();
     }

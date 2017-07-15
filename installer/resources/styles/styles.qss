@@ -54,18 +54,31 @@ installer--ui--main_window
 	background-color: white;
 }
 
-QWidget#logo
+QWidget#logo_icq
 {
 	background-repeat: no-repeat;
 	background-position: center;
 	background-image: url(:/images/content_logo_100.png);
 }
 
-QLabel#start_page_welcome_label
+QWidget#logo_agent
 {
-	color: #282828;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-image: url(:/images/content_logo_agent_100.png);
+}
+
+
+QLabel#start_page_welcome_label_icq
+{
 	font-size: 32dip; 
 }
+
+QLabel#start_page_welcome_label_agent
+{
+	font-size: 28dip; 
+}
+
 
 QLabel#start_page_will_install
 {
@@ -91,6 +104,7 @@ QPushButton#custom_button
 	font-size: 16dip;
 	background-color: #579e1c;
 	border-style: none;
+	border: none;
 	margin: 0;
 	padding-left: 20dip;
 	padding-right: 20dip;
@@ -98,18 +112,58 @@ QPushButton#custom_button
 	max-height: 32dip;
 	min-height: 32dip;
 }
+
 QPushButton#custom_button:hover
 {
 	background-color: #57a813;
 }
+
 QPushButton#custom_button:pressed
 {
 	background-color: #50901b;
 }
 
+QPushButton#custom_button:disabled
+{
+	background-color: #999999;
+}
+
+
+QPushButton#frame_button
+{
+	color: #579e1c;
+	font-size: 16dip;
+	background-color: #ffffff;
+	border-style: solid;
+	border-width: 2dip;
+	margin: 0;
+	padding-left: 20dip;
+	padding-right: 20dip;
+	min-width: 100dip;
+	max-height: 28dip;
+	min-height: 28dip;
+}
+
+QPushButton#frame_button:hover
+{
+	color: #57a813;
+}
+
+QPushButton#frame_button:pressed
+{
+	color: #50901b;
+}
+
+QPushButton#frame_button:disabled
+{
+	color: #999999;
+}
+
+
+
+
 QLabel#progress_page_demo_label
 {
-	color: #282828;
 	font-size: 24dip;
 	margin-left: 16dip;
 	margin-right: 16dip;
@@ -156,20 +210,18 @@ QLabel#error_page_support_link
 
 QLabel#choose_account_label
 {
-	color: #282828;
-	font-size: 24dip; 
+	font-size: 22dip; 
 }
 
 QLabel#choose_account_comment_label
 {
-	color: #696969;
 	font-size: 15dip;
 }
 
 QLabel#label_account_nick
 {
-	color: #282828;
-	font-size: 18dip;
+	color: #000000;
+	font-size: 15dip;
 }
 
 QLabel#label_account_uin
@@ -178,23 +230,193 @@ QLabel#label_account_uin
 	font-size: 15dip;
 }
 
-QLabel#arrow_right
+QPushButton#account_check
 {
-	background-image: url(:/images/picker_arrow_right_100.png);
+	background-image: url(:/images/check_icon_100.png);
+	background-position: right;
+	background-repeat: none;
+	background-color: white;
+	border: none;
+}
+
+installer--ui--account_widget
+{
+	background-image: url(:/images/check_icon_100.png);
+	background-position: right center;
+	background-repeat: none;
+	background-color: white;
+	border: none;
+	margin-right: 12dip;
+	border: solid;
+}
+
+
+installer--ui--account_widget:checked
+{
+	background-image: url(:/images/check_icon_100_active.png);
+}
+
+installer--ui--account_widget:hover
+{
+	background-image: url(:/images/check_icon_100_hover.png);
+}
+
+installer--ui--account_widget:checked:hover
+{
+	background-image: url(:/images/check_icon_100_active.png);
+}
+
+
+QWidget#agent_page_icon
+{
+	border: none;
+	background-color: white;
+	background-image: url(:/images/step_1_100_active.png);
 	background-repeat: none;
 }
+
+
+QWidget#agent_page_icon[state="normal"]
+{
+	background-image: url(:/images/step_1_100_active.png);
+}
+
+QWidget#agent_page_icon[state="normalchecked"]
+{
+	background-image: url(:/images/step_100_active.png);	
+}
+
+QWidget#agent_page_icon[state="disabled"]
+{
+	background-image: url(:/images/step_100.png);	
+}
+
+QWidget#agent_page_icon[state="disabledchecked"]
+{
+	background-image: url(:/images/step_100.png);	
+}
+
+
+QLabel#agent_page_text
+{
+	color: red;
+	border: none;
+	background-color: white;	
+	font-size: 14dip;
+	margin-bottom: 1dip;
+}
+
+QLabel#agent_page_text[state="normal"]
+{
+	color: #579e1c;
+}
+
+QLabel#agent_page_text[state="normalchecked"]
+{
+	color: #579e1c;
+}
+
+QLabel#agent_page_text[state="disabled"]
+{
+	color: #999999;
+}
+
+QLabel#agent_page_text[state="disabledchecked"]
+{
+	color: #999999;
+}
+
+QLabel#agent_page_text[state="gray"]
+{
+	color: #999999;
+}
+
+
+QWidget#icq_page_icon
+{
+	border: none;
+	background-color: white;
+	background-image: url(:/images/step_2_100_active.png);
+	background-repeat: none;
+}
+
+QWidget#icq_page_icon[state="normal"]
+{
+	background-image: url(:/images/step_2_100_active.png);
+}
+
+QWidget#icq_page_icon[state="normalchecked"]
+{
+	background-image: url(:/images/step_100_active.png);	
+}
+
+QWidget#icq_page_icon[state="disabled"]
+{
+	background-image: url(:/images/step_2_100.png);	
+}
+
+QWidget#icq_page_icon[state="disabledchecked"]
+{
+	background-image: url(:/images/step_100.png);	
+}
+
+QLabel#icq_page_text
+{
+	color: red;
+	border: none;
+	background-color: white;	
+	font-size: 14dip;
+	margin-bottom: 1dip;
+}
+
+QLabel#icq_page_text[state="normal"]
+{
+	color: #579e1c;
+}
+
+QLabel#icq_page_text[state="normalchecked"]
+{
+	color: #579e1c;
+}
+
+QLabel#icq_page_text[state="disabled"]
+{
+	color: #999999;
+}
+
+QLabel#icq_page_text[state="disabledchecked"]
+{
+	color: #999999;
+}
+
+QLabel#icq_page_text[state="gray"]
+{
+	color: #999999;
+}
+
+
 
 QScrollArea
 {
 	border: none;
 }
 
-installer--ui--account_widget
-{
-	background-color: white;
-}
 
 QWidget#accounts_area_widget
 {
 	background-color: white;
+}
+
+QPushButton#skip_button
+{
+	border: none;
+	color: #cbcbcb;
+	font-size: 13dip;
+	margin-top: 8dip;
+	text-decoration: underline;
+}
+
+QPushButton#skip_button:hover
+{
+	color: #696969;
 }

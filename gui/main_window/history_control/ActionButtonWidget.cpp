@@ -51,7 +51,7 @@ ActionButtonWidget::ResourceSet::ResourceSet(
 
 const ActionButtonWidget::ResourceSet ActionButtonWidget::ResourceSet::Play_(
     Themes::PixmapResourceId::FileSharingMediaPlay,
-    Themes::PixmapResourceId::FileSharingMediaPlayActive,
+    Themes::PixmapResourceId::FileSharingMediaPlayHover,
     Themes::PixmapResourceId::FileSharingMediaPlayHover,
     Themes::PixmapResourceId::FileSharingMediaCancel,
     Themes::PixmapResourceId::FileSharingMediaCancel,
@@ -83,7 +83,7 @@ const ActionButtonWidget::ResourceSet ActionButtonWidget::ResourceSet::DownloadM
 
 const ActionButtonWidget::ResourceSet ActionButtonWidget::ResourceSet::ShareContent_(
     Themes::PixmapResourceId::FileSharingShareContent,
-    Themes::PixmapResourceId::FileSharingShareContentActive,
+    Themes::PixmapResourceId::FileSharingShareContentHover,
     Themes::PixmapResourceId::FileSharingShareContentHover,
     Themes::PixmapResourceId::FileSharingShareContent,
     Themes::PixmapResourceId::FileSharingShareContent,
@@ -318,21 +318,15 @@ void ActionButtonWidget::setProgress(const double progress)
     }
 }
 
-void ActionButtonWidget::setProgressPen(const int32_t r, const int32_t g, const int32_t b, const double a, const double width)
+void ActionButtonWidget::setProgressPen(const QColor color, const double a, const double width)
 {
-    assert(r >= 0);
-    assert(r <= 255);
-    assert(g >= 0);
-    assert(g <= 255);
-    assert(b >= 0);
-    assert(b <= 255);
     assert(a >= 0);
     assert(a <= 1);
     assert(width > 0);
     assert(width < 5);
 
-    const auto progressAlpha = (int32_t)(a * 255);
-    QColor progressColor(r, g, b, progressAlpha);
+    QColor progressColor(color);
+    progressColor.setAlphaF(a);
     QBrush progressBrush(progressColor);
 
     ProgressPen_ = QPen(progressBrush, width);
@@ -379,8 +373,7 @@ QSize ActionButtonWidget::sizeHint() const
 void ActionButtonWidget::startAnimation(const int32_t _delay)
 {
     assert(_delay >= 0);
-    assert(_delay < 1000);
-
+    
     if (IsAnimating_)
     {
         return;

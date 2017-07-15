@@ -29,6 +29,7 @@ namespace Logic
 		Timer_->start();
 
         connect(Ui::GetDispatcher(), SIGNAL(avatarLoaded(const QString&, QPixmap*, int)), this, SLOT(avatarLoaded(const QString&, QPixmap*, int)), Qt::QueuedConnection);
+        connect(Ui::GetDispatcher(), SIGNAL(avatarUpdated(const QString &)), this, SLOT(UpdateAvatar(const QString &)), Qt::QueuedConnection);
         connect(Ui::GetDispatcher(), SIGNAL(chatInfo(qint64, std::shared_ptr<Data::ChatInfo>)), this, SLOT(chatInfo(qint64, std::shared_ptr<Data::ChatInfo>)), Qt::QueuedConnection);
 		connect(Timer_, SIGNAL(timeout()), this, SLOT(cleanup()), Qt::QueuedConnection);
 	}
@@ -39,7 +40,6 @@ namespace Logic
 
 	const QPixmapSCptr& AvatarStorage::Get(const QString& _aimId, const QString& _displayName, const int _sizePx, const bool _isFilled, bool& _isDefault, bool _regenerate)
 	{
-		assert(!_aimId.isEmpty());
 		assert(_sizePx > 0);
 
 		TimesCache_[_aimId] = QDateTime::currentDateTime();
@@ -62,7 +62,7 @@ namespace Logic
 				drawDisplayName = getContactListModel()->getDisplayName(_aimId).trimmed();
             }
 
-			auto defaultAvatar = Utils::getDefaultAvatar(_aimId, drawDisplayName, _sizePx, _isFilled);
+			auto defaultAvatar = Utils::getDefaultAvatar(_aimId, drawDisplayName, _sizePx, _aimId == "mail" ? false : _isFilled);
 			assert(defaultAvatar);
 
 			const auto result = AvatarsByAimId_.emplace(_aimId, std::make_shared<QPixmap>(std::move(defaultAvatar)));
@@ -93,6 +93,9 @@ namespace Logic
 		const auto result = AvatarsByAimIdAndSize_.emplace(key, std::make_shared<QPixmap>(std::move(scaledImage)));
 		assert(result.second);
 
+        if (_aimId == "mail")
+            return result.first->second;
+
 		auto requestedAvatarsIter = RequestedAvatars_.find(_aimId);
 		if (requestedAvatarsIter == RequestedAvatars_.end() || (avatarByAimId.width() < _sizePx && avatarByAimId.height() < _sizePx))
 		{
@@ -115,6 +118,27 @@ namespace Logic
 
 		return result.first->second;
 	}
+
+    void AvatarStorage::SetAvatar(const QString& _aimId, const QPixmap& _pixmap)
+    {
+        assert(!_aimId.isEmpty());
+
+        auto iter = AvatarsByAimId_.find(_aimId);
+        if (iter == AvatarsByAimId_.end())
+            return;
+
+        const auto size = iter->second->height();
+        auto scaled = _pixmap.scaled(size, size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+        AvatarsByAimId_[_aimId] = std::make_shared<QPixmap>(scaled);
+
+        CleanupSecondaryCaches(_aimId);
+
+        LoadedAvatars_.removeAll(_aimId);
+        LoadedAvatars_ << _aimId;
+
+        emit avatarChanged(_aimId);
+    }
 
     void AvatarStorage::UpdateAvatar(const QString& _aimId, bool force)
     {
@@ -152,7 +176,6 @@ namespace Logic
     
 	const QPixmapSCptr& AvatarStorage::GetRounded(const QString& _aimId, const QString& _displayName, const int _sizePx, const QString& _state, const bool _isFilled, bool& _isDefault, bool _regenerate, bool mini_icons)
 	{
-		assert(!_aimId.isEmpty());
 		assert(_sizePx > 0);
 
 		const auto &avatar = Get(_aimId, _displayName, _sizePx, _isFilled, _isDefault, _regenerate);
@@ -189,7 +212,7 @@ namespace Logic
             {
                 Ui::gui_coll_helper collection(Ui::GetDispatcher()->create_collection(), true);
                 collection.set_value_as_qstring("aimid", _aimId);
-                collection.set_value_as_int("limit", 1);
+                collection.set_value_as_int("limit", Logic::ChatMembersModel::get_limit(1));
                 Ui::GetDispatcher()->post_message_to_core("chats/info/get", collection.get());
                 ChatInfoRequested_.insert(_aimId, _size);
             }
@@ -341,7 +364,6 @@ namespace Logic
 	const QPixmapSCptr& AvatarStorage::GetRounded(const QPixmap& _avatar, const QString& _aimId, const QString& _state, bool mini_icons, bool _isDefault)
 	{
 		assert(!_avatar.isNull());
-		assert(!_aimId.isEmpty());
 
 		QString key;
 		key.reserve(128);
@@ -376,7 +398,6 @@ namespace
 {
 	QString CreateKey(const QString &_aimId, const int _sizePx)
 	{
-		assert(!_aimId.isEmpty());
 		assert(_sizePx > 0);
 
 		QString result;

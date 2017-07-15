@@ -5,9 +5,12 @@
 
 #include "proxy_settings.h"
 
-struct curl_context;
+#include "../external/curl/include/curl.h"
+
 namespace core
 {
+    struct curl_context;
+
     class hosts_map;
 
     class ithread_callback;
@@ -28,6 +31,8 @@ namespace core
     class http_request_simple
     {
     public:
+        typedef std::function<void(bool _success)> completion_function;
+
         typedef std::function<bool()> stop_function;
 
         typedef std::function<void(int64_t _bytes_total, int64_t _bytes_transferred, int32_t _pct_transferred)> progress_function;
@@ -45,7 +50,7 @@ namespace core
         std::list<std::string> custom_headers_;
 
         long response_code_;
-        std::shared_ptr<tools::binary_stream> output_;
+        std::shared_ptr<tools::stream> output_;
         std::shared_ptr<tools::binary_stream> header_;
 
         bool is_time_condition_;
@@ -63,11 +68,13 @@ namespace core
         bool is_post_form_;
         bool need_log_;
         bool keep_alive_;
+        priority_t priority_;
 
         void clear_post_data();
         std::string get_post_param() const;
         void set_post_params(curl_context* ctx);
-        bool send_request(bool _post, bool switch_proxy = false);
+        bool send_request(bool _post);
+        void* send_request_async(bool _post, completion_function _completion_function);
         proxy_settings proxy_settings_;
 
         std::string user_agent_;
@@ -76,12 +83,12 @@ namespace core
         http_request_simple(proxy_settings _proxy_settings, const std::string &_user_agent, stop_function _stop_func = nullptr, progress_function _progress_func = nullptr);
         virtual ~http_request_simple();
 
-        static ithread_callback* create_http_handlers();
-
         static void init_global();
         static void shutdown_global();
 
-        std::shared_ptr<tools::binary_stream> get_response();
+        void set_output_stream(std::shared_ptr<tools::stream> _output);
+
+        std::shared_ptr<tools::stream> get_response();
         std::shared_ptr<tools::binary_stream> get_header();
         long get_response_code();
 
@@ -102,12 +109,16 @@ namespace core
 
         void set_need_log(bool _need);
         void set_keep_alive();
+        void set_priority(priority_t _priority);
         void set_etag(const char *etag);
         void set_replace_log_function(replace_log_function _func);
 
         void get_post_parameters(std::map<std::string, std::string>& params);
 
         void set_range(int64_t _from, int64_t _to);
+
+        void post_async(completion_function _completion_function);
+        void* get_async(completion_function _completion_function);
 
         bool post();
         bool get();

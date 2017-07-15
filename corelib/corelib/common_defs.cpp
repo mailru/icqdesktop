@@ -20,11 +20,6 @@ namespace common
 
         return buffer;
     }
-
-    std::wstring get_product_data_path()
-    {
-        return (::common::get_user_profile() + L"/" + L"ICQ");
-    }
 }
 #endif // _WIN32
 

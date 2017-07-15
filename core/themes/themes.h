@@ -23,8 +23,6 @@ namespace core
             std::string tint_color_;
             
             std::string typing_color_;
-            std::string spinner_color_;
-            std::string edges_color_;
             std::wstring folder_path_;
             int32_t theme_id_;
         public:
@@ -45,23 +43,11 @@ namespace core
             
         public:
 
-            struct contact_list_item {
-                std::string bg_color_;
-                std::string name_color_;
-                std::string message_color_;
-                std::string sender_color_;
-                std::string time_color_;
-                void unserialize(const rapidjson::Value& _node);
-            } contact_list_item_;
-
             struct bubble {
                 std::string bg1_color_;
                 std::string bg2_color_;
-                std::string text_color_;
                 std::string time_color_;
-                std::string link_color_;
                 std::string info_color_;
-                std::string info_link_color_;
                 void unserialize(const rapidjson::Value& _node);
             };
             bubble incoming_bubble_;
@@ -89,25 +75,11 @@ namespace core
                 void unserialize(const rapidjson::Value& _node);
             } contact_name_;
             
-            struct new_messages {
-                std::string bg_color_;
-                std::string text_color_;
-                void unserialize(const rapidjson::Value& _node);
-            } new_messages_;
-            
             struct new_messages_plate {
                 std::string bg_color_;
                 std::string text_color_;
                 void unserialize(const rapidjson::Value& _node);
             } new_messages_plate_;
-            
-            struct new_messages_bubble {
-                std::string bg_color_;
-                std::string bg_hover_color_;
-                std::string bg_pressed_color_;
-                std::string text_color_;
-                void unserialize(const rapidjson::Value& _node);
-            } new_messages_bubble_;
             
             struct typing {
                 typing()
@@ -168,9 +140,7 @@ namespace core
             void make_download_tasks();
             void make_download_task(theme& _theme);
             bool get_next_meta_task(download_task& _task);
-            std::wstring get_theme_thumb_path(const theme& _theme) const;
             std::string get_theme_thumb_url(const theme& _theme) const;
-            std::wstring get_theme_image_path(const theme& _theme) const;
             std::string get_theme_image_url(const theme& _theme) const;
             std::wstring get_theme_image_path(const int32_t _theme_id) const;
             std::wstring get_theme_thumb_path(const int32_t _theme_id) const;

@@ -9,12 +9,18 @@
 #include "../main_window/MainWindow.h"
 #include "../main_window/contact_list/ContactListModel.h"
 #include "../utils/utils.h"
+#include "../controls/GeneralDialog.h"
+#include "SelectionContactsForConference.h"
+#include "../main_window/contact_list/ContactList.h"
+#include "../main_window/contact_list/ChatMembersModel.h"
 
 #define internal_spacer_w  (Utils::scale_value(24))
 #define internal_spacer_w4 (Utils::scale_value(16))
 #define internal_spacer_w_small (Utils::scale_value(12))
 
 #define DISPLAY_ADD_CHAT_BUTTON 0
+
+enum { kFitSpacerWidth = 560, kNormalModeMinWidth = 476};
 
 Ui::VideoPanel::VideoPanel(
     QWidget* _parent, QWidget* _container)
@@ -33,9 +39,11 @@ Ui::VideoPanel::VideoPanel(
         , stopCallButton_(NULL)
         , videoButton_(NULL)
         , micButton_(NULL)
+        , conferenceModeButton_(nullptr)
         , minimalBandwidthMode_(nullptr)
         , minimalBandwidthTooltip_(nullptr)
         , isTakling(false)
+        , isFadedVisible(false)
 {
     setStyleSheet(Utils::LoadStyle(":/voip/video_panel.qss"));
     setProperty("VideoPanel", true);
@@ -45,9 +53,7 @@ Ui::VideoPanel::VideoPanel(
     //setAttribute(Qt::WindowDoesNotAcceptFocus, true);
     
 
-    QVBoxLayout* rootLayout = new QVBoxLayout();
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
+    QVBoxLayout* rootLayout = Utils::emptyVLayout();
     rootLayout->setAlignment(Qt::AlignVCenter);
     setLayout(rootLayout);
 
@@ -56,9 +62,7 @@ Ui::VideoPanel::VideoPanel(
     rootWidget_->setProperty("VideoPanel", true);
     layout()->addWidget(rootWidget_);
     
-    QHBoxLayout* layoutTarget = new QHBoxLayout();
-    layoutTarget->setContentsMargins(0, 0, 0, 0);
-    layoutTarget->setSpacing(0);
+    QHBoxLayout* layoutTarget = Utils::emptyHLayout();
     layoutTarget->setAlignment(Qt::AlignVCenter);
     rootWidget_->setLayout(layoutTarget);
 
@@ -85,13 +89,13 @@ Ui::VideoPanel::VideoPanel(
     auto addVolumeGroup = [this, parentWidget, layoutTarget] ()->VolumeGroup*
     {
         VolumeGroup* volumeGroup = new VolumeGroup(parentWidget, false, [] (QPushButton& _btn, bool _muted)
-                                                                {
-                                                                    _btn.setProperty("CallPanelEnBtn", !_muted);
-                                                                    _btn.setProperty("CallPanelDisBtn", _muted);
-                                                                    _btn.setProperty("CallSoundOn", !_muted);
-                                                                    _btn.setProperty("CallSoundOff", _muted);
-                                                                    _btn.setStyle(QApplication::style());
-                                                                }, Utils::scale_value(660));
+        {
+            _btn.setProperty("CallPanelEnBtn", !_muted);
+            _btn.setProperty("CallPanelDisBtn", _muted);
+            _btn.setProperty("CallSoundOn", !_muted);
+            _btn.setProperty("CallSoundOff", _muted);
+            _btn.setStyle(QApplication::style());
+        }, Utils::scale_value(670));
         
         volumeGroup->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding));
         layoutTarget->addWidget(volumeGroup, 0, Qt::AlignVCenter);
@@ -116,6 +120,11 @@ Ui::VideoPanel::VideoPanel(
 
 	leftSpacer_ = new QSpacerItem(1, 1, QSizePolicy::MinimumExpanding);
     layoutTarget->addSpacerItem(leftSpacer_);
+
+    addUsers_ = addButton("AddUser", SLOT(onAddUserClicked()));
+
+    layoutTarget->addSpacing(internal_spacer_w);
+
     micButton_ = addButton("CallEnableMic", SLOT(onAudioOnOffClicked()));
     micButton_->setProperty("CallDisableMic", false);
 
@@ -137,6 +146,10 @@ Ui::VideoPanel::VideoPanel(
 
 	rightSpacer_ = new QSpacerItem(1, 1, QSizePolicy::MinimumExpanding);
     layoutTarget->addSpacerItem(rightSpacer_);
+
+    conferenceModeButton_ = addButton("ConferenceAllTheSame", SLOT(onChangeConferenceMode()));
+
+    layoutTarget->addSpacing(internal_spacer_w);
     settingsButton_ = addButton("CallSettings", SLOT(onClickSettings()));
 
     layoutTarget->addSpacing(internal_spacer_w);
@@ -153,7 +166,7 @@ Ui::VideoPanel::VideoPanel(
 
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipMediaLocalAudio(bool)), this, SLOT(onVoipMediaLocalAudio(bool)), Qt::DirectConnection);
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipMediaLocalVideo(bool)), this, SLOT(onVoipMediaLocalVideo(bool)), Qt::DirectConnection);
-    QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallNameChanged(const std::vector<voip_manager::Contact>&)), this, SLOT(onVoipCallNameChanged(const std::vector<voip_manager::Contact>&)), Qt::DirectConnection);
+    QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipCallNameChanged(const voip_manager::ContactsList&)), this, SLOT(onVoipCallNameChanged(const voip_manager::ContactsList&)), Qt::DirectConnection);
     QObject::connect(&Ui::GetDispatcher()->getVoipController(), SIGNAL(onVoipMinimalBandwidthChanged(bool)), this, SLOT(onVoipMinimalBandwidthChanged(bool)), Qt::DirectConnection);
 
     videoPanelEffect_ = new UIEffects(*this);
@@ -165,6 +178,7 @@ Ui::VideoPanel::VideoPanel(
 
     hideButtonList.push_back(minimalBandwidthMode_);
     hideButtonList.push_back(settingsButton_);
+    hideButtonList.push_back(conferenceModeButton_);    
 }
 
 Ui::VideoPanel::~VideoPanel()
@@ -216,12 +230,13 @@ void Ui::VideoPanel::onClickGoChat()
         {
             wnd->raise();
             wnd->activate();
+            wnd->hideMenu();
         }
     }
 
     if (!activeContact_.empty())
     {
-        Logic::getContactListModel()->setCurrent(activeContact_.c_str(), -1, true, true);
+        Logic::getContactListModel()->setCurrent(activeContact_[0].contact.c_str(), -1, true, true);
     }
 }
 
@@ -274,13 +289,12 @@ void Ui::VideoPanel::onVoipMinimalBandwidthChanged (bool _bEnable)
     }
 }
 
-void Ui::VideoPanel::onVoipCallNameChanged(const std::vector<voip_manager::Contact>& _contacts)
+void Ui::VideoPanel::setContacts(const std::vector<voip_manager::Contact>& contacts)
 {
-    if(_contacts.empty())
-    {
-        return;
-    }
-    activeContact_ = _contacts[0].contact;
+    activeContact_ = contacts;
+
+    updateConferenceModeButton();
+    updateBandwidthButtonState();
 }
 
 void Ui::VideoPanel::onClickAddChat()
@@ -321,6 +335,7 @@ void Ui::VideoPanel::leaveEvent(QEvent* _e)
     const bool focusOnVolumePanel = onUnderMouse(*volumeGroup->verticalVolumeWidget());
     if (!focusOnVolumePanel)
     {
+        mouseUnderPanel_ = false;
         emit onMouseLeave();
     }
 }
@@ -359,7 +374,14 @@ void Ui::VideoPanel::resizeEvent(QResizeEvent* _e)
     {
         if (button)
         {
-            button->setVisible(bVisibleButton && (isTakling || button != minimalBandwidthMode_));
+            if (button != minimalBandwidthMode_)
+            {
+                button->setVisible(bVisibleButton);
+            }
+            else
+            {
+                updateBandwidthButtonState();
+            }
         }
     }
 
@@ -406,6 +428,10 @@ void Ui::VideoPanel::resizeEvent(QResizeEvent* _e)
     volumeGroup->updateSliderPosition();
 
     updateToolTipsPosition();
+
+    updateConferenceModeButton();
+
+    updateBandwidthButtonState();
 }
 
 void Ui::VideoPanel::resetHangupText()
@@ -490,12 +516,14 @@ void Ui::VideoPanel::updateToolTipsPosition()
 
 void Ui::VideoPanel::fadeIn(unsigned int _kAnimationDefDuration)
 {
+    isFadedVisible = true;
     videoPanelEffect_->fadeIn(_kAnimationDefDuration);
     minimalBandwidthTooltipEffect_->fadeIn(_kAnimationDefDuration);
 }
 
 void Ui::VideoPanel::fadeOut(unsigned int _kAnimationDefDuration)
 {
+    isFadedVisible = false;
     videoPanelEffect_->fadeOut(_kAnimationDefDuration);
     minimalBandwidthTooltipEffect_->fadeOut(_kAnimationDefDuration);
     minimalBandwidthTooltip_->hide();
@@ -504,22 +532,31 @@ void Ui::VideoPanel::fadeOut(unsigned int _kAnimationDefDuration)
     volumeGroup->hideSlider();
 }
 
+bool Ui::VideoPanel::isFadedIn()
+{
+    return isFadedVisible;
+}
+
 void Ui::VideoPanel::hideBandwidthTooltip()
 {
     minimalBandwidthTooltip_->hide();
     hideBandwidthTooltipTimer->stop();
 }
 
+void Ui::VideoPanel::talkCreated()
+{
+    conferenceModeButton_->hide();
+    minimalBandwidthMode_->hide();
+}
+
 void Ui::VideoPanel::talkStarted()
 {
-    minimalBandwidthMode_->setVisible(isNormalPanelMode());
-    isTakling = true;
+    updateBandwidthButtonState();
 }
 
 void Ui::VideoPanel::talkFinished()
 {
     minimalBandwidthMode_->hide();
-    isTakling = false;
 }
 
 void Ui::VideoPanel::startToolTipHideTimer()
@@ -539,18 +576,50 @@ bool Ui::VideoPanel::isNormalPanelMode()
 {
     auto rc = rect();
 
-    return (rc.width() >= Utils::scale_value(436));
+    return (rc.width() >= Utils::scale_value(kNormalModeMinWidth));
 }
 
 bool Ui::VideoPanel::isFitSpacersPanelMode()
 {
 	auto rc = rect();
 
-	return (rc.width() < Utils::scale_value(520));
+	return (rc.width() < Utils::scale_value(kFitSpacerWidth));
 }
 
 void Ui::VideoPanel::activateVideoWindow()
 {
     parentWidget()->activateWindow();
     parentWidget()->raise();
+}
+
+void Ui::VideoPanel::updateConferenceModeButton()
+{
+    conferenceModeButton_->setVisible(activeContact_.size() > 1);
+}
+
+void Ui::VideoPanel::updateBandwidthButtonState()
+{
+    minimalBandwidthMode_->setVisible(Ui::GetDispatcher()->getVoipController().hasEstablishCall() && isNormalPanelMode());
+}
+
+void Ui::VideoPanel::onChangeConferenceMode()
+{
+    bool isAllTheSame = conferenceModeButton_->property("ConferenceAllTheSame").toBool();
+    isAllTheSame = !isAllTheSame;
+
+    Utils::ApplyPropertyParameter(conferenceModeButton_, "ConferenceAllTheSame", isAllTheSame);
+    Utils::ApplyPropertyParameter(conferenceModeButton_, "ConferenceOneIsBig", !isAllTheSame);
+
+    emit updateConferenceMode(isAllTheSame ? voip_manager::ConferenceAllTheSame : voip_manager::ConferenceOneIsBig);
+}
+
+void Ui::VideoPanel::changeConferenceMode(voip_manager::ConferenceLayout layout)
+{
+    Utils::ApplyPropertyParameter(conferenceModeButton_, "ConferenceAllTheSame", layout == voip_manager::ConferenceAllTheSame);
+    Utils::ApplyPropertyParameter(conferenceModeButton_, "ConferenceOneIsBig",   layout == voip_manager::ConferenceOneIsBig);
+}
+
+void Ui::VideoPanel::onAddUserClicked()
+{
+    emit addUserToConference();
 }

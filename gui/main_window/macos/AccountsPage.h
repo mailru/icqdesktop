@@ -2,6 +2,7 @@
 
 class MacMigrationManager;
 class MacProfile;
+class MacProfileList;
 
 namespace Ui
 {
@@ -36,12 +37,15 @@ namespace Ui
         
     private Q_SLOTS:
         void loginResult(int);
-        
-    private:
 
+    private:
+        MacMigrationManager *manager_;
+        
     public:
         AccountsPage(QWidget* _parent, MacMigrationManager * manager);
         virtual ~AccountsPage();
+        
+        void summon();
     };
 
 }

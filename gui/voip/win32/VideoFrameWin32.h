@@ -16,7 +16,7 @@ class GraphicsPanelWin32 : public platform_specific::GraphicsPanel
 {
     Q_OBJECT
 public:
-    GraphicsPanelWin32(QWidget* _parent, std::vector<Ui::BaseVideoPanel*>& _panels);
+    GraphicsPanelWin32(QWidget* _parent, std::vector<Ui::BaseVideoPanel*>& _panels, bool primaryVideo);
     virtual ~GraphicsPanelWin32();
 };
 

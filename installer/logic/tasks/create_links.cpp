@@ -5,9 +5,9 @@
 
 #include <comutil.h>
 
-#define STR_APP_NAME_SHORTCUT_EN L"ICQ.lnk"
-#define STR_APP_NAME_EN L"ICQ"
-#define STR_APP_USER_MODEL_ID L"ICQ.Client"
+const wchar_t* str_app_name_shortcut_en = (build::is_icq() ? L"ICQ.lnk" : L"Mail.Ru Agent.lnk");
+const wchar_t* str_app_name_en = (build::is_icq() ? L"ICQ" : L"Mail.Ru Agent");
+const wchar_t* str_app_user_model_id = (build::is_icq() ? L"ICQ.Client" : L"MailRu.Agent.Client");
 
 namespace installer
 {
@@ -30,7 +30,7 @@ namespace installer
                 if (!::SHGetSpecialFolderPath(0, program_dir.GetBuffer(4096), CSIDL_PROGRAMS, 0))
                     return installer::error(errorcode::get_special_folder);
                 program_dir.ReleaseBuffer();
-                program_dir += CAtlString(L"\\") + (const wchar_t*) get_product_display_name().utf16();
+                program_dir += CAtlString(L"\\") + (const wchar_t*) get_product_menu_folder().utf16();
 
                 if (!::SHGetSpecialFolderPath(0, start.GetBuffer(4096), CSIDL_STARTMENU, 0))
                     return installer::error(errorcode::get_special_folder);
@@ -50,46 +50,46 @@ namespace installer
 
             int iIconIndex = 0;
 
-            CAtlString str = program_dir + L"\\"STR_APP_NAME_SHORTCUT_EN;
-            if (S_OK != links::CreateLink(icq_exe, L"", str, STR_APP_NAME_EN, iIconIndex))
+            CAtlString str = program_dir + L"\\" + str_app_name_shortcut_en;
+            if (S_OK != links::CreateLink(icq_exe, L"", str, str_app_name_en, iIconIndex))
             {
                 assert(!"link creation was failed!");
             }
 
-            str = program_dir + L"\\Uninstall "STR_APP_NAME_SHORTCUT_EN;
-            if (S_OK != links::CreateLink(installer_exe, L"-uninstall", str, L"Uninstall "STR_APP_NAME_EN, 1))
+            str = program_dir + L"\\Uninstall " + str_app_name_shortcut_en;
+            if (S_OK != links::CreateLink(installer_exe, L"-uninstall", str, (LPCWSTR) (CAtlString(L"Uninstall ") + str_app_name_shortcut_en), 1))
             {
                 assert(!"link creation was failed!");
             }
 
-            str = start + L"\\"STR_APP_NAME_SHORTCUT_EN;
-            if (S_OK != links::CreateLink(icq_exe, L"", str, STR_APP_NAME_EN,	iIconIndex))
+            str = start + L"\\" + str_app_name_shortcut_en;
+            if (S_OK != links::CreateLink(icq_exe, L"", str, str_app_name_en, iIconIndex))
             {
                 assert(!"link creation was failed!");
             }
 
             str = links::GetQuickLaunchDir();
-            str += L"\\"STR_APP_NAME_SHORTCUT_EN;
+            str += CAtlString(L"\\") + str_app_name_shortcut_en;
             CComPtr<IShellLink> psl;
-            psl.Attach(links::CreateShellLink(icq_exe,(LPCTSTR) L"", STR_APP_NAME_EN, iIconIndex));
+            psl.Attach(links::CreateShellLink(icq_exe,(LPCTSTR) L"", str_app_name_en, iIconIndex));
             if (psl == NULL)
             {
                 assert(!"link creation was failed!");
             }
 
-            links::SetShellLinkTitle(psl, STR_APP_NAME_EN);
-            links::SetShellLinkAppID(psl, STR_APP_USER_MODEL_ID);
+            links::SetShellLinkTitle(psl, str_app_name_en);
+            links::SetShellLinkAppID(psl, str_app_user_model_id);
             links::SaveShellLink(psl, str);
 
-            str = desktop + L"\\"STR_APP_NAME_SHORTCUT_EN;
-            psl.Attach(links::CreateShellLink(icq_exe,(LPCTSTR) L"", STR_APP_NAME_EN, iIconIndex));
+            str = desktop + L"\\" + str_app_name_shortcut_en;
+            psl.Attach(links::CreateShellLink(icq_exe,(LPCTSTR) L"", str_app_name_en, iIconIndex));
             if (psl == NULL)
             {
                 assert(!"link creation was failed!");
             }
 
-            links::SetShellLinkTitle(psl, STR_APP_NAME_EN);
-            links::SetShellLinkAppID(psl, STR_APP_USER_MODEL_ID);
+            links::SetShellLinkTitle(psl, str_app_name_en);
+            links::SetShellLinkAppID(psl, str_app_user_model_id);
             links::SaveShellLink(psl, str);
 
             links::PinToTaskbar(str);
@@ -117,7 +117,7 @@ namespace installer
                 if (!::SHGetSpecialFolderPath(0, program_dir.GetBuffer(4096), CSIDL_PROGRAMS, 0))
                     return installer::error(errorcode::get_special_folder);
                 program_dir.ReleaseBuffer();
-                program_dir += CAtlString(L"\\") + (const wchar_t*) get_product_display_name().utf16();
+                program_dir += CAtlString(L"\\") + (const wchar_t*) get_product_menu_folder().utf16();
 
                 if (!::SHGetSpecialFolderPath(0, start.GetBuffer(4096), CSIDL_STARTMENU, 0))
                     return installer::error(errorcode::get_special_folder);
@@ -132,21 +132,21 @@ namespace installer
 
             links::RemoveFromMFUList(icq_exe_short);
 
-            CAtlString str = program_dir + L"\\"STR_APP_NAME_SHORTCUT_EN;
+            CAtlString str = program_dir + L"\\" + str_app_name_shortcut_en;
             links::RemoveLink(str);
 
-            str = program_dir + L"\\Uninstall "STR_APP_NAME_SHORTCUT_EN;
+            str = program_dir + L"\\Uninstall " + str_app_name_shortcut_en;
             links::RemoveLink(str);
 
-            str = start + _T("\\") + STR_APP_NAME_SHORTCUT_EN;
+            str = start + _T("\\") + str_app_name_shortcut_en;
             links::RemoveLink(str);
 
             str = links::GetQuickLaunchDir();
-            str += L"\\"STR_APP_NAME_SHORTCUT_EN;
+            str += CAtlString(L"\\") + str_app_name_shortcut_en;
             links::RemoveLink(str);
 
             str = desktop;
-            str += L"\\"STR_APP_NAME_SHORTCUT_EN;
+            str += CAtlString(L"\\") + str_app_name_shortcut_en;
             links::RemoveLink(str);
 
             ::CoUninitialize();

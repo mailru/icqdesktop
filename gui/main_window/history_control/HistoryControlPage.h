@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QtCore/QEasingCurve>
 #include "MessagesModel.h"
 
 #include "../../types/chat.h"
@@ -23,13 +24,13 @@ namespace Ui
 {
 	class ServiceMessageItem;
 	class HistoryControlPage;
-	class NewMessagesPlate;
 	class AuthWidget;
     class LabelEx;
     class TextEmojiWidget;
     class MessagesWidget;
     class MessagesScrollArea;
     class HistoryControlPageThemePanel;
+	class HistoryButtonDown;
 
     enum ThemePanelChoice: int;
     typedef std::function<void(ThemePanelChoice)> ThemePanelCallback;
@@ -81,7 +82,6 @@ Q_SIGNALS:
             MessagesScrollArea* _scrollArea,
 			QWidget* _firstOverlay,
 			QWidget* _secondOverlay,
-			NewMessagesPlate* _newMessaesPlate,
 			HistoryControlPage* _dialog
         );
 
@@ -106,7 +106,6 @@ Q_SIGNALS:
         bool ScrollDirectionDown_;
         int Width_;
         HistoryControlPage* Dialog_;
-        NewMessagesPlate* NewMessagesPlate_;
         QDate Date_;
         QPoint MousePos_;
         QString ContactName_;
@@ -197,7 +196,16 @@ Q_SIGNALS:
         void resumeVisibleItems();
         void suspendVisisbleItems();
 
+		/// set buttonDown_ positoin from resize 
+		void setButtonDownPositions(int x_showed, int y_showed, int y_hided);
+
+		void setQuoteId(qint64 _quote_id);
+
+	public Q_SLOTS:
         void scrollToBottom();
+		void scrollToBottomByButton();
+		void onUpdateHistoryPosition(int32_t position, int32_t offset);
+		void showNewMessageForce();
 
 	protected:
 		virtual void focusOutEvent(QFocusEvent* _event) override;
@@ -238,16 +246,13 @@ Q_SIGNALS:
 		void addMember();
         void unloadWidgets(QList<Logic::MessageKey> _keysToUnload);
 
-        void stats_spam_profile(QString _aimId);
-        void stats_spam_auth(QString _aimId);
-        void stats_ignore_auth(QString _aimId);
-        void stats_add_user_auth(QString _aimId);
-        void stats_delete_contact_auth(QString _aimId);
-
         void readByClient(QString _aimid, qint64 _id);
         void adminMenuRequest(QString);
         void adminMenu(QAction* _action);
         void actionResult(int);
+
+		void onButtonDownMove();
+        void onButtonDownClicked();
 
 	private:
 	    void updateName();
@@ -285,7 +290,6 @@ Q_SIGNALS:
         void replaceExistingWidgetByKey(const Logic::MessageKey& _key, QWidget* _widget);
 
         void loadChatInfo(bool _isFullListLoaded);
-        void renameChat();
         void renameContact();
 
         void setState(const State _state, const char* _dbgWhere);
@@ -300,10 +304,6 @@ Q_SIGNALS:
         void switchToFetchingState(const char* _dbgWhere);
         void setContactStatusClickable(bool _isEnabled);
 
-        bool isChatAdmin() const;
-
-        void onDeleteHistory();
-
         AuthWidget*								authWidget_;
         bool                                    isContactStatusClickable_;
         bool                                    isMessagesRequestPostponed_;
@@ -314,13 +314,11 @@ Q_SIGNALS:
         LabelEx*                                contactStatus_;
         MessagesScrollArea*						messagesArea_;
         MessagesWidgetEventFilter*				eventFilter_;
-        NewMessagesPlate*						newMessagesPlate_;
         qint32									nextLocalPosition_;
         qint64									newPlatePosition_;
         qint64									chatInfoSequence_;
         QPushButton*                            addMemberButton_;
         QPushButton*                            callButton_;
-        QPushButton*                            favoriteStar_;
         QPushButton*                            moreButton_;
         QPushButton*                            officialMark_;
         QPushButton*                            videoCallButton_;
@@ -338,5 +336,27 @@ Q_SIGNALS:
         std::set<Logic::MessageKey>				removeRequests_;
         TopWidget*                              topWidget_;
         ClickWidget*                            nameWidget_;
+
+		/// button to move history at last messages
+		HistoryButtonDown*						buttonDown_;
+		/// button position
+		QPoint									buttonDownShowPosition_;
+		QPoint									buttonDownHidePosition_;
+		/// -1 hide animation, 0 - show animation, 1 show animation
+		int										buttonDir_;
+		/// time of buttonDown 0..1 show 1..0 hide
+		float									buttonDownTime_;
+
+		void startShowButtonDown();
+		void startHideButtonDown();
+
+		QTimer*									buttonDownTimer_;
+		QEasingCurve							buttonDownCurve_;
+		/// new message plate force show
+		bool									bNewMessageForceShow_;
+        /// current time in ms for timer function
+        qint64                                  buttonDownCurrentTime_;
+
+		qint64									quoteId_;
 	};
 }

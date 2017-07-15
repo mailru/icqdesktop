@@ -8,8 +8,8 @@ namespace installer
     namespace logic
     {
 
-        const std::wstring main_window_classname = L"MraICQWClass";
-        const std::wstring rwa_mra_shutdown = L"MraICQ shutdown";
+        const std::wstring main_window_classname = (build::is_icq() ? L"MraICQWClass" : L"MraWClass");
+        const std::wstring rwa_mra_shutdown = (build::is_icq() ? L"MraICQ shutdown" : L"Mra shutdown");
 
         BOOL CALLBACK enum_windows_callback(HWND hwnd, LPARAM l_param)
         {
@@ -78,13 +78,40 @@ namespace installer
 
         bool is_new_settings_exits() 
         {
-            QString auth_file = get_exported_settings_folder() + "/" + gui_settings_file_name;
+            QString settings_file = get_exported_settings_folder() + "/" + gui_settings_file_name;
 
-            return QFileInfo::exists(auth_file);
+            return QFileInfo::exists(settings_file);
+        }
+
+        bool is_8x_installed()
+        {
+            bool installed = false;
+
+            const CAtlString product_key_path = (build::is_icq() ? L"Software\\ICQ\\ICQ" : L"Software\\Mail.Ru\\Agent");
+
+            CRegKey key_path;
+
+            if (key_path.Open(HKEY_CURRENT_USER, product_key_path, KEY_READ) != ERROR_SUCCESS)
+                return false;
+
+            wchar_t buffer_guid[1025];
+            ULONG len = 1024;
+
+            if (key_path.QueryStringValue(L"GUID", buffer_guid, &len) == ERROR_SUCCESS)
+            {
+                installed = true;
+            }
+
+            key_path.Close();
+
+            return installed;
         }
 
         installer::error export_from_8x()
         {
+            if (!is_8x_installed())
+                return installer::error();
+
             shutdown_8x();
 
             get_exported_data().read(
@@ -96,16 +123,22 @@ namespace installer
 
         installer::error uninstall_8x_from_executable()
         {
+            const CAtlString product_key_path = (build::is_icq() ? L"Software\\ICQ\\ICQ" : L"Software\\Mail.Ru\\Agent");
+
             CRegKey key_path;
-            if (key_path.Open(HKEY_CURRENT_USER, L"Software\\ICQ\\ICQ", KEY_READ) == ERROR_SUCCESS)
+
+            if (key_path.Open(HKEY_CURRENT_USER, product_key_path, KEY_READ) == ERROR_SUCCESS)
             {
                 wchar_t buffer_path[1025];
                 ULONG len = 1024;
 
                 if (key_path.QueryStringValue(L"InstallPath", buffer_path, &len) == ERROR_SUCCESS)
                 {
+                    CAtlString key_product_sub_path = (build::is_icq() ? L"ICQ" : L"MRA");
+
                     CRegKey key_uninstall;
-                    if (key_uninstall.Open(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\ICQ", KEY_READ) == ERROR_SUCCESS)
+
+                    if (key_uninstall.Open(HKEY_CURRENT_USER, CAtlString(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") + key_product_sub_path, KEY_READ) == ERROR_SUCCESS)
                     {
                         wchar_t buffer_uninstall_command[1025];
                         len = 1024;
@@ -118,15 +151,21 @@ namespace installer
                             QString uninstall_command = QString::fromUtf16((const ushort*)(LPCWSTR) registry_command) + " -uninstallsilent";
 
                             QProcess::execute(uninstall_command);
+
+
                         }
+
+                        key_uninstall.Close();
                     }
                 }
+
+                key_path.Close();
             }
 
             return installer::error();
         }
 
-        installer::error store_exported_account(bool _is_from_8x)
+        installer::error store_exported_accounts(bool _is_from_8x)
         {
             QString folder_name = get_exported_account_folder();
 
@@ -134,7 +173,7 @@ namespace installer
             if (!dir.mkpath(folder_name))
                 return installer::error(errorcode::create_exported_account_folder, QString("create folder: ") + folder_name);
 
-            get_exported_data().store_exported_account(folder_name + "/" + auth_export_file_name, _is_from_8x);
+            get_exported_data().store_exported_accounts(folder_name, _is_from_8x);
 
             return installer::error();
         }
@@ -147,7 +186,8 @@ namespace installer
             if (!dir.mkpath(folder_name))
                 return installer::error(errorcode::create_exported_settings_folder, QString("create folder: ") + folder_name);
 
-            get_exported_data().store_exported_settings(folder_name + "/" + settings_export_file_name, _is_from_8x);
+            get_exported_data().store_exported_ui_settings(folder_name + "/" + settings_export_file_name, _is_from_8x);
+            get_exported_data().store_exported_core_settings(folder_name + "/" + core_settings_export_file_name, _is_from_8x);
 
             return installer::error();
         }

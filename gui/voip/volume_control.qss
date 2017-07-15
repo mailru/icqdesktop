@@ -45,7 +45,7 @@ QSlider[VolumeSliderHor="true"]:add-page:horizontal:disabled
 
 QSlider[VolumeSliderVert="true"]:groove:vertical
 {
-	background: rgba(255,255,255,80%);
+	background: rgba(255, 255, 255, 80%);
 	width: 2dip;
 }
 

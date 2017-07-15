@@ -25,7 +25,7 @@ load_file::~load_file()
 
 int32_t load_file::init_request(std::shared_ptr<core::http_request_simple> _request)
 {
-    _request->set_need_log(false);
+    _request->set_need_log(params_.full_log_);
     _request->set_url(info_->get_file_dlink());
     _request->set_keep_alive();
 
@@ -44,11 +44,6 @@ int32_t load_file::init_request(std::shared_ptr<core::http_request_simple> _requ
     _request->set_range(info_->get_bytes_transfer(), info_->get_bytes_transfer() + read_size);
 
     return 0;
-}
-
-int32_t load_file::execute()
-{
-    return wim_packet::execute();
 }
 
 int32_t load_file::execute_request(std::shared_ptr<core::http_request_simple> _request)
